@@ -1,7 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://zimutcanyonplay"]
+[gd_scene load_steps=8 format=3 uid="uid://zimutcanyonplay"]
 
 [ext_resource type="Script" path="res://scripts/world/landscape_manager.gd" id="1_landscape"]
 [ext_resource type="PackedScene" uid="uid://zimutplayer0001" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://scripts/world/collectible_spawner.gd" id="3_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/collectible_item.tscn" id="4_item"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5_hud"]
+[ext_resource type="Script" path="res://scripts/world/world_setup.gd" id="6_setup"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.45, 0.65, 0.85, 1)
@@ -37,5 +41,16 @@ directional_shadow_max_distance = 400.0
 [node name="Landscape" type="Node3D" parent="."]
 script = ExtResource("1_landscape")
 
+[node name="Collectibles" type="Node3D" parent="."]
+script = ExtResource("3_spawner")
+item_scene = ExtResource("4_item")
+count = 14
+
 [node name="Player" parent="." instance=ExtResource("2_player")]
+groups = ["player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 12, -30)
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]
+
+[node name="WorldSetup" type="Node" parent="."]
+script = ExtResource("6_setup")

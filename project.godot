@@ -21,6 +21,10 @@ config/icon="res://icon.svg"
 
 InputManager="*res://scripts/autoload/input_manager.gd"
 LocalizationLoader="*res://scripts/autoload/localization_loader.gd"
+InteractionManager="*res://scripts/autoload/interaction_manager.gd"
+Inventory="*res://scripts/autoload/inventory.gd"
+Sfx="*res://scripts/autoload/sfx.gd"
+DayNightCycle="*res://scripts/autoload/day_night_cycle.gd"
 
 [display]
 
@@ -92,6 +96,7 @@ ui_cancel={
 [internationalization]
 
 locale/fallback="en"
+locale/translations=PackedStringArray("res://locales/translations.en.en.translation", "res://locales/translations.fr.fr.translation")
 
 [rendering]
 
