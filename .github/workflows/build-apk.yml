@@ -109,6 +109,8 @@ jobs:
           mkdir -p android/build
           unzip -q -o "$TEMPLATES_DIR/android_source.zip" -d android/build
           echo "rootProject.name = \"GodotAndroid\"" >> android/build/settings.gradle
+          printf '%s' "4.7.stable" > android/.build_version
+          touch android/build/.gdignore
           ls android/build
 
       - name: Export APK (${{ matrix.build_type }})

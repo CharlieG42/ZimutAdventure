@@ -58,10 +58,24 @@ fi
 cd "$PROJECT_ROOT"
 echo "== Export $BUILD_TYPE -> $OUT"
 "$GODOT_BIN" --headless --path . --import
-# Installe le template de build Gradle (.android/) si absent. Godot le fait
-# normalement tout seul lors de l'export ; on le force pour avoir des logs clairs.
-if [ ! -d "$PROJECT_ROOT/.android" ]; then
-	"$GODOT_BIN" --headless --path . --install-android-build-template
+# Installe le template de build Gradle (android/build/) si absent.
+# Godot l'installe normalement tout seul lors de l'export, mais en mode
+# headless --install-android-build-template reste bloqu\u00e9 sans sortie ;
+# on extrait donc android_source.zip depuis les export templates et on
+# \u00e9crit les marqueurs attendus par l'export Gradle (.build_version + .gdignore).
+GODOT_VERSION_DIR=$(basename "$(dirname "$(dirname "$GODOT_BIN")")" 2>/dev/null || true)
+if [ ! -f "$PROJECT_ROOT/android/.build_version" ]; then
+	TEMPLATES_DIR="${HOME}/.local/share/godot/export_templates"
+	VERSION_DIR=$(ls "$TEMPLATES_DIR" 2>/dev/null | head -1)
+	if [ -z "$VERSION_DIR" ] || [ ! -f "$TEMPLATES_DIR/$VERSION_DIR/android_source.zip" ]; then
+		echo "ERREUR: android_source.zip introuvable dans $TEMPLATES_DIR. Installe les export templates Godot."
+		exit 1
+	fi
+	mkdir -p "$PROJECT_ROOT/android/build"
+	unzip -q -o "$TEMPLATES_DIR/$VERSION_DIR/android_source.zip" -d "$PROJECT_ROOT/android/build"
+	echo 'rootProject.name = "GodotAndroid"' >> "$PROJECT_ROOT/android/build/settings.gradle"
+	printf '%s' "$VERSION_DIR" > "$PROJECT_ROOT/android/.build_version"
+	touch "$PROJECT_ROOT/android/build/.gdignore"
 fi
 "$GODOT_BIN" --headless --path . $FLAG "Android" "$OUT"
 
