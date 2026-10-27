@@ -14,8 +14,8 @@ env:
   GODOT_VERSION: "4.7-stable"
   GODOT_RELEASE: "4.7"
   EXPORT_PRESET: "Android"
-  ANDROID_SDK_ROOT: /opt/android-sdk
-  ANDROID_HOME: /opt/android-sdk
+  ANDROID_SDK_ROOT: /home/runner/android-sdk
+  ANDROID_HOME: /home/runner/android-sdk
 
 jobs:
   test:
@@ -58,13 +58,22 @@ jobs:
           java-version: "17"
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
-        with:
-          cmdline-tools-version: "latest"
-          build-tools-version: "36.1.0"
-          platform-version: "36"
-          cmake-version: "3.10.2.4988404"
-          ndk-version: "29.0.14206865"
+        run: |
+          set -eu
+          SDK_ROOT="$ANDROID_SDK_ROOT"
+          mkdir -p "$SDK_ROOT/cmdline-tools"
+          cd "$SDK_ROOT"
+          curl -fSL -o cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+          unzip -q -o cmdline-tools.zip -d cmdline-tools
+          mv cmdline-tools/cmdline-tools cmdline-tools/latest
+          rm -f cmdline-tools.zip
+          yes | cmdline-tools/latest/bin/sdkmanager --sdk_root="$SDK_ROOT" --licenses > /dev/null
+          cmdline-tools/latest/bin/sdkmanager --sdk_root="$SDK_ROOT" \
+            "platform-tools" \
+            "build-tools;36.1.0" \
+            "platforms;android-36" \
+            "cmake;3.10.2.4988404" \
+            "ndk;29.0.14206865"
 
       - name: Setup Godot + export templates
         uses: solarlabyrinth/action-setup-godot@v3

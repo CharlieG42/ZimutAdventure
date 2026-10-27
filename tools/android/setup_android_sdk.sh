@@ -33,7 +33,7 @@ export ANDROID_HOME="$SDK_ROOT"
 echo "== Acceptation des licences =="
 yes | cmdline-tools/latest/bin/sdkmanager --sdk_root="$SDK_ROOT" --licenses > /dev/null
 
-echo "== Installation des composants SDK (build-tools 35.0.1, platform 35, CMake, NDK r28b) =="
+echo "== Installation des composants SDK (build-tools 36.1.0, platform 36, CMake 3.10, NDK 29) =="
 cmdline-tools/latest/bin/sdkmanager --sdk_root="$SDK_ROOT" \
 	"platform-tools" \
 	"build-tools;36.1.0" \
