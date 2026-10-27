@@ -93,11 +93,17 @@ jobs:
           EOF
           cat "$HOME/.config/godot/editor_settings-4.tres"
 
-      - name: Restore release keystore (release only)
-        if: matrix.build_type == 'release'
+      - name: Restore release keystore (release only, when secrets are set)
+        if: matrix.build_type == 'release' && secrets.RELEASE_KEYSTORE_BASE64 != '' && secrets.RELEASE_KEYSTORE_PASSWORD != ''
         run: |
           echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > "$GODOT_ANDROID_KEYSTORE_RELEASE_PATH"
           chmod 600 "$GODOT_ANDROID_KEYSTORE_RELEASE_PATH"
+
+      - name: Unset release keystore config when secrets are missing (PR without access)
+        if: matrix.build_type == 'release' && (secrets.RELEASE_KEYSTORE_BASE64 == '' || secrets.RELEASE_KEYSTORE_PASSWORD == '')
+        run: |
+          sed -i 's|^keystore/release=.*|keystore/release=""|; s|^keystore/release_user=.*|keystore/release_user=""|' export_presets.cfg
+          grep '^keystore/release' export_presets.cfg || true
 
       - name: Import project
         run: godot --headless --path . --import
