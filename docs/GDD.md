@@ -114,6 +114,20 @@ Chaque région = **une grande carte ouverte** (plusieurs dizaines de km² en jeu
 - **Ambiance sonore** : vent omniprésent, bruissements, cris d'animaux au loin, musique minimaliste (guitare, harmonica) qui entre et sort selon l'intensité.
 - **Cycle jour/nuit complet** avec aube/crépuscule marqués, nuits étoilées navigables, aurores boréales au Canada.
 
+### 7.1 Références photographiques
+
+Les photos de référence (prises par l'auteur) sont stockées dans `assets/landscapes/models/` :
+
+| Fichier | Sujet | Usage |
+|---|---|---|
+| `canyon_panorama_01.heic` | Panorama falaises rouges, mesas à sommet plat | Composition du terrain, horizon |
+| `canyon_strata_01.jpg` | Parois stratifiées rouge/orange | Shader terrain (strates), palette ocre/rouge |
+| `canyon_hoodoos_pines_01.jpg` | Hoodoos + pins dispersés | Props hoodoo et pin |
+| `canyon_hoodoos_02.jpg` | Hoodoos en grès ocre, lumière rasante | Proportions hoodoos, éclairage soir |
+| `canyon_trail_pines_01.jpg` | Sentier rouge, champignons rocheux, conifères | Sentiers, rochers, sol rougeâtre |
+
+Implémentation actuelle : `LandscapeManager` génère procéduralement un terrain 512 m (vallée de canyon + falaises périphériques) avec un shader de strates sédimentaires, et place par MultiMesh des hoodoos, buttes/mesas, rochers, pins, buissons et herbes — tous générés en code (`RockGenerator`, `VegetationGenerator`), sans asset externe, pour rester léger sur Android.
+
 ## 8. Pile technique (Godot 4)
 
 - **Langage** : GDScript (rapidité de prototypage, lisible) — GDExtension C# possible plus tard si besoin de perfs.
