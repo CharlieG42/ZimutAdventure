@@ -49,6 +49,7 @@ jobs:
       GODOT_ANDROID_KEYSTORE_RELEASE_USER: zimut
       GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
       RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+      RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -95,13 +96,13 @@ jobs:
           cat "$HOME/.config/godot/editor_settings-4.tres"
 
       - name: Restore release keystore (release only, when secrets are set)
-        if: matrix.build_type == 'release' && env.RELEASE_KEYSTORE_BASE64 != '' && secrets.RELEASE_KEYSTORE_PASSWORD != ''
+        if: matrix.build_type == 'release' && env.RELEASE_KEYSTORE_BASE64 != '' && env.RELEASE_KEYSTORE_PASSWORD != ''
         run: |
           echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > "$GODOT_ANDROID_KEYSTORE_RELEASE_PATH"
           chmod 600 "$GODOT_ANDROID_KEYSTORE_RELEASE_PATH"
 
       - name: Unset release keystore config when secrets are missing (PR without access)
-        if: matrix.build_type == 'release' && (env.RELEASE_KEYSTORE_BASE64 == '' || secrets.RELEASE_KEYSTORE_PASSWORD == '')
+        if: matrix.build_type == 'release' && (env.RELEASE_KEYSTORE_BASE64 == '' || env.RELEASE_KEYSTORE_PASSWORD == '')
         run: |
           sed -i 's|^keystore/release=.*|keystore/release=""|; s|^keystore/release_user=.*|keystore/release_user=""|' export_presets.cfg
           grep '^keystore/release' export_presets.cfg || true
@@ -132,8 +133,12 @@ jobs:
       - name: Verify APK signature
         run: |
           APK="build/android/ZimutAdventure-${{ matrix.build_type }}.apk"
-          "$ANDROID_SDK_ROOT/build-tools/36.1.0/apksigner" verify --print-certs "$APK"
           ls -lh "$APK"
+          if [ "${{ matrix.build_type }}" = "release" ] && { [ -z "$RELEASE_KEYSTORE_BASE64" ] || [ -z "$RELEASE_KEYSTORE_PASSWORD" ]; }; then
+            echo "Unsigned release build (signing secrets unavailable, e.g. on a PR) - skipping signature verification"
+          else
+            "$ANDROID_SDK_ROOT/build-tools/36.1.0/apksigner" verify --print-certs "$APK"
+          fi
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

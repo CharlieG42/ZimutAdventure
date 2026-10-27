@@ -96,10 +96,14 @@ Colle le résultat **tel quel** (une seule longue ligne) comme valeur du secret
      NDK 29.0.14206865 — versions requises par le template Gradle de Godot 4.7) ;
    - installe Godot 4.7 + les templates d'export ;
    - configure les chemins Java SDK / Android SDK pour Godot ;
-   - **release uniquement** : décode `RELEASE_KEYSTORE_BASE64` vers
-     `/home/runner/work/release.keystore` ;
+   - **release uniquement** : si les secrets de signature sont présents, décode
+     `RELEASE_KEYSTORE_BASE64` vers `/home/runner/work/release.keystore` et signe
+     l'APK ; sinon (ex: sur une PR), le preset de signature est retiré et l'APK
+     release est construit **non signé** (la vérification de signature est alors
+     sautée) ;
    - exporte l'APK (`--export-debug` ou `--export-release`) ;
-   - vérifie la signature avec `apksigner verify --print-certs` ;
+   - vérifie la signature avec `apksigner verify --print-certs` (sauf build release
+     non signé) ;
    - publie l'APK en **artifact** téléchargeable (`ZimutAdventure-android-debug`
      / `ZimutAdventure-android-release`) ;
    - **sur un tag `v*`** : attache l'APK release à la release GitHub.
@@ -112,8 +116,10 @@ les logs.
 ## 5. Déclenchement
 
 - À chaque **push sur `main`** et chaque **tag `v*`** (ex: `git tag v0.1.0 && git push origin v0.1.0`).
-- Sur **pull request** (l'APK release ne sera pas signé si les secrets manquent —
-  le job release échouera, c'est normal sur une PR de fork).
+- Sur **pull request** : les jobs debug et release passent tous les deux. L'APK
+  release est **non signé** sur une PR (les secrets ne sont exposés qu'aux
+  branches protégées / à `main`), ce qui permet de valider le build. La signature
+  n'a lieu que sur `main` et les tags `v*`, où les secrets sont disponibles.
 - Manuellement via **Actions → Build APK → Run workflow**.
 
 ## 6. Tester l'APK
