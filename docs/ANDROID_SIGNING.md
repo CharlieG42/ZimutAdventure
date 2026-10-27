@@ -98,12 +98,12 @@ Colle le résultat **tel quel** (une seule longue ligne) comme valeur du secret
    - configure les chemins Java SDK / Android SDK pour Godot ;
    - **release uniquement** : si les secrets de signature sont présents, décode
      `RELEASE_KEYSTORE_BASE64` vers `/home/runner/work/release.keystore` et signe
-     l'APK ; sinon (ex: sur une PR), le preset de signature est retiré et l'APK
-     release est construit **non signé** (la vérification de signature est alors
-     sautée) ;
+     l'APK avec ; sinon (ex: PR de fork sans accès aux secrets), génère un
+     **keystore jetable** (`throwaway`) — l'APK release reste signé et installable,
+     mais ne pourra jamais être publié (ne jamais utiliser ce keystore pour une
+     vraie release) ;
    - exporte l'APK (`--export-debug` ou `--export-release`) ;
-   - vérifie la signature avec `apksigner verify --print-certs` (sauf build release
-     non signé) ;
+   - vérifie la signature avec `apksigner verify --print-certs` ;
    - publie l'APK en **artifact** téléchargeable (`ZimutAdventure-android-debug`
      / `ZimutAdventure-android-release`) ;
    - **sur un tag `v*`** : attache l'APK release à la release GitHub.
@@ -116,10 +116,11 @@ les logs.
 ## 5. Déclenchement
 
 - À chaque **push sur `main`** et chaque **tag `v*`** (ex: `git tag v0.1.0 && git push origin v0.1.0`).
-- Sur **pull request** : les jobs debug et release passent tous les deux. L'APK
-  release est **non signé** sur une PR (les secrets ne sont exposés qu'aux
-  branches protégées / à `main`), ce qui permet de valider le build. La signature
-  n'a lieu que sur `main` et les tags `v*`, où les secrets sont disponibles.
+- Sur **pull request** : les jobs debug et release passent tous les deux. Si les
+  secrets de signature ne sont pas accessibles (PR de fork), l'APK release est signé
+  avec un **keystore jetable généré à la volée** — utile pour valider le build et
+  tester l'APK, mais **ne jamais le publier**. La vraie signature (ton keystore
+  `zimut`) n'a lieu que sur `main` et les tags `v*`, où les secrets sont disponibles.
 - Manuellement via **Actions → Build APK → Run workflow**.
 
 ## 6. Tester l'APK
