@@ -48,6 +48,7 @@ jobs:
       GODOT_ANDROID_KEYSTORE_RELEASE_PATH: /home/runner/work/release.keystore
       GODOT_ANDROID_KEYSTORE_RELEASE_USER: zimut
       GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+      RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
     steps:
       - uses: actions/checkout@v4
 
@@ -94,13 +95,13 @@ jobs:
           cat "$HOME/.config/godot/editor_settings-4.tres"
 
       - name: Restore release keystore (release only, when secrets are set)
-        if: matrix.build_type == 'release' && secrets.RELEASE_KEYSTORE_BASE64 != '' && secrets.RELEASE_KEYSTORE_PASSWORD != ''
+        if: matrix.build_type == 'release' && env.RELEASE_KEYSTORE_BASE64 != '' && secrets.RELEASE_KEYSTORE_PASSWORD != ''
         run: |
-          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > "$GODOT_ANDROID_KEYSTORE_RELEASE_PATH"
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > "$GODOT_ANDROID_KEYSTORE_RELEASE_PATH"
           chmod 600 "$GODOT_ANDROID_KEYSTORE_RELEASE_PATH"
 
       - name: Unset release keystore config when secrets are missing (PR without access)
-        if: matrix.build_type == 'release' && (secrets.RELEASE_KEYSTORE_BASE64 == '' || secrets.RELEASE_KEYSTORE_PASSWORD == '')
+        if: matrix.build_type == 'release' && (env.RELEASE_KEYSTORE_BASE64 == '' || secrets.RELEASE_KEYSTORE_PASSWORD == '')
         run: |
           sed -i 's|^keystore/release=.*|keystore/release=""|; s|^keystore/release_user=.*|keystore/release_user=""|' export_presets.cfg
           grep '^keystore/release' export_presets.cfg || true
