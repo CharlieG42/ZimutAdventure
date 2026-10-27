@@ -102,7 +102,12 @@ jobs:
         run: godot --headless --path . --import
 
       - name: Install Android build template (Gradle build)
-        run: godot --headless --path . --install-android-build-template
+        run: |
+          set -eu
+          TEMPLATES_DIR="$HOME/.local/share/godot/export_templates/4.7.stable"
+          mkdir -p .android
+          unzip -q -o "$TEMPLATES_DIR/android_source.zip" -d .android
+          echo "rootProject.name = \"GodotAndroid\"" >> .android/settings.gradle
 
       - name: Export APK (${{ matrix.build_type }})
         run: |
