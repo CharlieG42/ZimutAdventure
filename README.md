@@ -32,6 +32,24 @@ tests/             # tests headless (SceneTree)
 docs/              # GDD
 ```
 
+## Build Android (APK)
+
+Un workflow GitHub Actions (`.github/workflows/build-apk.yml`) produit un APK
+**debug** et un APK **release signé** à chaque push sur `main`, sur les tags `v*`
+et manuellement (Actions → Build APK).
+
+Pour le build release signé, 3 secrets sont requis (voir
+[docs/ANDROID_SIGNING.md](docs/ANDROID_SIGNING.md)) :
+`RELEASE_KEYSTORE_BASE64`, `RELEASE_KEYSTORE_PASSWORD`.
+
+En local :
+
+```bash
+sh tools/android/setup_android_sdk.sh   # installe le SDK Android (une fois)
+sh tools/android/export_apk.sh debug    # APK debug
+sh tools/android/export_apk.sh release  # APK release signé (voir docs/ANDROID_SIGNING.md)
+```
+
 ## Tests (headless)
 
 ```bash
