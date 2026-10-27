@@ -4,11 +4,13 @@ extends CanvasLayer
 @onready var journal_button: Button = $SafeArea/VBox/BottomBar/JournalButton
 @onready var map_button: Button = $SafeArea/VBox/BottomBar/MapButton
 @onready var sprint_button: Button = $SafeArea/VBox/BottomBar/SprintButton
+@onready var view_button: Button = $SafeArea/VBox/BottomBar/ViewButton
 @onready var compass_label: Label = $SafeArea/VBox/TopBar/CompassLabel
 @onready var clock_label: Label = $SafeArea/VBox/TopBar/ClockLabel
 @onready var interact_prompt: Label = $SafeArea/VBox/CenterPrompt
 @onready var toast: Label = $SafeArea/VBox/Toast
 @onready var joystick: Control = $VirtualJoystick
+@onready var camera_joystick: Control = $CameraJoystick
 @onready var touch_look: Control = $TouchLook
 
 var _player: CharacterBody3D
@@ -16,6 +18,7 @@ var _toast_timer: SceneTreeTimer
 var _interaction_manager: Node
 var _inventory: Node
 var _day_night: Node
+var _camera_joystick_vector: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	var is_touch := DisplayServer.get_name() == "android"
@@ -23,7 +26,9 @@ func _ready() -> void:
 	sprint_button.visible = is_touch
 	journal_button.visible = is_touch
 	map_button.visible = is_touch
+	view_button.visible = true
 	joystick.visible = is_touch
+	camera_joystick.visible = is_touch
 	touch_look.visible = is_touch
 
 	interact_button.pressed.connect(_on_interact_pressed)
@@ -31,6 +36,7 @@ func _ready() -> void:
 	sprint_button.button_up.connect(func(): Input.action_release("sprint"))
 	journal_button.pressed.connect(func(): Input.action_press("open_journal"))
 	map_button.pressed.connect(func(): Input.action_press("open_map"))
+	view_button.pressed.connect(_on_view_pressed)
 
 	_interaction_manager = InteractionManager
 	_inventory = Inventory
@@ -47,14 +53,34 @@ func _ready() -> void:
 	toast.visible = false
 
 	_player = get_tree().get_first_node_in_group("player") as CharacterBody3D
+	if _player == null:
+		var parent := get_parent()
+		if parent != null:
+			_player = parent.get_node_or_null("Player") as CharacterBody3D
 	if _player != null:
 		joystick.moved.connect(_player.set_joystick_vector)
 		touch_look.look_delta.connect(_player.apply_touch_look)
+		camera_joystick.moved.connect(_on_camera_joystick_moved)
+		if _player.has_signal("view_changed"):
+			_player.connect("view_changed", _on_view_changed)
+		_on_view_changed(_player.call("is_first_person"))
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _player != null:
+		if _camera_joystick_vector != Vector2.ZERO and _player.has_method("apply_camera_joystick"):
+			_player.call("apply_camera_joystick", _camera_joystick_vector, delta)
 		var yaw_deg := fmod(rad_to_deg(_player.global_rotation.y) + 360.0, 360.0)
 		compass_label.text = "%s %03d°" % [tr("HUD_NORTH"), int(yaw_deg)]
+
+func _on_camera_joystick_moved(vector: Vector2) -> void:
+	_camera_joystick_vector = vector
+
+func _on_view_pressed() -> void:
+	if _player != null and _player.has_method("toggle_view"):
+		_player.call("toggle_view")
+
+func _on_view_changed(is_first_person: bool) -> void:
+	view_button.text = tr("VIEW_FIRST_PERSON") if is_first_person else tr("VIEW_THIRD_PERSON")
 
 func show_toast(message: String, duration: float = 2.0) -> void:
 	toast.text = message

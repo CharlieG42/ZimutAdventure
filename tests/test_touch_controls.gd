@@ -1,7 +1,5 @@
 extends SceneTree
 
-var joystick_script: GDScript = load("res://scripts/ui/virtual_joystick.gd")
-var look_script: GDScript = load("res://scripts/ui/touch_look.gd")
 var interaction_manager_script: GDScript = load("res://scripts/autoload/interaction_manager.gd")
 
 func _init() -> void:
@@ -20,6 +18,13 @@ func _init() -> void:
 		root.add_child(joystick)
 		await process_frame
 
+		var base := joystick.get_node_or_null("Base") as Control
+		var knob := joystick.get_node_or_null("Knob") as Control
+		if base == null or knob == null:
+			errors.append("joystick must have Base and Knob children")
+		elif not base.visible:
+			errors.append("joystick base should be always visible (always_visible=true)")
+
 		var received: Array[Vector2] = []
 		joystick.moved.connect(func(v): received.append(v))
 
@@ -31,12 +36,21 @@ func _init() -> void:
 			var v := received[-1]
 			if v.x <= 0.0 or v.y != 0.0:
 				errors.append("joystick right-drag should give +x, got %s" % v)
-			if abs(v.x - 0.5) > 0.001:
-				errors.append("45px of 90px reach should give 0.5, got %.3f" % v.x)
+			var expected := 45.0 / 80.0
+			if abs(v.x - expected) > 0.001:
+				errors.append("45px of 80px reach should give %.3f, got %.3f" % [expected, v.x])
+
+		joystick.call("_update_knob", joystick.get("size") * 0.5 + Vector2(400.0, 0.0))
+		if received.is_empty() or received[-1].length() > 1.001:
+			errors.append("joystick vector should be clamped to 1, got %s" % (received[-1] if not received.is_empty() else "nothing"))
 
 		joystick._release()
 		if received.is_empty() or received[-1] != Vector2.ZERO:
 			errors.append("joystick release should emit zero vector")
+		if knob != null and knob.position != joystick.get("size") * 0.5 - knob.get("size") * 0.5:
+			errors.append("knob should return to center on release")
+		if base != null and not base.visible:
+			errors.append("base should stay visible after release")
 		joystick.free()
 
 	var look_scene := load("res://scenes/ui/touch_look.tscn") as PackedScene
@@ -70,9 +84,15 @@ func _init() -> void:
 		if player._joystick_vector.length() > 1.0:
 			errors.append("joystick vector should be clamped to 1, got %f" % player._joystick_vector.length())
 
+		var yaw_before := player.rotation.y
 		player.apply_touch_look(Vector2(0.5, 0.0))
-		if abs(player.rotation.y) < 0.001:
+		if abs(player.rotation.y - yaw_before) < 0.001:
 			errors.append("apply_touch_look should rotate the player")
+
+		var yaw_before_cam := player.rotation.y
+		player.call("apply_camera_joystick", Vector2(1.0, 0.0), 0.1)
+		if abs(player.rotation.y - yaw_before_cam) < 0.001:
+			errors.append("apply_camera_joystick should rotate the player")
 
 		player.free()
 
@@ -83,8 +103,14 @@ func _init() -> void:
 		var hud := hud_scene.instantiate()
 		root.add_child(hud)
 		await process_frame
-		if hud == null:
-			errors.append("hud.tscn should instantiate")
+		if hud.get_node_or_null("VirtualJoystick") == null:
+			errors.append("HUD missing move VirtualJoystick")
+		if hud.get_node_or_null("CameraJoystick") == null:
+			errors.append("HUD missing camera CameraJoystick")
+		if hud.get_node_or_null("TouchLook") == null:
+			errors.append("HUD missing TouchLook")
+		if hud.get_node_or_null("SafeArea/VBox/BottomBar/ViewButton") == null:
+			errors.append("HUD missing ViewButton")
 		hud.free()
 
 	im.free()
