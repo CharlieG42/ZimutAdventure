@@ -1,0 +1,22 @@
+# Godot 4-specific ignores
+.godot/
+.android/
+
+# Godot-specific export overrides
+# Keep these out of version control
+export_presets.cfg
+*.import
+
+# Imported translations
+locales/*.translation
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Build outputs
+build/
+dist/
