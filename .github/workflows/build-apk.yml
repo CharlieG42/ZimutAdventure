@@ -84,13 +84,14 @@ jobs:
       - name: Configure Godot Android toolchain paths
         run: |
           mkdir -p "$HOME/.config/godot"
-          cat > "$HOME/.config/godot/editor_settings-4.tres" <<'EOF'
+          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
           [gd_resource type="EditorSettings" format=3]
 
           [resource]
           export/android/java_sdk_path = "$JAVA_HOME"
           export/android/android_sdk_path = "$ANDROID_SDK_ROOT"
           EOF
+          cat "$HOME/.config/godot/editor_settings-4.tres"
 
       - name: Restore release keystore (release only)
         if: matrix.build_type == 'release'
@@ -105,9 +106,10 @@ jobs:
         run: |
           set -eu
           TEMPLATES_DIR="$HOME/.local/share/godot/export_templates/4.7.stable"
-          mkdir -p .android
-          unzip -q -o "$TEMPLATES_DIR/android_source.zip" -d .android
-          echo "rootProject.name = \"GodotAndroid\"" >> .android/settings.gradle
+          mkdir -p android/build
+          unzip -q -o "$TEMPLATES_DIR/android_source.zip" -d android/build
+          echo "rootProject.name = \"GodotAndroid\"" >> android/build/settings.gradle
+          ls android/build
 
       - name: Export APK (${{ matrix.build_type }})
         run: |
