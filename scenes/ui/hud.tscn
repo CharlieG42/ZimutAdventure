@@ -7,12 +7,15 @@
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
+[node name="TouchLook" parent="." instance=ExtResource("3_look")]
+
 [node name="SafeArea" type="MarginContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
@@ -22,11 +25,13 @@ theme_override_constants/margin_bottom = 16
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 
 [node name="TopBar" type="HBoxContainer" parent="SafeArea/VBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
+mouse_filter = 2
 
 [node name="CompassLabel" type="Label" parent="SafeArea/VBox/TopBar"]
 layout_mode = 2
@@ -67,6 +72,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 10
 alignment = 2
+mouse_filter = 2
 
 [node name="JournalButton" type="Button" parent="SafeArea/VBox/BottomBar"]
 layout_mode = 2
@@ -88,13 +94,14 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "Sprint"
 
-[node name="VirtualJoystick" parent="SafeArea" instance=ExtResource("2_joy")]
-anchors_preset = 0
+[node name="VirtualJoystick" parent="." instance=ExtResource("2_joy")]
+anchors_preset = 7
+anchor_left = 0.0
+anchor_top = 1.0
 anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 120.0
-offset_top = 700.0
+anchor_bottom = 1.0
+grow_vertical = 0
+offset_left = 60.0
+offset_top = -320.0
 offset_right = 380.0
-offset_bottom = 960.0
-
-[node name="TouchLook" parent="SafeArea" instance=ExtResource("3_look")]
+offset_bottom = 0.0

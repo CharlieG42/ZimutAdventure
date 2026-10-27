@@ -23,8 +23,8 @@ func _init() -> void:
 		var received: Array[Vector2] = []
 		joystick.moved.connect(func(v): received.append(v))
 
-		joystick._touch_index = 0
-		joystick._update_knob(joystick._center + Vector2(45.0, 0.0))
+		joystick.set("_touch_index", 0)
+		joystick.call("_update_knob", joystick.get("size") * 0.5 + Vector2(45.0, 0.0))
 		if received.is_empty():
 			errors.append("joystick should emit moved on drag")
 		else:

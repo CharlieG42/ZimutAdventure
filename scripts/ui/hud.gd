@@ -8,8 +8,8 @@ extends CanvasLayer
 @onready var clock_label: Label = $SafeArea/VBox/TopBar/ClockLabel
 @onready var interact_prompt: Label = $SafeArea/VBox/CenterPrompt
 @onready var toast: Label = $SafeArea/VBox/Toast
-@onready var joystick: Control = $SafeArea/VirtualJoystick
-@onready var touch_look: Control = $SafeArea/TouchLook
+@onready var joystick: Control = $VirtualJoystick
+@onready var touch_look: Control = $TouchLook
 
 var _player: CharacterBody3D
 var _toast_timer: SceneTreeTimer
