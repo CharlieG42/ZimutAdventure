@@ -18,7 +18,7 @@ func _ready() -> void:
 	_base.position = _center - _base.size * 0.5
 	_knob.position = _center - _knob.size * 0.5
 	_base.visible = always_visible or DisplayServer.get_name() == "android"
-	visible = DisplayServer.get_name() == "android"
+	visible = true
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:

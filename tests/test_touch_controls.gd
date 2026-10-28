@@ -24,6 +24,19 @@ func _init() -> void:
 			errors.append("joystick must have Base and Knob children")
 		elif not base.visible:
 			errors.append("joystick base should be always visible (always_visible=true)")
+		if joystick.visible == false:
+			errors.append("joystick control should be visible on every platform (always-on joysticks)")
+		if base != null:
+			var tex := base.get("texture") as Texture2D
+			if tex == null:
+				errors.append("joystick base must have a texture")
+			elif tex is PlaceholderTexture2D:
+				errors.append("joystick base texture must be a real image, not a PlaceholderTexture2D (renders as nothing in exported APK)")
+			var ktex := (knob as Control).get("texture") as Texture2D
+			if ktex == null:
+				errors.append("joystick knob must have a texture")
+			elif ktex is PlaceholderTexture2D:
+				errors.append("joystick knob texture must be a real image, not a PlaceholderTexture2D")
 
 		var received: Array[Vector2] = []
 		joystick.moved.connect(func(v): received.append(v))
