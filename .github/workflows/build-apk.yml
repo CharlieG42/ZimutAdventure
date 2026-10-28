@@ -18,6 +18,28 @@ env:
   ANDROID_HOME: /home/runner/android-sdk
 
 jobs:
+  cleanup-artifacts:
+    name: Purge anciens artefacts APK
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      actions: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Supprime les artefacts APK au-delà des 2 plus récents par type
+        run: |
+          set -e
+          for type in debug release; do
+            ids=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+              --jq --arg t "ZimutAdventure-android-$type" \
+              '[.artifacts[] | select(.name == $t) | .id] | sort | .[2:] | .[]')
+            for id in $ids; do
+              gh api -X DELETE "repos/${GITHUB_REPOSITORY}/actions/artifacts/$id" > /dev/null
+              echo "supprimé: $type #$id"
+            done
+          done
+
   test:
     name: Tests (Godot headless)
     runs-on: ubuntu-latest
