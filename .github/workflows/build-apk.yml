@@ -67,6 +67,37 @@ jobs:
           done
           echo "Purge complète terminée" 
 
+  storage-report:
+    name: Rapport stockage artefacts
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Affiche l'usage du stockage des artefacts
+        run: |
+          set -e
+          if ! command -v gh > /dev/null; then
+            echo "gh CLI indisponible, rapport ignoré"
+            exit 0
+          fi
+          echo "## Usage du stockage des artefacts"
+          echo ""
+          echo "| Artefact | Créé | Taille | Retention |"
+          echo "|----------|------|---------|-----------|"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | [.name, .created_at, ((.size_in_bytes/1048576*100|floor)/100|tostring) + " Mo", (.expired|if . then "expiré" else "actif" end)] | @tsv' \
+            | while IFS=$'\t' read -r name created size expired; do
+                echo "| $name | $created | $size | $expired |"
+              done
+          total=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+            --jq '[.artifacts[].size_in_bytes] | (add // 0) / 1048576 | floor')
+          echo ""
+          echo "**Total actuel : ${total} Mo**"
+          echo ""
+          echo "> Rappel : le quota de stockage Actions est recalculé toutes les 6–12 h ; les suppressions ne libèrent l'espace qu'après ce délai."
+
   test:
     name: Tests (Godot headless)
     runs-on: ubuntu-latest
@@ -211,11 +242,10 @@ jobs:
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
-        continue-on-error: true
         with:
           name: ZimutAdventure-android-${{ matrix.build_type }}
           path: build/android/ZimutAdventure-${{ matrix.build_type }}.apk
-          retention-days: 7
+          retention-days: 1
 
       - name: Attach APK to tag release (release only, on tags)
         if: matrix.build_type == 'release' && startsWith(github.ref, 'refs/tags/v')
