@@ -32,8 +32,7 @@ jobs:
           set -e
           for type in debug release; do
             ids=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
-              --jq --arg t "ZimutAdventure-android-$type" \
-              '[.artifacts[] | select(.name == $t) | .id] | sort | .[2:] | .[]')
+              --jq ".artifacts | map(select(.name == \"ZimutAdventure-android-$type\")) | map(.id) | sort | .[2:] | .[]")
             for id in $ids; do
               gh api -X DELETE "repos/${GITHUB_REPOSITORY}/actions/artifacts/$id" > /dev/null
               echo "supprimé: $type #$id"
