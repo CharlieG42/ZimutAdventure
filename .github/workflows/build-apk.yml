@@ -19,7 +19,7 @@ env:
 
 jobs:
   cleanup-artifacts:
-    name: Purge anciens artefacts APK
+    name: Purge artefacts APK (garde les 2 plus récents par type)
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
@@ -47,6 +47,25 @@ jobs:
           echo "--- après purge ---"
           gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
             --jq '[.artifacts[] | {name, created_at, size_mb: (.size_in_bytes/1048576|floor)}]' || true
+
+      - name: Purge TOUS les artefacts APK si le quota est atteint
+        run: |
+          set -e
+          echo "Vérification du quota de stockage..."
+          remaining=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" --jq '.artifacts | length')
+          total_mb=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" --jq '[.artifacts[].size_in_bytes] | (add // 0) / 1048576 | floor')
+          echo "Artefacts restants: $remaining ($total_mb Mo)"
+          if [ "$total_mb" -lt 100 ]; then
+            echo "Quota probablement OK, pas de purge complète nécessaire"
+            exit 0
+          fi
+          echo "Quota probablement atteint, suppression de TOUS les artefacts APK..."
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | select(.name | startswith("ZimutAdventure-android-")) | .id' | while read -r id; do
+            gh api -X DELETE "repos/${GITHUB_REPOSITORY}/actions/artifacts/$id" > /dev/null
+            echo "supprimé (purge complète): #$id"
+          done
+          echo "Purge complète terminée" 
 
   test:
     name: Tests (Godot headless)
@@ -92,17 +111,27 @@ jobs:
           SDK_ROOT="$ANDROID_SDK_ROOT"
           mkdir -p "$SDK_ROOT/cmdline-tools"
           cd "$SDK_ROOT"
-          curl -fSL -o cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+          curl -fSL --retry 5 --retry-delay 10 --retry-all-errors -o cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
           unzip -q -o cmdline-tools.zip -d cmdline-tools
           mv cmdline-tools/cmdline-tools cmdline-tools/latest
           rm -f cmdline-tools.zip
           yes | cmdline-tools/latest/bin/sdkmanager --sdk_root="$SDK_ROOT" --licenses > /dev/null
-          cmdline-tools/latest/bin/sdkmanager --sdk_root="$SDK_ROOT" \
-            "platform-tools" \
-            "build-tools;36.1.0" \
-            "platforms;android-36" \
-            "cmake;3.10.2.4988404" \
-            "ndk;29.0.14206865"
+          for attempt in 1 2 3; do
+            echo "Tentative d'installation du SDK #$attempt..."
+            if cmdline-tools/latest/bin/sdkmanager --sdk_root="$SDK_ROOT" \
+              "platform-tools" \
+              "build-tools;36.1.0" \
+              "platforms;android-36" \
+              "cmake;3.10.2.4988404" \
+              "ndk;29.0.14206865"; then
+              echo "SDK installé avec succès"
+              exit 0
+            fi
+            echo "Tentative #$attempt échouée, nouvelle tentative dans 15s..."
+            sleep 15
+          done
+          echo "::error::Échec de l'installation du SDK après 3 tentatives"
+          exit 1
 
       - name: Setup Godot + export templates
         uses: solarlabyrinth/action-setup-godot@v3
