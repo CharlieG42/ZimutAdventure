@@ -54,13 +54,24 @@ func _apply() -> void:
 		var sky: Sky = environment.sky
 		if sky != null and sky.sky_material is ProceduralSkyMaterial:
 			var sky_mat: ProceduralSkyMaterial = sky.sky_material
-			sky_mat.sky_top_color = Color(0.10, 0.13, 0.28).lerp(Color(0.45, 0.65, 0.85), day_factor)
-			sky_mat.sky_horizon_color = Color(0.05, 0.06, 0.12).lerp(Color(0.85, 0.60, 0.40), day_factor)
+			sky_mat.sky_top_color = Color(0.06, 0.09, 0.22).lerp(Color(0.45, 0.65, 0.85), day_factor)
+			sky_mat.sky_horizon_color = Color(0.04, 0.05, 0.10).lerp(Color(0.85, 0.60, 0.40), day_factor)
 			sky_mat.ground_bottom_color = Color(0.02, 0.02, 0.05).lerp(Color(0.35, 0.22, 0.14), day_factor)
 			sky_mat.ground_horizon_color = Color(0.03, 0.03, 0.07).lerp(Color(0.60, 0.40, 0.25), day_factor)
+			var night_factor := 1.0 - day_factor
+			sky_mat.sky_cover_modulate = Color(0.15, 0.18, 0.30, 1.0).lerp(Color(0.9, 0.85, 0.8, 1.0), day_factor)
+			sky_mat.sky_energy_multiplier = lerp(0.3, 1.0, day_factor)
+			sky_mat.ground_energy_multiplier = lerp(0.2, 1.0, day_factor)
 		if environment.background_mode == Environment.BG_SKY:
-			environment.ambient_light_color = Color(0.15, 0.16, 0.22).lerp(Color(0.75, 0.65, 0.55), day_factor)
-			environment.ambient_light_energy = lerp(0.15, 0.6, day_factor)
+			environment.ambient_light_color = Color(0.10, 0.12, 0.20).lerp(Color(0.75, 0.65, 0.55), day_factor)
+			environment.ambient_light_energy = lerp(0.08, 0.6, day_factor)
+			var nf := 1.0 - day_factor
+			environment.fog_light_color = Color(0.08, 0.09, 0.14).lerp(Color(0.75, 0.55, 0.38), day_factor)
+			environment.fog_light_energy = lerp(0.15, 0.6, day_factor)
+			environment.fog_density = lerp(0.0009, 0.0018, day_factor)
+			environment.glow_enabled = true
+			environment.glow_intensity = lerp(0.4, 0.8, day_factor)
+			environment.glow_bloom = lerp(0.05, 0.15, day_factor)
 	_update_phase()
 
 func _day_factor() -> float:

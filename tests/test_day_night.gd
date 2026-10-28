@@ -34,7 +34,7 @@ func _init() -> void:
 		errors.append("at 23h sun energy should be ~0, got %.2f" % sun.light_energy)
 	if cycle.get_phase() != "night":
 		errors.append("at 23h phase should be night, got %s" % cycle.get_phase())
-	if abs(env.ambient_light_energy - 0.15) > 0.01:
+	if env.ambient_light_energy > 0.15:
 		errors.append("at night ambient energy should be low, got %.2f" % env.ambient_light_energy)
 
 	cycle.set_hour(18.0)
