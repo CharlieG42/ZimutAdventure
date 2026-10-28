@@ -27,8 +27,8 @@ func _ready() -> void:
 	journal_button.visible = is_touch
 	map_button.visible = is_touch
 	view_button.visible = true
-	joystick.visible = is_touch
-	camera_joystick.visible = is_touch
+	joystick.visible = true
+	camera_joystick.visible = true
 	touch_look.visible = is_touch
 
 	interact_button.pressed.connect(_on_interact_pressed)
