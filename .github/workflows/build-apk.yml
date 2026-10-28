@@ -211,11 +211,10 @@ jobs:
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
-        continue-on-error: true
         with:
           name: ZimutAdventure-android-${{ matrix.build_type }}
           path: build/android/ZimutAdventure-${{ matrix.build_type }}.apk
-          retention-days: 7
+          retention-days: 1
 
       - name: Attach APK to tag release (release only, on tags)
         if: matrix.build_type == 'release' && startsWith(github.ref, 'refs/tags/v')
