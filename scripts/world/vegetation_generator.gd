@@ -21,10 +21,12 @@ static func _build_mesh(vertices: PackedVector3Array, normals: PackedVector3Arra
 	surfaces[Mesh.ARRAY_INDEX] = indices
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surfaces)
-	var material := StandardMaterial3D.new()
-	material.albedo_color = color
-	material.roughness = 1.0
-	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var material := ShaderMaterial.new()
+	material.shader = load("res://assets/landscapes/shaders/prop_foliage.gdshader")
+	material.set_shader_parameter("albedo", color)
+	material.set_shader_parameter("albedo_light", color.lightened(0.35))
+	material.set_shader_parameter("variation_scale", 2.0)
+	material.set_shader_parameter("light_boost", 0.4)
 	mesh.surface_set_material(0, material)
 	return mesh
 
@@ -67,7 +69,7 @@ static func _generate_pine(rng: RandomNumberGenerator) -> ArrayMesh:
 	for seg in range(segments):
 		indices.append_array([seg, trunk_top, seg + 1])
 
-	var mesh := _build_mesh(vertices, normals, uvs, indices, Color(0.24, 0.14, 0.07))
+	var mesh := _build_trunk_mesh(vertices, normals, uvs, indices)
 
 	var fverts := PackedVector3Array()
 	var fnormals := PackedVector3Array()
@@ -89,11 +91,31 @@ static func _generate_pine(rng: RandomNumberGenerator) -> ArrayMesh:
 	fsurfaces[Mesh.ARRAY_INDEX] = findices
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, fsurfaces)
 	var green := Color.from_hsv(rng.randf_range(0.28, 0.38), rng.randf_range(0.5, 0.7), rng.randf_range(0.22, 0.32))
-	var fmat := StandardMaterial3D.new()
-	fmat.albedo_color = green
-	fmat.roughness = 1.0
-	fmat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var fmat := ShaderMaterial.new()
+	fmat.shader = load("res://assets/landscapes/shaders/prop_foliage.gdshader")
+	fmat.set_shader_parameter("albedo", green)
+	fmat.set_shader_parameter("albedo_light", green.lightened(0.4))
+	fmat.set_shader_parameter("variation_scale", 2.5)
+	fmat.set_shader_parameter("light_boost", 0.45)
 	mesh.surface_set_material(1, fmat)
+	return mesh
+
+static func _build_trunk_mesh(vertices: PackedVector3Array, normals: PackedVector3Array, uvs: PackedVector2Array, indices: PackedInt32Array) -> ArrayMesh:
+	var surfaces: Array = []
+	surfaces.resize(Mesh.ARRAY_MAX)
+	surfaces[Mesh.ARRAY_VERTEX] = vertices
+	surfaces[Mesh.ARRAY_NORMAL] = normals
+	surfaces[Mesh.ARRAY_TEX_UV] = uvs
+	surfaces[Mesh.ARRAY_INDEX] = indices
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surfaces)
+	var material := ShaderMaterial.new()
+	material.shader = load("res://assets/landscapes/shaders/prop_trunk.gdshader")
+	material.set_shader_parameter("albedo", Color(0.24, 0.14, 0.07))
+	material.set_shader_parameter("albedo_light", Color(0.38, 0.22, 0.10))
+	material.set_shader_parameter("bark_scale", 6.0)
+	material.set_shader_parameter("bark_depth", 0.4)
+	mesh.surface_set_material(0, material)
 	return mesh
 
 static func _generate_shrub(rng: RandomNumberGenerator) -> ArrayMesh:

@@ -22,7 +22,7 @@ func _init() -> void:
 	if visuals == null:
 		errors.append("player should have a Visuals node for the drawn character")
 	else:
-		for part in ["Legs", "Torso", "Head"]:
+		for part in ["LegL", "LegR", "Torso", "Head", "Torso/Backpack", "Torso/ArmL", "Torso/ArmR"]:
 			var mesh := visuals.get_node_or_null(part) as MeshInstance3D
 			if mesh == null:
 				errors.append("character visuals missing %s" % part)

@@ -21,11 +21,16 @@ static func _rock_color(rng: RandomNumberGenerator, base: Color) -> Color:
 static func _build_mesh(surfaces: Array) -> ArrayMesh:
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surfaces)
-	var material := StandardMaterial3D.new()
-	material.roughness = 0.9
-	material.metallic = 0.0
-	mesh.surface_set_material(0, material)
+	mesh.surface_set_material(0, _rock_material())
 	return mesh
+
+static func _rock_material() -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = load("res://assets/landscapes/shaders/prop_rock.gdshader")
+	material.set_shader_parameter("grain_scale", 4.0)
+	material.set_shader_parameter("grain_strength", 0.35)
+	material.set_shader_parameter("roughness_base", 0.9)
+	return material
 
 static func _generate_hoodoo(rng: RandomNumberGenerator) -> ArrayMesh:
 	var height := rng.randf_range(8.0, 22.0)
@@ -86,8 +91,9 @@ static func _generate_hoodoo(rng: RandomNumberGenerator) -> ArrayMesh:
 	surfaces[Mesh.ARRAY_INDEX] = indices
 
 	var mesh := _build_mesh(surfaces)
-	var mat := mesh.surface_get_material(0) as StandardMaterial3D
-	mat.albedo_color = _rock_color(rng, Color(0.62, 0.32, 0.16))
+	var mat := mesh.surface_get_material(0) as ShaderMaterial
+	mat.set_shader_parameter("albedo", _rock_color(rng, Color(0.62, 0.32, 0.16)))
+	mat.set_shader_parameter("albedo_dark", _rock_color(rng, Color(0.38, 0.18, 0.09)))
 	return mesh
 
 static func _generate_butte(rng: RandomNumberGenerator) -> ArrayMesh:
@@ -150,8 +156,9 @@ static func _generate_butte(rng: RandomNumberGenerator) -> ArrayMesh:
 	surfaces[Mesh.ARRAY_INDEX] = indices
 
 	var mesh := _build_mesh(surfaces)
-	var mat := mesh.surface_get_material(0) as StandardMaterial3D
-	mat.albedo_color = _rock_color(rng, Color(0.72, 0.42, 0.2))
+	var mat := mesh.surface_get_material(0) as ShaderMaterial
+	mat.set_shader_parameter("albedo", _rock_color(rng, Color(0.72, 0.42, 0.2)))
+	mat.set_shader_parameter("albedo_dark", _rock_color(rng, Color(0.45, 0.24, 0.12)))
 	return mesh
 
 static func _generate_boulder(rng: RandomNumberGenerator) -> ArrayMesh:
@@ -198,6 +205,7 @@ static func _generate_boulder(rng: RandomNumberGenerator) -> ArrayMesh:
 	surfaces[Mesh.ARRAY_INDEX] = indices
 
 	var mesh := _build_mesh(surfaces)
-	var mat := mesh.surface_get_material(0) as StandardMaterial3D
-	mat.albedo_color = _rock_color(rng, Color(0.5, 0.28, 0.15))
+	var mat := mesh.surface_get_material(0) as ShaderMaterial
+	mat.set_shader_parameter("albedo", _rock_color(rng, Color(0.5, 0.28, 0.15)))
+	mat.set_shader_parameter("albedo_dark", _rock_color(rng, Color(0.3, 0.16, 0.08)))
 	return mesh
