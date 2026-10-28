@@ -99,9 +99,12 @@ Chaque région = **une grande carte ouverte** (plusieurs dizaines de km² en jeu
 - C : journal (bestiaire, carte, notes)
 - B : boussole rapide (azimut actuel)
 - Clic droit : observer avec les jumelles
+- V : basculer entre vue 1ère personne et vue 3ème personne (caméra dans le dos du personnage)
 
 ### 6.2 Android (tactile)
-- **Stick virtuel** gauche pour le déplacement, zone de droite pour la caméra.
+- **Deux sticks virtuels toujours visibles** : coin bas-gauche pour le déplacement, coin bas-droit pour la caméra.
+- La caméra peut aussi être bougée en glissant le doigt n'importe où sur l'écran (hors des sticks).
+- Bouton **vue** (1ère / 3ème personne) : en 3ème personne, la caméra suit le personnage dessiné par le dessus.
 - Boutons contextuels (interagir, inventaire, carte, journal) en overlay.
 - Carte du monde et journal adaptés au tactile (pinch-to-zoom sur la carte).
 - Mode **portrait déconseillé** : jeu conçu en paysage ; l'interface s'adapte mais le paysage est recommandé.

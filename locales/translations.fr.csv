@@ -24,3 +24,6 @@ PHASE_DAY,Jour
 PHASE_DUSK,Crépuscule
 PHASE_NIGHT,Nuit
 PHASE_DAWN,Aube
+ACTION_TOGGLE_VIEW,Changer de vue
+VIEW_FIRST_PERSON,1ère personne
+VIEW_THIRD_PERSON,3ème personne
