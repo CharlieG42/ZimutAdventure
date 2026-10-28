@@ -30,14 +30,23 @@ jobs:
       - name: Supprime les artefacts APK au-delà des 2 plus récents par type
         run: |
           set -e
+          KEEP=2
           for type in debug release; do
-            ids=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
-              --jq ".artifacts | map(select(.name == \"ZimutAdventure-android-$type\")) | map(.id) | sort | .[2:] | .[]")
-            for id in $ids; do
+            gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+              --jq ".artifacts | map(select(.name == \"ZimutAdventure-android-$type\")) | sort_by(.created_at) | reverse" > /tmp/all_$type.json
+            total=$(jq length /tmp/all_$type.json)
+            if [ "$total" -le "$KEEP" ]; then
+              echo "$type: $total artefact(s), rien à supprimer (garde $KEEP)"
+              continue
+            fi
+            jq -r --argjson keep "$KEEP" '.[$keep:] | .[].id' /tmp/all_$type.json | while read -r id; do
               gh api -X DELETE "repos/${GITHUB_REPOSITORY}/actions/artifacts/$id" > /dev/null
               echo "supprimé: $type #$id"
             done
           done
+          echo "--- après purge ---"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+            --jq '[.artifacts[] | {name, created_at, size_mb: (.size_in_bytes/1048576|floor)}]' || true
 
   test:
     name: Tests (Godot headless)
