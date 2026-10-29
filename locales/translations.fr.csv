@@ -49,3 +49,4 @@ INVENTORY_EMPTY,Sac vide.
 JOURNAL_INVENTORY_TITLE,Sac — inventaire
 ACTION_CLOSE,Fermer
 SIGN_CANYON_1,Sentier du canyon - méfiez-vous de la tombée de la nuit !
+ACTION_BREAK_ROCK,Casser le rocher

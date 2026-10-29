@@ -49,3 +49,4 @@ INVENTORY_EMPTY,Sack is empty.
 JOURNAL_INVENTORY_TITLE,Belongings
 ACTION_CLOSE,Close
 SIGN_CANYON_1,Canyon trail - watch your step at dusk!
+ACTION_BREAK_ROCK,Break rock

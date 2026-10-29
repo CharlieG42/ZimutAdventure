@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://zimutcanyonplay"]
+[gd_scene load_steps=13 format=3 uid="uid://zimutcanyonplay"]
 
 [ext_resource type="Script" path="res://scripts/world/landscape_manager.gd" id="1_landscape"]
 [ext_resource type="PackedScene" uid="uid://zimutplayer0001" path="res://scenes/player/player.tscn" id="2_player"]
@@ -9,6 +9,8 @@
 [ext_resource type="PackedScene" path="res://scenes/interaction/campfire.tscn" id="7_campfire"]
 [ext_resource type="PackedScene" path="res://scenes/interaction/signpost.tscn" id="8_sign"]
 [ext_resource type="PackedScene" path="res://scenes/interaction/wood_item.tscn" id="9_wood"]
+[ext_resource type="Script" path="res://scripts/world/breakable_rock_spawner.gd" id="10_rockspawn"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/breakable_rock.tscn" id="11_rock"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.45, 0.65, 0.85, 1)
@@ -87,6 +89,11 @@ message_key = "SIGN_CANYON_1"
 [node name="Player" parent="." instance=ExtResource("2_player")]
 groups = ["player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 12, -30)
+
+[node name="BreakableRocks" type="Node3D" parent="."]
+script = ExtResource("10_rockspawn")
+rock_scene = ExtResource("11_rock")
+count = 25
 
 [node name="HUD" parent="." instance=ExtResource("5_hud")]
 
