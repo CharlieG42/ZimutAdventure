@@ -266,7 +266,7 @@ jobs:
 
             > Release mise à jour à chaque build. Les artefacts CI restent aussi disponibles dans l'onglet Actions quand le quota de stockage le permet.
           draft: false
-          prerelease: true
+          prerelease: false
           files: build/android/ZimutAdventure-${{ matrix.build_type }}.apk
 
       - name: Attach APK to tag release (release only, on tags)
