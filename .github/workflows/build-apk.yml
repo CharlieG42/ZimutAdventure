@@ -250,7 +250,7 @@ jobs:
           path: build/android/ZimutAdventure-${{ matrix.build_type }}.apk
           retention-days: 1
 
-      - name: Publish APK to draft release (build-latest)
+      - name: Publish APK to release (build-latest)
         if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         env:
@@ -264,8 +264,8 @@ jobs:
             - **ZimutAdventure-debug.apk** : build debug
             - **ZimutAdventure-release.apk** : build release (signé en CI)
 
-            > Release draft mise à jour à chaque build. Les artefacts CI restent aussi disponibles dans l'onglet Actions quand le quota de stockage le permet.
-          draft: true
+            > Release mise à jour à chaque build. Les artefacts CI restent aussi disponibles dans l'onglet Actions quand le quota de stockage le permet.
+          draft: false
           prerelease: true
           files: build/android/ZimutAdventure-${{ matrix.build_type }}.apk
 
