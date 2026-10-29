@@ -50,7 +50,7 @@ static func _generate_pine(rng: RandomNumberGenerator) -> ArrayMesh:
 	var trunk_radius := rng.randf_range(0.08, 0.14)
 	var foliage_height := rng.randf_range(3.5, 6.5)
 	var foliage_radius := rng.randf_range(1.2, 2.2)
-	var segments := 6
+	var segments := 7
 
 	var vertices := PackedVector3Array()
 	var normals := PackedVector3Array()
@@ -75,12 +75,12 @@ static func _generate_pine(rng: RandomNumberGenerator) -> ArrayMesh:
 	var fnormals := PackedVector3Array()
 	var fuvs := PackedVector2Array()
 	var findices := PackedInt32Array()
-	var layers := 3
+	var layers := 4
 	for layer in range(layers):
 		var t := float(layer) / (layers - 1)
 		var base_y := trunk_height * 0.6 + t * foliage_height
 		var radius := foliage_radius * (1.0 - t * 0.85)
-		var height := foliage_height * 0.45
+		var height := foliage_height * 0.42
 		_cone(fverts, fnormals, fuvs, findices, base_y, height, radius, segments, Vector3.ZERO)
 
 	var fsurfaces: Array = []

@@ -54,7 +54,21 @@ void fragment() {
 	float grain = fbm3(v_world_pos * grain_scale);
 	vec3 col = mix(albedo_dark.rgb, albedo.rgb, grain * grain_strength + (1.0 - grain_strength) * 0.5);
 
-	float ndotl = max(dot(normalize(v_normal), vec3(0.4, 0.8, 0.3)), 0.0);
+	// Strates sédimentaires horizontales : bandes de teinte par hauteur monde,
+	// déformées par le grain pour une érosion irrégulière.
+	float band = sin(v_world_pos.y * 1.4 + grain * 2.5);
+	float strata = smoothstep(-0.35, 0.35, band);
+	col = mix(col * 0.82, col * 1.12, strata);
+
+	// Poudre claire sur les faces vers le haut (poussière déposée).
+	vec3 n = normalize(v_normal);
+	float up = max(n.y, 0.0);
+	col = mix(col, col * 1.18 + vec3(0.06, 0.05, 0.03), up * 0.4 * grain);
+	// Ombre renforcée dans les creux orientés vers le bas.
+	float under = max(-n.y, 0.0);
+	col = mix(col, col * 0.7, under * 0.5);
+
+	float ndotl = max(dot(n, vec3(0.4, 0.8, 0.3)), 0.0);
 	vec3 shaded = mix(albedo_dark.rgb * 0.6, col, ndotl * 0.5 + 0.5);
 
 	ALBEDO = shaded;

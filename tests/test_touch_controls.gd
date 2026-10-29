@@ -124,6 +124,12 @@ func _init() -> void:
 			errors.append("HUD missing TouchLook")
 		if hud.get_node_or_null("SafeArea/VBox/BottomBar/ViewButton") == null:
 			errors.append("HUD missing ViewButton")
+		var base_child := hud.get_node_or_null("VirtualJoystick/Base") as Control
+		var knob_child := hud.get_node_or_null("VirtualJoystick/Knob") as Control
+		if base_child != null and base_child.mouse_filter != Control.MOUSE_FILTER_IGNORE:
+			errors.append("joystick Base must ignore mouse (mouse_filter=2) so touches reach the joystick parent, got %d" % base_child.mouse_filter)
+		if knob_child != null and knob_child.mouse_filter != Control.MOUSE_FILTER_IGNORE:
+			errors.append("joystick Knob must ignore mouse (mouse_filter=2) so touches reach the joystick parent, got %d" % knob_child.mouse_filter)
 		hud.free()
 
 	im.free()
