@@ -82,8 +82,8 @@ void fragment() {
 	vec3 albedo = mix(dust, rock, rock_factor);
 
 	// Poussière accumulée sur les replats et sommets (faces vers le haut).
-	float flat = 1.0 - clamp(v_slope * 2.0, 0.0, 1.0);
-	albedo = mix(albedo, dust, flat * ledge_dust);
+	float flatness = 1.0 - clamp(v_slope * 2.0, 0.0, 1.0);
+	albedo = mix(albedo, dust, flatness * ledge_dust);
 
 	float height_mix = smoothstep(sand_blend_height - 4.0, sand_blend_height + 4.0, v_height);
 	albedo = mix(albedo, dust, height_mix * 0.4);

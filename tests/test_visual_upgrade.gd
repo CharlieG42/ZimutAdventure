@@ -82,17 +82,17 @@ func _init() -> void:
 		if not env.adjustment_enabled:
 			errors.append("color adjustment should be enabled for a richer look")
 
-	// Le feuillage et le tronc doivent avoir un balancement au vent.
+	# Le feuillage et le tronc doivent avoir un balancement au vent.
 	var foliage_shader := load("res://assets/landscapes/shaders/prop_foliage.gdshader") as Shader
 	if foliage_shader != null and not foliage_shader.code.contains("wind_strength"):
 		errors.append("foliage shader should support wind sway (wind_strength)")
 	var trunk_shader := load("res://assets/landscapes/shaders/prop_trunk.gdshader") as Shader
 	if trunk_shader != null and not trunk_shader.code.contains("wind_strength"):
 		errors.append("trunk shader should support wind sway (wind_strength)")
-	// Le terrain doit avoir des strates par hauteur et des replats poussiéreux.
+	# Le terrain doit avoir des strates par hauteur et des replats poussiéreux.
 	var terrain_shader := load("res://assets/landscapes/shaders/canyon_terrain.gdshader") as Shader
 	if terrain_shader != null:
-		if not terrain_shader.code.contains("v_height * strata_scale") and not terrain_shader.code.contains("(v_height + warp) * strata_scale"):
+		if not terrain_shader.code.contains("(v_height + warp) * strata_scale"):
 			errors.append("terrain shader should use world-height strata")
 		if not terrain_shader.code.contains("ledge_dust"):
 			errors.append("terrain shader should have ledge dust on flat areas")
