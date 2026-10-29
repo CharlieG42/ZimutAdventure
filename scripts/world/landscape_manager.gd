@@ -16,6 +16,9 @@ var _terrain: MeshInstance3D
 var _collision_body: StaticBody3D
 var _props_root: Node3D
 var _prop_collision: StaticBody3D
+## Transformations de toutes les instances du décor (utile aux tests : le rendu
+## headless ne relit pas les MultiMesh).
+var prop_placements: Array[Transform3D] = []
 
 func _ready() -> void:
 	rng.seed = seed_value
@@ -182,6 +185,7 @@ func terrain_height_at(world_x: float, world_z: float) -> float:
 	return _height_at(nx, nz)
 
 func _place_props() -> void:
+	prop_placements.clear()
 	_props_root = Node3D.new()
 	_props_root.name = "Props"
 	add_child(_props_root)
@@ -194,16 +198,19 @@ func _place_props() -> void:
 		_prop_collision.name = "PropCollision"
 		add_child(_prop_collision)
 
-	# [type, nombre, grand rocher ?, rayon, hauteur, sphère ?]
+	# [type, nombre, grand rocher ?, forme sphérique ?, part du rayon du maillage]
 	var rocks := [
-		[RockGenerator.RockType.HOODOO, hoodoo_count, true, 2.2, 13.0, false],
-		[RockGenerator.RockType.BUTTE, butte_count, true, 10.0, 18.0, false],
-		[RockGenerator.RockType.BOULDER, boulder_count, false, 0.8, 1.1, true],
+		[RockGenerator.RockType.HOODOO, hoodoo_count, true, false, 0.7],
+		[RockGenerator.RockType.BUTTE, butte_count, true, false, 0.85],
+		[RockGenerator.RockType.BOULDER, boulder_count, false, true, 0.85],
 	]
 	for rock in rocks:
 		var mesh: ArrayMesh = RockGenerator.generate(rock[0] as RockGenerator.RockType, rng)
+		# Collision calquée sur le maillage réellement généré (tailles aléatoires).
+		var box := mesh.get_aabb()
+		var radius := maxf(box.size.x, box.size.z) * 0.5 * (rock[4] as float)
 		_props_root.add_child(_place_multimesh(mesh, rock[1] as int, rock[2] as bool,
-				rock[3] as float, rock[4] as float, rock[5] as bool))
+				radius, box.size.y, rock[3] as bool, box.position.y + box.size.y * 0.5))
 
 	var plants := [
 		[VegetationGenerator.PlantType.PINE, pine_count, 0.45, 4.0],
@@ -217,7 +224,7 @@ func _place_props() -> void:
 
 func _place_multimesh(mesh: ArrayMesh, count: int, is_large_rock: bool,
 		collider_radius: float = 0.0, collider_height: float = 0.0,
-		collider_sphere: bool = false) -> MultiMeshInstance3D:
+		collider_sphere: bool = false, collider_center_y: float = -1.0) -> MultiMeshInstance3D:
 	var multimesh := MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
 	multimesh.mesh = mesh
@@ -230,29 +237,32 @@ func _place_multimesh(mesh: ArrayMesh, count: int, is_large_rock: bool,
 	for i in range(count):
 		var pos := _random_ground_position(is_large_rock)
 		var scale_v := rng.randf_range(0.7, 1.4)
-		var transform := Transform3D.IDENTITY
-		transform.origin = pos
-		transform = transform.rotated(Vector3.UP, rng.randf_range(0.0, TAU))
-		transform = transform.scaled(Vector3.ONE * scale_v)
+		# Attention : Transform3D.rotated()/scaled() appliquent aussi la rotation et l'échelle
+		# à l'ORIGINE (le décor se retrouvait déplacé, flottant ou enterré, et ne
+		# correspondait plus à ses collisions). On construit donc base + origine séparément.
+		var basis := Basis(Vector3.UP, rng.randf_range(0.0, TAU)).scaled(Vector3.ONE * scale_v)
+		var transform := Transform3D(basis, pos)
 		multimesh.set_instance_transform(i, transform)
+		prop_placements.append(transform)
 		if _prop_collision != null and collider_radius > 0.0:
-			_add_prop_shape(pos, scale_v, collider_radius, collider_height, collider_sphere)
+			_add_prop_shape(pos, scale_v, collider_radius, collider_height, collider_sphere,
+					collider_center_y if collider_center_y > -1.0 else collider_height * 0.5)
 
 	return instance
 
-func _add_prop_shape(pos: Vector3, scale_v: float, radius: float, height: float, sphere: bool) -> void:
+func _add_prop_shape(pos: Vector3, scale_v: float, radius: float, height: float, sphere: bool, center_y: float) -> void:
 	var col := CollisionShape3D.new()
 	if sphere:
 		var s := SphereShape3D.new()
 		s.radius = radius * scale_v
 		col.shape = s
-		col.position = pos + Vector3(0.0, radius * scale_v * 0.6, 0.0)
+		col.position = pos + Vector3(0.0, center_y * scale_v, 0.0)
 	else:
 		var c := CylinderShape3D.new()
 		c.radius = radius * scale_v
 		c.height = height * scale_v
 		col.shape = c
-		col.position = pos + Vector3(0.0, height * scale_v * 0.5, 0.0)
+		col.position = pos + Vector3(0.0, center_y * scale_v, 0.0)
 	_prop_collision.add_child(col)
 
 func _random_ground_position(is_large_rock: bool) -> Vector3:

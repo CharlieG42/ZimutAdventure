@@ -101,6 +101,7 @@ static func _generate_pine(rng: RandomNumberGenerator) -> ArrayMesh:
 	return mesh
 
 static func _build_trunk_mesh(vertices: PackedVector3Array, normals: PackedVector3Array, uvs: PackedVector2Array, indices: PackedInt32Array) -> ArrayMesh:
+	indices = RockGenerator.orient_triangles(vertices, normals, indices)
 	var surfaces: Array = []
 	surfaces.resize(Mesh.ARRAY_MAX)
 	surfaces[Mesh.ARRAY_VERTEX] = vertices

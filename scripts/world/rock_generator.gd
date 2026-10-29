@@ -18,7 +18,26 @@ static func _rock_color(rng: RandomNumberGenerator, base: Color) -> Color:
 	var v = clamp(base.v + rng.randf_range(-0.08, 0.08), 0.0, 1.0)
 	return Color.from_hsv(h, s, v)
 
+## Oriente chaque triangle pour que sa face avant (sens horaire, convention Godot)
+## regarde du côté de la normale fournie. Évite les rochers « creux » (faces vues
+## de l'intérieur avec cull_back).
+static func orient_triangles(vertices: PackedVector3Array, normals: PackedVector3Array, indices: PackedInt32Array) -> PackedInt32Array:
+	var out := indices.duplicate()
+	for i in range(0, out.size() - 2, 3):
+		var a := vertices[out[i]]
+		var b := vertices[out[i + 1]]
+		var c := vertices[out[i + 2]]
+		var facing := (b - a).cross(c - a)
+		var normal := normals[out[i]] + normals[out[i + 1]] + normals[out[i + 2]]
+		# Le produit vectoriel (a,b,c) pointe vers l'intérieur pour une face avant horaire.
+		if facing.dot(normal) > 0.0:
+			var tmp := out[i + 1]
+			out[i + 1] = out[i + 2]
+			out[i + 2] = tmp
+	return out
+
 static func _build_mesh(surfaces: Array) -> ArrayMesh:
+	surfaces[Mesh.ARRAY_INDEX] = orient_triangles(surfaces[Mesh.ARRAY_VERTEX], surfaces[Mesh.ARRAY_NORMAL], surfaces[Mesh.ARRAY_INDEX])
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surfaces)
 	mesh.surface_set_material(0, _rock_material())
@@ -171,18 +190,23 @@ static func _generate_boulder(rng: RandomNumberGenerator) -> ArrayMesh:
 	var uvs := PackedVector2Array()
 	var indices := PackedInt32Array()
 
+	# Déformation par sommet : identique sur la couture (seg 0 = seg N) et aux pôles,
+	# sinon le rocher a une fente et des pointes en haut/en bas.
+	var wobbles := PackedFloat32Array()
+	for ring in range(rings + 1):
+		for seg in range(segments):
+			wobbles.append(1.0 + rng.randf_range(-0.15, 0.15))
 	for ring in range(rings + 1):
 		var phi := float(ring) / rings * PI
+		var pole_wobble := wobbles[ring * segments]
 		for seg in range(segments + 1):
 			var theta := float(seg) / segments * TAU
-			var wobble := 1.0 + rng.randf_range(-0.15, 0.15)
+			var wobble := pole_wobble if (ring == 0 or ring == rings) else wobbles[ring * segments + (seg % segments)]
 			var pos := Vector3(
 				sin(phi) * cos(theta) * radius * wobble,
 				cos(phi) * radius * 0.7 * wobble,
 				sin(phi) * sin(theta) * radius * wobble
 			)
-			if ring == 0:
-				pos.y = -radius * 0.7
 			vertices.append(pos)
 			normals.append(pos.normalized())
 			uvs.append(Vector2(float(seg) / segments, float(ring) / rings))
