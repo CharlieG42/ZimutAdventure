@@ -120,6 +120,8 @@ jobs:
     name: Build APK (${{ matrix.build_type }})
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -242,10 +244,30 @@ jobs:
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: ZimutAdventure-android-${{ matrix.build_type }}
           path: build/android/ZimutAdventure-${{ matrix.build_type }}.apk
           retention-days: 1
+
+      - name: Publish APK to draft release (build-latest)
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: build-latest
+          name: "Build APK (automatique)"
+          body: |
+            APK générés automatiquement par la CI depuis ${{ github.ref_name }} (${{ github.sha }}).
+
+            - **ZimutAdventure-debug.apk** : build debug
+            - **ZimutAdventure-release.apk** : build release (signé en CI)
+
+            > Release draft mise à jour à chaque build. Les artefacts CI restent aussi disponibles dans l'onglet Actions quand le quota de stockage le permet.
+          draft: true
+          prerelease: true
+          files: build/android/ZimutAdventure-${{ matrix.build_type }}.apk
 
       - name: Attach APK to tag release (release only, on tags)
         if: matrix.build_type == 'release' && startsWith(github.ref, 'refs/tags/v')
