@@ -1,8 +1,14 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/virtual_joystick.tscn" id="2_joy"]
 [ext_resource type="PackedScene" path="res://scenes/ui/touch_look.tscn" id="3_look"]
+[ext_resource type="Theme" path="res://assets/ui/hud_theme.tres" id="4_theme"]
+[ext_resource type="Script" path="res://scripts/ui/compass_strip.gd" id="5_compass"]
+[ext_resource type="Script" path="res://scripts/ui/reticle.gd" id="6_reticle"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/jump.png" id="7_jump"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/interact.png" id="8_interact"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/sprint.png" id="9_sprint"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -16,6 +22,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme = ExtResource("4_theme")
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
@@ -26,6 +33,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_filter = 2
+theme_override_constants/separation = 12
 
 [node name="TopBar" type="HBoxContainer" parent="SafeArea/VBox"]
 layout_mode = 2
@@ -42,6 +50,7 @@ text = "N 000°"
 [node name="Spacer" type="Control" parent="SafeArea/VBox/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 
 [node name="ClockLabel" type="Label" parent="SafeArea/VBox/TopBar"]
 layout_mode = 2
@@ -52,52 +61,166 @@ text = "10:00"
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 
-[node name="CenterPrompt" type="Label" parent="SafeArea/VBox"]
-visible = false
+[node name="StaminaBar" type="ProgressBar" parent="SafeArea/VBox"]
+modulate = Color(1, 1, 1, 0)
+custom_minimum_size = Vector2(340, 12)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 34
-horizontal_alignment = 1
-
-[node name="Toast" type="Label" parent="SafeArea/VBox"]
-visible = false
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 30
-horizontal_alignment = 1
+mouse_filter = 2
+theme_type_variation = &"StaminaBar"
+step = 0.1
+value = 100.0
+show_percentage = false
 
 [node name="BottomBar" type="HBoxContainer" parent="SafeArea/VBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 10
-alignment = 2
 mouse_filter = 2
-
-[node name="ViewButton" type="Button" parent="SafeArea/VBox/BottomBar"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 26
-text = "1P/3P"
+theme_override_constants/separation = 14
+alignment = 1
 
 [node name="JournalButton" type="Button" parent="SafeArea/VBox/BottomBar"]
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
-text = "Journal"
+focus_mode = 0
+text = "ACTION_OPEN_JOURNAL"
 
 [node name="MapButton" type="Button" parent="SafeArea/VBox/BottomBar"]
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
-text = "Map"
+focus_mode = 0
+text = "ACTION_OPEN_MAP"
 
-[node name="InteractButton" type="Button" parent="SafeArea/VBox/BottomBar"]
+[node name="ViewButton" type="Button" parent="SafeArea/VBox/BottomBar"]
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
-text = "Interact"
+focus_mode = 0
+text = "1P/3P"
 
-[node name="SprintButton" type="Button" parent="SafeArea/VBox/BottomBar"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 26
-text = "Sprint"
+[node name="Overlay" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("4_theme")
+
+[node name="CompassStrip" type="Control" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -230.0
+offset_top = 10.0
+offset_right = 230.0
+offset_bottom = 62.0
+grow_horizontal = 2
+mouse_filter = 2
+script = ExtResource("5_compass")
+
+[node name="Reticle" type="Control" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_reticle")
+
+[node name="CenterPrompt" type="Label" parent="Overlay"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_top = 64.0
+offset_bottom = 64.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_type_variation = &"PillLabel"
+theme_override_font_sizes/font_size = 30
+horizontal_alignment = 1
+
+[node name="Toast" type="Label" parent="Overlay"]
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_top = 84.0
+offset_bottom = 84.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_type_variation = &"PillLabel"
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+
+[node name="ActionPad" type="Control" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -264.0
+offset_top = -560.0
+offset_right = -16.0
+offset_bottom = -336.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="SprintButton" type="Button" parent="Overlay/ActionPad"]
+layout_mode = 0
+offset_left = 152.0
+offset_top = 16.0
+offset_right = 232.0
+offset_bottom = 96.0
+focus_mode = 0
+toggle_mode = true
+theme_type_variation = &"RoundButton"
+icon = ExtResource("9_sprint")
+icon_alignment = 1
+expand_icon = true
+
+[node name="JumpButton" type="Button" parent="Overlay/ActionPad"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 128.0
+offset_right = 112.0
+offset_bottom = 224.0
+focus_mode = 0
+theme_type_variation = &"RoundButton"
+icon = ExtResource("7_jump")
+icon_alignment = 1
+expand_icon = true
+
+[node name="InteractButton" type="Button" parent="Overlay/ActionPad"]
+layout_mode = 0
+offset_left = 136.0
+offset_top = 112.0
+offset_right = 248.0
+offset_bottom = 224.0
+focus_mode = 0
+disabled = true
+theme_type_variation = &"RoundButton"
+icon = ExtResource("8_interact")
+icon_alignment = 1
+expand_icon = true
 
 [node name="VirtualJoystick" parent="." instance=ExtResource("2_joy")]
 anchors_preset = 7

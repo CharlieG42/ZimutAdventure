@@ -11,6 +11,21 @@ Moteur : **Godot 4** (GDScript) · Cibles : PC (Windows / macOS / Linux) + **And
    `scenes/world/canyon_playground.tscn` (terrain de test du canyon, région Ouest américain).
 3. Jouer avec **F5** (ou ▶). Contrôles : ZQSD pour se déplacer, Maj pour courir, souris pour la caméra, Échap pour libérer la souris.
 
+### Contrôles
+
+| Action | Clavier / souris | Tactile (Android) |
+|---|---|---|
+| Se déplacer | ZQSD / flèches | Stick gauche (vitesse proportionnelle à l'inclinaison) |
+| Courir | Maj | Stick à fond (course automatique), ou bouton course |
+| Regarder | Souris | Glisser sur l'écran, ou stick droit |
+| Sauter | Espace | Bouton saut |
+| Interagir | E | Bouton interaction (s'allume face à un objet) |
+| Vue 1re / 3e personne | V | Bouton 1P/3P |
+
+La course consomme de l'endurance (barre discrète en bas) ; la boussole en haut suit le cap du joueur (Nord = -Z). Option `sprint_at_full_tilt` sur le joueur pour désactiver la course automatique.
+
+Régénérer les images du HUD : `python3 tools/generate_ui_assets.py` puis `godot --headless --path . -s tools/make_hud_theme.gd`. Note : Godot 4.7 possède une classe native `VirtualJoystick`, notre stick s'appelle donc `TouchStick`.
+
 ## Structure du projet
 
 ```

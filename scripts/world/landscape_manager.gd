@@ -15,6 +15,7 @@ var rng := RandomNumberGenerator.new()
 var _terrain: MeshInstance3D
 var _collision_body: StaticBody3D
 var _props_root: Node3D
+var _prop_collision: StaticBody3D
 
 func _ready() -> void:
 	rng.seed = seed_value
@@ -31,6 +32,8 @@ func regenerate(new_seed: int = -1) -> void:
 		_collision_body.queue_free()
 	if _props_root:
 		_props_root.queue_free()
+	if _prop_collision:
+		_prop_collision.queue_free()
 	_generate_terrain()
 	_place_props()
 
@@ -107,8 +110,11 @@ func _displace_mesh(plane: PlaneMesh) -> ArrayMesh:
 			var b := a + 1
 			var c := a + res + 1
 			var d := c + 1
-			indices[idx] = a; indices[idx + 1] = c; indices[idx + 2] = b
-			indices[idx + 3] = b; indices[idx + 4] = c; indices[idx + 5] = d
+			# Godot : faces avant = sens horaire. Cet ordre oriente les triangles vers
+			# le HAUT (+Y) ; l'ordre inverse rendait le terrain invisible vu d'en haut
+			# (cull_back) et faisait traverser le sol au joueur (collision à sens unique).
+			indices[idx] = a; indices[idx + 1] = b; indices[idx + 2] = c
+			indices[idx + 3] = b; indices[idx + 4] = d; indices[idx + 5] = c
 			idx += 6
 
 	arrays[Mesh.ARRAY_VERTEX] = vertices
@@ -180,25 +186,38 @@ func _place_props() -> void:
 	_props_root.name = "Props"
 	add_child(_props_root)
 
+	# Collisions des accessoires : un corps statique frère de « Props » (qui ne
+	# contient que des MultiMeshInstance3D), avec une forme simple par instance.
+	_prop_collision = null
+	if collision_enabled:
+		_prop_collision = StaticBody3D.new()
+		_prop_collision.name = "PropCollision"
+		add_child(_prop_collision)
+
+	# [type, nombre, grand rocher ?, rayon, hauteur, sphère ?]
 	var rocks := [
-		[RockGenerator.RockType.HOODOO, hoodoo_count, true],
-		[RockGenerator.RockType.BUTTE, butte_count, true],
-		[RockGenerator.RockType.BOULDER, boulder_count, false],
+		[RockGenerator.RockType.HOODOO, hoodoo_count, true, 2.2, 13.0, false],
+		[RockGenerator.RockType.BUTTE, butte_count, true, 10.0, 18.0, false],
+		[RockGenerator.RockType.BOULDER, boulder_count, false, 0.8, 1.1, true],
 	]
 	for rock in rocks:
 		var mesh: ArrayMesh = RockGenerator.generate(rock[0] as RockGenerator.RockType, rng)
-		_props_root.add_child(_place_multimesh(mesh, rock[1] as int, rock[2] as bool))
+		_props_root.add_child(_place_multimesh(mesh, rock[1] as int, rock[2] as bool,
+				rock[3] as float, rock[4] as float, rock[5] as bool))
 
 	var plants := [
-		[VegetationGenerator.PlantType.PINE, pine_count],
-		[VegetationGenerator.PlantType.SHRUB, shrub_count],
-		[VegetationGenerator.PlantType.DRY_GRASS, grass_count],
+		[VegetationGenerator.PlantType.PINE, pine_count, 0.45, 4.0],
+		[VegetationGenerator.PlantType.SHRUB, shrub_count, 0.0, 0.0],
+		[VegetationGenerator.PlantType.DRY_GRASS, grass_count, 0.0, 0.0],
 	]
 	for plant in plants:
 		var mesh: ArrayMesh = VegetationGenerator.generate(plant[0] as VegetationGenerator.PlantType, rng)
-		_props_root.add_child(_place_multimesh(mesh, plant[1] as int, false))
+		_props_root.add_child(_place_multimesh(mesh, plant[1] as int, false,
+				plant[2] as float, plant[3] as float, false))
 
-func _place_multimesh(mesh: ArrayMesh, count: int, is_large_rock: bool) -> MultiMeshInstance3D:
+func _place_multimesh(mesh: ArrayMesh, count: int, is_large_rock: bool,
+		collider_radius: float = 0.0, collider_height: float = 0.0,
+		collider_sphere: bool = false) -> MultiMeshInstance3D:
 	var multimesh := MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
 	multimesh.mesh = mesh
@@ -216,8 +235,25 @@ func _place_multimesh(mesh: ArrayMesh, count: int, is_large_rock: bool) -> Multi
 		transform = transform.rotated(Vector3.UP, rng.randf_range(0.0, TAU))
 		transform = transform.scaled(Vector3.ONE * scale_v)
 		multimesh.set_instance_transform(i, transform)
+		if _prop_collision != null and collider_radius > 0.0:
+			_add_prop_shape(pos, scale_v, collider_radius, collider_height, collider_sphere)
 
 	return instance
+
+func _add_prop_shape(pos: Vector3, scale_v: float, radius: float, height: float, sphere: bool) -> void:
+	var col := CollisionShape3D.new()
+	if sphere:
+		var s := SphereShape3D.new()
+		s.radius = radius * scale_v
+		col.shape = s
+		col.position = pos + Vector3(0.0, radius * scale_v * 0.6, 0.0)
+	else:
+		var c := CylinderShape3D.new()
+		c.radius = radius * scale_v
+		c.height = height * scale_v
+		col.shape = c
+		col.position = pos + Vector3(0.0, height * scale_v * 0.5, 0.0)
+	_prop_collision.add_child(col)
 
 func _random_ground_position(is_large_rock: bool) -> Vector3:
 	var margin := 30.0 if is_large_rock else 8.0

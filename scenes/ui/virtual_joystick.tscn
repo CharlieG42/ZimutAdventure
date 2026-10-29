@@ -12,46 +12,40 @@ offset_bottom = 320.0
 mouse_filter = 0
 script = ExtResource("1_joy")
 
-[node name="Base" type="NinePatchRect" parent="."]
+[node name="Base" type="TextureRect" parent="."]
+modulate = Color(1, 1, 1, 0.6)
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -90.0
-offset_top = -90.0
-offset_right = 90.0
-offset_bottom = 90.0
+offset_left = -128.0
+offset_top = -128.0
+offset_right = 128.0
+offset_bottom = 128.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 texture = ExtResource("2_base")
-modulate = Color(1, 1, 1, 0.25)
-mouse_filter = 2
-patch_margin_left = 32
-patch_margin_top = 32
-patch_margin_right = 32
-patch_margin_bottom = 32
-draw_center = true
+expand_mode = 1
+stretch_mode = 5
 
-[node name="Knob" type="NinePatchRect" parent="."]
+[node name="Knob" type="TextureRect" parent="."]
+modulate = Color(1, 1, 1, 0.8)
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -56.0
-offset_top = -56.0
-offset_right = 56.0
-offset_bottom = 56.0
+offset_left = -48.0
+offset_top = -48.0
+offset_right = 48.0
+offset_bottom = 48.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = ExtResource("3_knob")
-modulate = Color(1, 1, 1, 0.5)
 mouse_filter = 2
-patch_margin_left = 24
-patch_margin_top = 24
-patch_margin_right = 24
-patch_margin_bottom = 24
-draw_center = true
+texture = ExtResource("3_knob")
+expand_mode = 1
+stretch_mode = 5

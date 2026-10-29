@@ -9,7 +9,7 @@ var _touch_index: int = -1
 var _joystick_zones: Array[Control] = []
 
 func _ready() -> void:
-	visible = DisplayServer.get_name() == "android"
+	visible = PlatformInfo.is_touch()
 	for name in ["VirtualJoystick", "CameraJoystick"]:
 		var zone := get_node_or_null("../" + name) as Control
 		if zone != null:
@@ -22,7 +22,7 @@ func _gui_input(event: InputEvent) -> void:
 				return
 			_touch_index = event.index
 			get_viewport().set_input_as_handled()
-		elif not event.pressed and event.index == _touch_index:
+		elif event.index == _touch_index and (not event.pressed or event.canceled):
 			_touch_index = -1
 			get_viewport().set_input_as_handled()
 	elif event is InputEventScreenDrag and event.index == _touch_index:
