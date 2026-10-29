@@ -6,6 +6,9 @@ uniform vec4 albedo : source_color = vec4(0.2, 0.35, 0.12, 1.0);
 uniform vec4 albedo_light : source_color = vec4(0.35, 0.5, 0.18, 1.0);
 uniform float variation_scale : hint_range(0.1, 10.0) = 2.0;
 uniform float light_boost : hint_range(0.0, 1.0) = 0.4;
+uniform float wind_strength : hint_range(0.0, 1.0) = 0.12;
+uniform float wind_speed : hint_range(0.0, 10.0) = 1.6;
+uniform float wind_scale : hint_range(0.01, 2.0) = 0.35;
 
 varying vec3 v_world_pos;
 varying vec3 v_normal;
@@ -38,6 +41,13 @@ void vertex() {
 	v_world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	v_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
 	v_y = VERTEX.y;
+
+	// Balancement au vent : déformation horizontale croissante avec la
+	// hauteur locale, animée par une onde qui parcourt le monde.
+	float sway_phase = TIME * wind_speed + v_world_pos.x * wind_scale + v_world_pos.z * wind_scale * 0.7;
+	float sway = sin(sway_phase) * wind_strength * max(VERTEX.y, 0.0);
+	VERTEX.x += sway;
+	VERTEX.z += cos(sway_phase * 0.8) * wind_strength * 0.6 * max(VERTEX.y, 0.0);
 }
 
 void fragment() {
@@ -46,7 +56,6 @@ void fragment() {
 
 	vec3 n = normalize(v_normal);
 	float up = max(n.y, 0.0);
-	float side = abs(n.x) + abs(n.z);
 	float light_dir = max(dot(n, normalize(vec3(0.4, 0.8, 0.3))), 0.0);
 	col = mix(col, albedo_light.rgb, up * light_boost);
 	col *= 0.75 + light_dir * 0.25;

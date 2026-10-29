@@ -6,6 +6,9 @@ uniform vec4 albedo : source_color = vec4(0.24, 0.14, 0.07, 1.0);
 uniform vec4 albedo_light : source_color = vec4(0.38, 0.22, 0.10, 1.0);
 uniform float bark_scale : hint_range(0.5, 20.0) = 6.0;
 uniform float bark_depth : hint_range(0.0, 1.0) = 0.4;
+uniform float wind_strength : hint_range(0.0, 1.0) = 0.04;
+uniform float wind_speed : hint_range(0.0, 10.0) = 1.6;
+uniform float wind_scale : hint_range(0.01, 2.0) = 0.35;
 
 varying vec3 v_world_pos;
 varying vec3 v_normal;
@@ -28,6 +31,12 @@ float noise(vec2 p) {
 void vertex() {
 	v_world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	v_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+
+	// Vent léger : le tronc plie surtout en haut, ancré au sol.
+	float sway_phase = TIME * wind_speed + v_world_pos.x * wind_scale + v_world_pos.z * wind_scale * 0.7;
+	float bend = pow(max(VERTEX.y, 0.0) * 0.5, 1.5);
+	VERTEX.x += sin(sway_phase) * wind_strength * bend;
+	VERTEX.z += cos(sway_phase * 0.8) * wind_strength * 0.6 * bend;
 }
 
 void fragment() {
