@@ -20,9 +20,16 @@ Moteur : **Godot 4** (GDScript) · Cibles : PC (Windows / macOS / Linux) + **And
 | Regarder | Souris | Glisser sur l'écran, ou stick droit |
 | Sauter | Espace | Bouton saut |
 | Interagir | E | Bouton interaction (s'allume face à un objet) |
+| Sac / journal | C | Bouton Journal |
 | Vue 1re / 3e personne | V | Bouton 1P/3P |
 
 La course consomme de l'endurance (barre discrète en bas) ; la boussole en haut suit le cap du joueur (Nord = -Z). Option `sprint_at_full_tilt` sur le joueur pour désactiver la course automatique.
+
+### Objets et environnement
+
+- **Ramasser** : des pierres et des bûches de bois jonchent le canyon (E ou bouton interaction). Le sac (bouton Journal / touche C) liste l'inventaire, sauvegardé automatiquement.
+- **Feu de camp** : près du départ, alimentez-le avec 4 bûches pour l'allumer (la lumière grandit à chaque bûche). Une fois allumé, « Se reposer » restaure l'endurance.
+- **Pancarte** : lisez le panneau au départ pour un message d'ambiance (affiché en toast, traduit FR/EN).
 
 Régénérer les images du HUD : `python3 tools/generate_ui_assets.py` puis `godot --headless --path . -s tools/make_hud_theme.gd`. Note : Godot 4.7 possède une classe native `VirtualJoystick`, notre stick s'appelle donc `TouchStick`.
 
