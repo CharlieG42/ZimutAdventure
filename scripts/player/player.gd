@@ -166,6 +166,13 @@ func get_stamina() -> float:
 func is_exhausted() -> bool:
 	return _exhausted
 
+## Recouvrement immédiat (repos au feu de camp).
+func restore_stamina() -> void:
+	stamina = 1.0
+	_exhausted = false
+	_regen_delay_left = 0.0
+	stamina_changed.emit(stamina, _exhausted)
+
 ## Cap en degrés, 0 = Nord (-Z), sens horaire (90 = Est).
 func get_heading_degrees() -> float:
 	return fposmod(-rad_to_deg(rotation.y), 360.0)

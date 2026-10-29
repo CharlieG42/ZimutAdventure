@@ -38,3 +38,14 @@ HUD_DIR_NW,NW
 ACTION_JUMP,Jump
 TOAST_SOON,Coming soon
 TOAST_EXHAUSTED,Out of breath!
+ITEM_ITEM_WOOD,wood
+ACTION_STOKE_FIRE,Add wood
+ACTION_REST,Rest at fire
+ACTION_READ,Read
+TOAST_NEED_WOOD,Not enough wood!
+TOAST_FIRE_STOKED,The fire crackles...
+TOAST_RESTED,You feel rested.
+INVENTORY_EMPTY,Sack is empty.
+JOURNAL_INVENTORY_TITLE,Belongings
+ACTION_CLOSE,Close
+SIGN_CANYON_1,Canyon trail - watch your step at dusk!

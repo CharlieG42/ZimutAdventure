@@ -24,6 +24,8 @@ const BASE_MARGIN := 16
 @onready var interact_prompt: Label = $Overlay/CenterPrompt
 @onready var toast: Label = $Overlay/Toast
 @onready var joystick: Control = $VirtualJoystick
+@onready var inventory_center: CenterContainer = $InventoryCenter
+@onready var inventory_panel: InventoryPanel = $InventoryCenter/InventoryPanel
 @onready var camera_joystick: Control = $CameraJoystick
 @onready var touch_look: Control = $TouchLook
 
@@ -133,9 +135,13 @@ func _on_view_pressed() -> void:
 		_player.call("toggle_view")
 
 func _on_journal_pressed() -> void:
-	if get_signal_connection_list("journal_requested").is_empty():
+	if get_signal_connection_list("journal_requested").size() > 0:
+		journal_requested.emit()
+		return
+	if inventory_panel != null:
+		inventory_panel.toggle()
+	else:
 		show_toast(tr("TOAST_SOON"))
-	journal_requested.emit()
 
 func _on_map_pressed() -> void:
 	if get_signal_connection_list("map_requested").is_empty():

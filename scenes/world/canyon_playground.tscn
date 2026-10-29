@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://zimutcanyonplay"]
+[gd_scene load_steps=11 format=3 uid="uid://zimutcanyonplay"]
 
 [ext_resource type="Script" path="res://scripts/world/landscape_manager.gd" id="1_landscape"]
 [ext_resource type="PackedScene" uid="uid://zimutplayer0001" path="res://scenes/player/player.tscn" id="2_player"]
@@ -6,6 +6,9 @@
 [ext_resource type="PackedScene" path="res://scenes/interaction/collectible_item.tscn" id="4_item"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5_hud"]
 [ext_resource type="Script" path="res://scripts/world/world_setup.gd" id="6_setup"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/campfire.tscn" id="7_campfire"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/signpost.tscn" id="8_sign"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/wood_item.tscn" id="9_wood"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.45, 0.65, 0.85, 1)
@@ -67,6 +70,19 @@ script = ExtResource("1_landscape")
 script = ExtResource("3_spawner")
 item_scene = ExtResource("4_item")
 count = 14
+
+[node name="WoodCollectibles" type="Node3D" parent="."]
+script = ExtResource("3_spawner")
+item_scene = ExtResource("9_wood")
+count = 6
+seed_offset = 1337
+spawn_radius = 180.0
+min_terrain_height = -5.0
+
+[node name="Campfire" parent="." instance=ExtResource("7_campfire")]
+
+[node name="Signpost" parent="." instance=ExtResource("8_sign")]
+message_key = "SIGN_CANYON_1"
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
 groups = ["player"]

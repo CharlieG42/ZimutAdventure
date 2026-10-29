@@ -38,3 +38,14 @@ HUD_DIR_NW,NO
 ACTION_JUMP,Saut
 TOAST_SOON,Bientôt disponible
 TOAST_EXHAUSTED,Essoufflé !
+ITEM_ITEM_WOOD,bois
+ACTION_STOKE_FIRE,Ajouter du bois
+ACTION_REST,Se reposer
+ACTION_READ,Lire
+TOAST_NEED_WOOD,Pas assez de bois !
+TOAST_FIRE_STOKED,Le feu crépite...
+TOAST_RESTED,Vous voilà requinqué.
+INVENTORY_EMPTY,Sac vide.
+JOURNAL_INVENTORY_TITLE,Sac — inventaire
+ACTION_CLOSE,Fermer
+SIGN_CANYON_1,Sentier du canyon - méfiez-vous de la tombée de la nuit !
