@@ -16,6 +16,8 @@ var _mesh: MeshInstance3D
 var _glow: OmniLight3D
 
 func _ready() -> void:
+	add_to_group("collectible")
+	add_to_group("wood" if item_id == "item_wood" else "stone")
 	_base_y = position.y
 	prompt_text = "ACTION_COLLECT"
 	one_shot = true

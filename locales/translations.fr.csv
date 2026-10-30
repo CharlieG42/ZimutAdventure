@@ -50,3 +50,55 @@ JOURNAL_INVENTORY_TITLE,Sac — inventaire
 ACTION_CLOSE,Fermer
 SIGN_CANYON_1,Sentier du canyon - méfiez-vous de la tombée de la nuit !
 ACTION_BREAK_ROCK,Casser le rocher
+QUEST_NONE,Aucune quête pour l'instant - explorez le canyon !
+QUEST_FIRST_STONE_TITLE,Premières pierres
+QUEST_FIRST_STONE_DESC,Ramassez 3 pierres (cassez les rochers avec E).
+QUEST_WARM_FIRE_TITLE,Un feu au chaud
+QUEST_WARM_FIRE_DESC,Récoltez 4 bûches pour allumer le feu de camp.
+QUEST_BUILDER_TITLE,Premiers outils
+QUEST_BUILDER_DESC,Fabriquez une hache en pierre (2 pierres et 1 bûche) depuis le journal.
+JOURNAL_QUESTS,Quêtes
+JOURNAL_CRAFT,Fabrication
+ACTION_CRAFT,Fabriquer
+TOAST_CRAFTED,Fabriqué : %s
+CRAFT_STONE_AXE,Hache en pierre
+CRAFT_HUNTING_BOW,Arc de chasse
+CRAFT_CAMP_BED,Lit de camp
+CRAFT_SHELTER,Abri
+ITEM_TOOL_STONE_AXE,hache en pierre
+ITEM_TOOL_HUNTING_BOW,arc de chasse
+ITEM_FURNITURE_CAMP_BED,lit de camp
+ITEM_BUILDING_SHELTER,abri
+MAP_TITLE,Carte du canyon
+QUEST_HUNTER_TITLE,Chasseur
+QUEST_HUNTER_DESC,Fabriquez un arc de chasse (3 bûches) depuis le journal.
+QUEST_SHELTER_TITLE,Un toit sur la tête
+QUEST_SHELTER_DESC,Construisez un abri (8 bûches et 4 pierres) pour passer la nuit.
+QUEST_LOCKED_HINT,Nouvelles quêtes à débloquer...
+QUEST_TRACKER,Objectif : %s (%d/%d)
+TOAST_QUEST_DONE,Quête accomplie : %s
+JOURNAL_DONE,Terminées
+CAT_TOOLS,Outils
+CAT_WEAPONS,Armes
+CAT_FURNITURE,Mobilier
+CAT_BUILDINGS,Habitations
+CRAFT_OWNED,Possédé : %d
+MAP_LEGEND_STONE,Pierre
+MAP_LEGEND_WOOD,Bois
+MAP_LEGEND_ROCK,Rocher
+MAP_LEGEND_ANIMAL,Animal
+MAP_LEGEND_YOU,Vous
+MAP_HINT,Touche M ou bouton Fermer
+ACTION_PLACE,Poser
+ACTION_REST_BED,Se reposer sur le lit
+ACTION_SLEEP,Dormir
+TOAST_PLACED,Posé : %s
+TOAST_TOO_STEEP,Terrain trop pentu pour construire ici.
+TOAST_CANNOT_PLACE,Impossible de poser ça ici.
+TOAST_TOO_MANY,Trop de constructions dans le canyon.
+TOAST_BED_REST,Quelle bonne sieste ! Endurance rétablie.
+TOAST_NOT_TIRED,Vous n'avez pas sommeil : attendez la nuit.
+TOAST_SLEPT,Vous dormez jusqu'à l'aube. Endurance rétablie.
+QUEST_REWARD,Récompense : %s
+MAP_LEGEND_FIRE,Feu de camp
+MAP_LEGEND_CAMP,Campement

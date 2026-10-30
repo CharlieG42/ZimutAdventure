@@ -15,6 +15,7 @@ extends Interactable
 var _broken: bool = false
 
 func _ready() -> void:
+	add_to_group("breakable")
 	prompt_text = "ACTION_BREAK_ROCK"
 	one_shot = true
 

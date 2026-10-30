@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/virtual_joystick.tscn" id="2_joy"]
@@ -9,13 +9,25 @@
 [ext_resource type="Texture2D" path="res://assets/ui/icons/jump.png" id="7_jump"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/interact.png" id="8_interact"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/sprint.png" id="9_sprint"]
-[ext_resource type="Script" path="res://scripts/ui/inventory_panel.gd" id="10_inventory"]
+[ext_resource type="Script" path="res://scripts/ui/journal_panel.gd" id="10_journal"]
+[ext_resource type="Script" path="res://scripts/ui/map_panel.gd" id="11_map"]
 
 [node name="HUD" type="CanvasLayer"]
 groups = ["hud"]
 script = ExtResource("1_hud")
 
 [node name="TouchLook" parent="." instance=ExtResource("3_look")]
+
+[node name="MapPanel" type="Control" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+theme = ExtResource("4_theme")
+script = ExtResource("11_map")
 
 [node name="SafeArea" type="MarginContainer" parent="."]
 anchors_preset = 15
@@ -171,6 +183,17 @@ theme_type_variation = &"PillLabel"
 theme_override_font_sizes/font_size = 28
 horizontal_alignment = 1
 
+[node name="QuestTracker" type="Label" parent="Overlay"]
+visible = false
+layout_mode = 0
+offset_left = 16.0
+offset_top = 68.0
+offset_right = 420.0
+offset_bottom = 104.0
+mouse_filter = 2
+theme_type_variation = &"PillLabel"
+theme_override_font_sizes/font_size = 20
+
 [node name="ActionPad" type="Control" parent="Overlay"]
 layout_mode = 1
 anchors_preset = 3
@@ -235,11 +258,11 @@ grow_vertical = 2
 mouse_filter = 1
 theme = ExtResource("4_theme")
 
-[node name="InventoryPanel" type="PanelContainer" parent="InventoryCenter"]
+[node name="JournalPanel" type="PanelContainer" parent="InventoryCenter"]
 visible = false
 layout_mode = 2
 mouse_filter = 1
-script = ExtResource("10_inventory")
+script = ExtResource("10_journal")
 
 [node name="VirtualJoystick" parent="." instance=ExtResource("2_joy")]
 anchors_preset = 7
