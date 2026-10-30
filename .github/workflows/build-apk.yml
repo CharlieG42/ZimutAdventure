@@ -11,6 +11,10 @@ permissions:
   contents: read
 
 env:
+  # Nom des APK publiés : <projet>-<debug|release>_<version>-<n° PR>.apk (voir tools/ci/apk_name.sh).
+  # PROJECT_NAME suit le nom du dépôt ; APK_VERSION est à changer à la main pour une nouvelle version.
+  PROJECT_NAME: ${{ github.event.repository.name }}
+  APK_VERSION: "v0.001"
   GODOT_VERSION: "4.7-stable"
   GODOT_RELEASE: "4.7"
   EXPORT_PRESET: "Android"
@@ -242,6 +246,19 @@ jobs:
           ls -lh "$APK"
           "$ANDROID_SDK_ROOT/build-tools/36.1.0/apksigner" verify --print-certs "$APK"
 
+      - name: Nom des APK publiés
+        id: apkname
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -eu
+          sh tools/ci/apk_name.sh | tee -a "$GITHUB_OUTPUT"
+          FILE="${{ matrix.build_type }}_file"
+          NAME=$(sh tools/ci/apk_name.sh | sed -n "s/^${FILE}=//p")
+          cp "build/android/ZimutAdventure-${{ matrix.build_type }}.apk" "build/android/$NAME"
+          echo "file=$NAME" >> "$GITHUB_OUTPUT"
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         continue-on-error: true
@@ -250,6 +267,22 @@ jobs:
           path: build/android/ZimutAdventure-${{ matrix.build_type }}.apk
           retention-days: 1
 
+      - name: Retirer les anciens APK de ce type de la release (build-latest)
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Les APK portent le numéro de PR dans leur nom : sans ce nettoyage, chaque
+          # fusion laisserait un APK de plus dans la release.
+          PREFIX="${PROJECT_NAME}-${{ matrix.build_type }}"
+          NEW="${{ steps.apkname.outputs.file }}"
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/build-latest" \
+            --jq ".assets[] | select(.name | startswith(\"$PREFIX\")) | select(.name != \"$NEW\") | .id" 2>/dev/null \
+            | while read -r id; do
+                gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/$id" > /dev/null
+                echo "supprimé: asset #$id"
+              done || true
+
       - name: Publish APK to release (build-latest)
         if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
@@ -257,17 +290,19 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: build-latest
-          name: "Build APK (automatique)"
+          name: "Build APK ${{ env.APK_VERSION }}-${{ steps.apkname.outputs.pr }} (automatique)"
           body: |
-            APK générés automatiquement par la CI depuis ${{ github.ref_name }} (${{ github.sha }}).
+            APK générés automatiquement par la CI depuis ${{ github.ref_name }} (${{ github.sha }}), à chaque fusion sur `main`.
+            Dernière PR fusionnée : **${{ steps.apkname.outputs.pr }}** · version **${{ env.APK_VERSION }}**.
 
-            - **ZimutAdventure-debug.apk** : build debug
-            - **ZimutAdventure-release.apk** : build release (signé en CI)
+            - **${{ steps.apkname.outputs.debug_file }}** : build debug
+            - **${{ steps.apkname.outputs.release_file }}** : build release (signé en CI)
 
             > Release mise à jour à chaque build. Les artefacts CI restent aussi disponibles dans l'onglet Actions quand le quota de stockage le permet.
           draft: false
           prerelease: false
-          files: build/android/ZimutAdventure-${{ matrix.build_type }}.apk
+          make_latest: true
+          files: build/android/${{ steps.apkname.outputs.file }}
 
       - name: Attach APK to tag release (release only, on tags)
         if: matrix.build_type == 'release' && startsWith(github.ref, 'refs/tags/v')
