@@ -13,8 +13,9 @@ Instructions pour les agents (IA) travaillant sur ce dépôt. Godot 4 (GDScript)
 ## Livraison des APK
 
 - Le workflow `.github/workflows/build-apk.yml` publie les APK **dans la release `build-latest`** à chaque push sur `main` (pas dans les artefacts, régulièrement purgés par quota).
+- Les APK publiés s'appellent `<projet>-debug_<version>-<n° PR>.apk` et `<projet>-release_<version>-<n° PR>.apk` (ex. `ZimutAdventure-debug_v0.001-22.apk`) : le projet suit le nom du dépôt, la version est la variable `APK_VERSION` du workflow (à changer à la main), le numéro est celui de la dernière PR fusionnée (calculé par `tools/ci/apk_name.sh`). À chaque fusion, les anciens APK du même type sont retirés de la release.
 - Cette release doit rester **version stable (Latest), jamais pre-release** (`prerelease: false`) : c'est le point de téléchargement visible depuis la page du dépôt.
-- Après chaque fusion, vérifier que le run « Build APK (Android) » lié au push sur `main` passe, puis confirmer que `gh api repos/.../releases/latest` renvoie `build-latest` avec `ZimutAdventure-debug.apk` et `ZimutAdventure-release.apk` à jour.
+- Après chaque fusion, vérifier que le run « Build APK (Android) » lié au push sur `main` passe, puis confirmer que `gh api repos/.../releases/latest` renvoie `build-latest` avec les deux APK (debug et release) portant le numéro de la PR qui vient d'être fusionnée.
 
 ## Tests
 
