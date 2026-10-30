@@ -19,11 +19,21 @@ func _ready() -> void:
 	_refresh()
 
 func get_prompt() -> String:
+	if _stage >= STAGES and _has_raw_meat():
+		return "ACTION_COOK"
 	return "ACTION_REST" if _stage >= STAGES else prompt_text
+
+## Cuisson possible seulement sur un feu plein, avec de la viande crue sur soi.
+func _has_raw_meat() -> bool:
+	var inv := InteractionManager.get_inventory()
+	return inv != null and inv.has_item("item_raw_meat", 1)
 
 func _on_interact(interactor: Node3D) -> void:
 	if _stage >= STAGES:
-		_rest(interactor)
+		if _has_raw_meat():
+			_cook(interactor)
+		else:
+			_rest(interactor)
 		return
 	var inventory := InteractionManager.get_inventory()
 	if inventory == null or not inventory.has_item(wood_item_id, wood_per_stage):
@@ -36,6 +46,15 @@ func _on_interact(interactor: Node3D) -> void:
 	if sfx != null:
 		sfx.play(load("res://assets/audio/pickup/collect.wav"), -4.0, 0.8)
 	_notify(interactor, "TOAST_FIRE_STOKED")
+
+## Cuit la viande crue portée : chaque interaction convertit une viande.
+func _cook(interactor: Node3D) -> void:
+	var inventory := InteractionManager.get_inventory()
+	if inventory == null or not inventory.remove_item("item_raw_meat", 1):
+		_notify(interactor, "TOAST_NEED_MEAT")
+		return
+	inventory.add_item("item_cooked_meat", 1)
+	_notify(interactor, "TOAST_MEAT_COOKED")
 
 func _rest(interactor: Node3D) -> void:
 	if interactor is CharacterBody3D and interactor.has_method("restore_stamina"):

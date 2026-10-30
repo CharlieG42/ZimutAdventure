@@ -266,24 +266,52 @@ func _refresh_inventory() -> void:
 	var ids := all.keys()
 	ids.sort()
 	var spawner := get_tree().get_first_node_in_group("structure_spawner")
+	var survival := get_tree().root.get_node_or_null("SurvivalManager")
 	for item_id in ids:
 		var label := Label.new()
 		label.text = "%s  ×%d" % [tr("ITEM_" + String(item_id).to_upper()), int(all[item_id])]
 		label.add_theme_font_size_override("font_size", 22)
-		if spawner == null or not bool(spawner.call("is_placeable", item_id)):
+		var placeable: bool = spawner != null and bool(spawner.call("is_placeable", String(item_id)))
+		var edible: bool = survival != null and EDIBLE.has(String(item_id))
+		if not placeable and not edible:
 			_inventory_list.add_child(label)
 			continue
-		# Construction : le bouton « Poser » la dépose devant le joueur.
 		var row := HBoxContainer.new()
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(label)
-		var button := Button.new()
-		button.text = tr("ACTION_PLACE")
-		button.custom_minimum_size = Vector2(150, BUTTON_HEIGHT)
-		button.focus_mode = Control.FOCUS_NONE
-		button.pressed.connect(_on_place_pressed.bind(String(item_id)))
-		row.add_child(button)
+		if edible:
+			var eat_button := Button.new()
+			eat_button.text = tr("ACTION_EAT")
+			eat_button.custom_minimum_size = Vector2(150, BUTTON_HEIGHT)
+			eat_button.focus_mode = Control.FOCUS_NONE
+			eat_button.pressed.connect(_on_eat_pressed.bind(String(item_id)))
+			row.add_child(eat_button)
+		if placeable:
+			var button := Button.new()
+			button.text = tr("ACTION_PLACE")
+			button.custom_minimum_size = Vector2(150, BUTTON_HEIGHT)
+			button.focus_mode = Control.FOCUS_NONE
+			button.pressed.connect(_on_place_pressed.bind(String(item_id)))
+			row.add_child(button)
 		_inventory_list.add_child(row)
+
+## Aliments consommables depuis le Sac : id -> valeur nutritive (faim restaurée).
+const EDIBLE := {
+	"item_cooked_meat": 0.45,
+	"item_raw_meat": 0.15,
+}
+
+## Mange un aliment : restaure la faim (la viande crue restaure peu).
+func _on_eat_pressed(item_id: String) -> void:
+	var tree := get_tree()
+	var survival := tree.root.get_node_or_null("SurvivalManager")
+	if survival == null or _inventory == null:
+		return
+	if not _inventory.remove_item(item_id, 1):
+		return
+	survival.call("eat", EDIBLE.get(item_id, 0.1))
+	_notify(tr("TOAST_ATE") % tr("ITEM_" + item_id.to_upper()))
+	_refresh()
 
 ## Pose la construction 3 m devant le joueur, face à lui, si le terrain s'y prête.
 func _on_place_pressed(item_id: String) -> void:

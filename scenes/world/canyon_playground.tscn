@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" path="res://scenes/interaction/breakable_rock.tscn" id="11_rock"]
 [ext_resource type="Script" path="res://scripts/world/animal_spawner.gd" id="12_animalspawn"]
 [ext_resource type="PackedScene" path="res://scenes/world/passive_animal.tscn" id="13_animal"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/water_source.tscn" id="14_water"]
 [ext_resource type="Script" path="res://scripts/world/structure_spawner.gd" id="14_structures"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
@@ -97,6 +98,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 12, -30)
 script = ExtResource("10_rockspawn")
 rock_scene = ExtResource("11_rock")
 count = 25
+
+[node name="WaterSource" parent="." instance=ExtResource("14_water")]
 
 [node name="Animals" type="Node3D" parent="."]
 script = ExtResource("12_animalspawn")

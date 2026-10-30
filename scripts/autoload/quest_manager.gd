@@ -55,6 +55,22 @@ const QUESTS := {
 		"goal_count": 1,
 		"requires": "quest_hunter",
 	},
+	"quest_first_hunt": {
+		"title": "QUEST_FIRST_HUNT_TITLE",
+		"description": "QUEST_FIRST_HUNT_DESC",
+		"goal_item": "item_raw_meat",
+		"goal_count": 1,
+		"requires": "quest_hunter",
+		"reward": {"item_wood": 2},
+	},
+	"quest_cooked_meal": {
+		"title": "QUEST_COOKED_MEAL_TITLE",
+		"description": "QUEST_COOKED_MEAL_DESC",
+		"goal_item": "item_cooked_meat",
+		"goal_count": 1,
+		"requires": "quest_first_hunt",
+		"reward": {"arrow": 4},
+	},
 }
 
 var _states: Dictionary = {}
