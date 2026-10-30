@@ -16,6 +16,8 @@ const COLORS := {
 	"wood": Color(0.62, 0.38, 0.16),
 	"rock": Color(0.3, 0.28, 0.27),
 	"animal": Color(1.0, 0.95, 0.7),
+	"fire": Color(1.0, 0.55, 0.15),
+	"camp": Color(0.55, 0.85, 0.5),
 	"player": Color(0.25, 0.6, 1.0),
 	"north": Color(0.95, 0.55, 0.35),
 	"text": Color(0.97, 0.94, 0.88),
@@ -158,7 +160,7 @@ func _draw_resources(to_map: Transform2D, rect: Rect2) -> void:
 	var tree := get_tree()
 	if tree == null:
 		return
-	for group in ["breakable", "wood", "stone", "animals"]:
+	for group in ["breakable", "wood", "stone", "animals", "campfire", "structures"]:
 		for node in tree.get_nodes_in_group(group):
 			if not (node is Node3D) or not is_instance_valid(node):
 				continue
@@ -185,6 +187,14 @@ func _draw_marker(kind: String, pos: Vector2) -> void:
 		"animals":
 			draw_circle(pos, 4.5, outline)
 			draw_circle(pos, 3.0, COLORS["animal"])
+		"campfire":
+			# Flamme : triangle pointe en haut.
+			draw_colored_polygon(PackedVector2Array([pos + Vector2(0, -10), pos + Vector2(8, 7), pos + Vector2(-8, 7)]), outline)
+			draw_colored_polygon(PackedVector2Array([pos + Vector2(0, -7), pos + Vector2(5, 5), pos + Vector2(-5, 5)]), COLORS["fire"])
+		"structures":
+			# Maison : carré surmonté d'un toit.
+			draw_colored_polygon(PackedVector2Array([pos + Vector2(-9, -1), pos + Vector2(0, -10), pos + Vector2(9, -1), pos + Vector2(9, 8), pos + Vector2(-9, 8)]), outline)
+			draw_colored_polygon(PackedVector2Array([pos + Vector2(-6, 0), pos + Vector2(0, -6), pos + Vector2(6, 0), pos + Vector2(6, 5), pos + Vector2(-6, 5)]), COLORS["camp"])
 
 func _draw_player(to_map: Transform2D, rect: Rect2) -> void:
 	if _player == null or not is_instance_valid(_player):
@@ -207,6 +217,7 @@ func _draw_legend(rect: Rect2, font: Font) -> void:
 	var entries := [
 		["player", "MAP_LEGEND_YOU"], ["stone", "MAP_LEGEND_STONE"], ["wood", "MAP_LEGEND_WOOD"],
 		["breakable", "MAP_LEGEND_ROCK"], ["animals", "MAP_LEGEND_ANIMAL"],
+		["campfire", "MAP_LEGEND_FIRE"], ["structures", "MAP_LEGEND_CAMP"],
 	]
 	if rect.position.x < 200.0:
 		# Écran étroit : titre et légende en ligne, sous la barre du haut.

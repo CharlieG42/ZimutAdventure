@@ -89,3 +89,16 @@ MAP_LEGEND_ROCK,Rock
 MAP_LEGEND_ANIMAL,Animal
 MAP_LEGEND_YOU,You
 MAP_HINT,Press M or the Close button
+ACTION_PLACE,Place
+ACTION_REST_BED,Rest on the bed
+ACTION_SLEEP,Sleep
+TOAST_PLACED,Placed: %s
+TOAST_TOO_STEEP,Ground too steep to build here.
+TOAST_CANNOT_PLACE,You can't place that here.
+TOAST_TOO_MANY,Too many structures in the canyon.
+TOAST_BED_REST,What a nap! Stamina restored.
+TOAST_NOT_TIRED,You're not sleepy: wait for night.
+TOAST_SLEPT,You sleep until dawn. Stamina restored.
+QUEST_REWARD,Reward: %s
+MAP_LEGEND_FIRE,Campfire
+MAP_LEGEND_CAMP,Camp

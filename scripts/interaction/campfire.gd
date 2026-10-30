@@ -12,6 +12,7 @@ var _light: OmniLight3D
 var _mesh: MeshInstance3D
 
 func _ready() -> void:
+	add_to_group("campfire")
 	prompt_text = "ACTION_STOKE_FIRE"
 	_light = get_node_or_null("FireLight") as OmniLight3D
 	_mesh = get_node_or_null("Flames") as MeshInstance3D

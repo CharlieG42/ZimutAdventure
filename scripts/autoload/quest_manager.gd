@@ -14,7 +14,8 @@ enum State { LOCKED, ACTIVE, COMPLETED }
 const SAVE_PATH := "user://quests.cfg"
 
 ## id -> titre, description, objet suivi, quantité, quête requise (optionnelle).
-## `goal_item` est un id d'inventaire : une ressource ramassée (item_stone) ou un
+## `reward` : ressources offertes à la fin de la quête (elles aident à enchaîner les
+## suivantes). `goal_item` est un id d'inventaire : une ressource ramassée (item_stone) ou un
 ## objet fabriqué (tool_stone_axe : CraftManager le dépose dans le sac).
 const QUESTS := {
 	"quest_first_stone": {
@@ -22,12 +23,14 @@ const QUESTS := {
 		"description": "QUEST_FIRST_STONE_DESC",
 		"goal_item": "item_stone",
 		"goal_count": 3,
+		"reward": {"item_wood": 2},
 	},
 	"quest_warm_fire": {
 		"title": "QUEST_WARM_FIRE_TITLE",
 		"description": "QUEST_WARM_FIRE_DESC",
 		"goal_item": "item_wood",
 		"goal_count": 4,
+		"reward": {"item_stone": 2},
 	},
 	"quest_builder": {
 		"title": "QUEST_BUILDER_TITLE",
@@ -35,6 +38,7 @@ const QUESTS := {
 		"goal_item": "tool_stone_axe",
 		"goal_count": 1,
 		"requires": "quest_first_stone",
+		"reward": {"item_wood": 3},
 	},
 	"quest_hunter": {
 		"title": "QUEST_HUNTER_TITLE",
@@ -42,6 +46,7 @@ const QUESTS := {
 		"goal_item": "tool_hunting_bow",
 		"goal_count": 1,
 		"requires": "quest_builder",
+		"reward": {"item_wood": 5, "item_stone": 4},
 	},
 	"quest_shelter": {
 		"title": "QUEST_SHELTER_TITLE",
@@ -112,6 +117,12 @@ func get_description(quest_id: String) -> String:
 		return QUESTS[quest_id].get("description", "")
 	return ""
 
+## Récompense {id d'objet: quantité} (vide si aucune).
+func get_reward(quest_id: String) -> Dictionary:
+	if QUESTS.has(quest_id):
+		return (QUESTS[quest_id].get("reward", {}) as Dictionary).duplicate()
+	return {}
+
 func get_goal_item(quest_id: String) -> String:
 	if QUESTS.has(quest_id):
 		return String(QUESTS[quest_id].get("goal_item", ""))
@@ -164,12 +175,22 @@ func _unlock_available() -> void:
 			set_state(quest_id, State.ACTIVE)
 
 func _announce(quest_id: String) -> void:
+	var reward := get_reward(quest_id)
+	var inventory := InteractionManager.get_inventory()
+	var parts: PackedStringArray = []
+	for item_id in reward:
+		if inventory != null:
+			inventory.call("add_item", item_id, int(reward[item_id]))
+		parts.append("%d× %s" % [int(reward[item_id]), tr("ITEM_" + String(item_id).to_upper())])
 	var tree := get_tree()
 	if tree == null:
 		return
 	var hud := tree.get_first_node_in_group("hud") as Node
 	if hud != null and hud.has_method("show_toast"):
-		hud.show_toast(tr("TOAST_QUEST_DONE") % tr(get_title(quest_id)), 3.0)
+		var message: String = tr("TOAST_QUEST_DONE") % tr(get_title(quest_id))
+		if not parts.is_empty():
+			message += "\n" + tr("QUEST_REWARD") % ", ".join(parts)
+		hud.show_toast(message, 3.5)
 
 # --- Sauvegarde --------------------------------------------------------------------
 

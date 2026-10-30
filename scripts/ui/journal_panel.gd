@@ -166,6 +166,13 @@ func _quest_card(quest_id: String, done: bool) -> Control:
 	bar.show_percentage = false
 	box.add_child(bar)
 
+	var reward: Dictionary = _quest_manager.call("get_reward", quest_id)
+	if not reward.is_empty() and not done:
+		var parts: PackedStringArray = []
+		for item_id in reward:
+			parts.append("%d× %s" % [int(reward[item_id]), tr("ITEM_" + String(item_id).to_upper())])
+		_add_label(box, tr("QUEST_REWARD") % ", ".join(parts), 15, ACCENT)
+
 	var count := Label.new()
 	count.text = "%d / %d" % [progress.x, progress.y]
 	count.add_theme_font_size_override("font_size", 15)
@@ -258,11 +265,43 @@ func _refresh_inventory() -> void:
 		return
 	var ids := all.keys()
 	ids.sort()
+	var spawner := get_tree().get_first_node_in_group("structure_spawner")
 	for item_id in ids:
 		var label := Label.new()
 		label.text = "%s  ×%d" % [tr("ITEM_" + String(item_id).to_upper()), int(all[item_id])]
 		label.add_theme_font_size_override("font_size", 22)
-		_inventory_list.add_child(label)
+		if spawner == null or not bool(spawner.call("is_placeable", item_id)):
+			_inventory_list.add_child(label)
+			continue
+		# Construction : le bouton « Poser » la dépose devant le joueur.
+		var row := HBoxContainer.new()
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(label)
+		var button := Button.new()
+		button.text = tr("ACTION_PLACE")
+		button.custom_minimum_size = Vector2(150, BUTTON_HEIGHT)
+		button.focus_mode = Control.FOCUS_NONE
+		button.pressed.connect(_on_place_pressed.bind(String(item_id)))
+		row.add_child(button)
+		_inventory_list.add_child(row)
+
+## Pose la construction 3 m devant le joueur, face à lui, si le terrain s'y prête.
+func _on_place_pressed(item_id: String) -> void:
+	var tree := get_tree()
+	var spawner := tree.get_first_node_in_group("structure_spawner")
+	var player := tree.get_first_node_in_group("player") as Node3D
+	if spawner == null or player == null or _inventory == null:
+		return
+	var forward := -player.global_transform.basis.z
+	forward.y = 0.0
+	var origin := player.global_position + forward.normalized() * 3.2
+	var error: String = spawner.call("place", item_id, origin, player.rotation.y)
+	if error != "":
+		_notify(tr(error))
+		return
+	_inventory.call("remove_item", item_id, 1)
+	_notify(tr("TOAST_PLACED") % tr("ITEM_" + item_id.to_upper()))
+	close()
 
 # --- Utilitaires ---------------------------------------------------------------------
 

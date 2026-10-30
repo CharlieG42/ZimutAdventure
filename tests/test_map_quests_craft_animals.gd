@@ -50,6 +50,9 @@ func _init() -> void:
 
 	# --- Quêtes ----------------------------------------------------------------------
 	quest_node.call("clear_for_test")
+	# La hache fabriquée plus haut terminerait « Premiers outils » (et sa récompense de
+	# bûches ferait aboutir « Un feu au chaud ») : on la retire pour isoler ce test.
+	inventory_node.call("remove_item", "tool_stone_axe", 1)
 	for quest_id in quest_node.get("QUESTS").keys():
 		quest_node.call("activate", quest_id)
 	inventory_node.call("add_item", "item_stone", 3)

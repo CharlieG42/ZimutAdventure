@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://zimutcanyonplay"]
+[gd_scene load_steps=16 format=3 uid="uid://zimutcanyonplay"]
 
 [ext_resource type="Script" path="res://scripts/world/landscape_manager.gd" id="1_landscape"]
 [ext_resource type="PackedScene" uid="uid://zimutplayer0001" path="res://scenes/player/player.tscn" id="2_player"]
@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" path="res://scenes/interaction/breakable_rock.tscn" id="11_rock"]
 [ext_resource type="Script" path="res://scripts/world/animal_spawner.gd" id="12_animalspawn"]
 [ext_resource type="PackedScene" path="res://scenes/world/passive_animal.tscn" id="13_animal"]
+[ext_resource type="Script" path="res://scripts/world/structure_spawner.gd" id="14_structures"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.45, 0.65, 0.85, 1)
@@ -101,6 +102,9 @@ count = 25
 script = ExtResource("12_animalspawn")
 animal_scene = ExtResource("13_animal")
 count = 6
+
+[node name="Structures" type="Node3D" parent="."]
+script = ExtResource("14_structures")
 
 [node name="HUD" parent="." instance=ExtResource("5_hud")]
 

@@ -89,3 +89,16 @@ MAP_LEGEND_ROCK,Rocher
 MAP_LEGEND_ANIMAL,Animal
 MAP_LEGEND_YOU,Vous
 MAP_HINT,Touche M ou bouton Fermer
+ACTION_PLACE,Poser
+ACTION_REST_BED,Se reposer sur le lit
+ACTION_SLEEP,Dormir
+TOAST_PLACED,Posé : %s
+TOAST_TOO_STEEP,Terrain trop pentu pour construire ici.
+TOAST_CANNOT_PLACE,Impossible de poser ça ici.
+TOAST_TOO_MANY,Trop de constructions dans le canyon.
+TOAST_BED_REST,Quelle bonne sieste ! Endurance rétablie.
+TOAST_NOT_TIRED,Vous n'avez pas sommeil : attendez la nuit.
+TOAST_SLEPT,Vous dormez jusqu'à l'aube. Endurance rétablie.
+QUEST_REWARD,Récompense : %s
+MAP_LEGEND_FIRE,Feu de camp
+MAP_LEGEND_CAMP,Campement

@@ -42,6 +42,10 @@ func _init() -> void:
 	if quests.call("state_of", "quest_builder") != 1:
 		errors.append("quest_builder doit se débloquer après les premières pierres")
 
+	# Récompense : 2 bûches offertes à la fin de « Premières pierres ».
+	if int(inventory.call("count_of", "item_wood")) != 2:
+		errors.append("la récompense de quest_first_stone doit offrir 2 bûches")
+
 	# Progression CUMULATIVE : fabriquer consomme les pierres sans défaire la quête.
 	inventory.call("add_item", "item_wood", 4)
 	if quests.call("state_of", "quest_warm_fire") != 2:
@@ -87,6 +91,11 @@ func _init() -> void:
 	if bars.is_empty() or cards_before == 0:
 		errors.append("le journal doit afficher des barres de progression")
 	# Une recette craftable a un bouton actif, les autres sont désactivées.
+	# Les récompenses ont rempli le sac : on le vide pour tester les deux états.
+	inventory.call("clear_for_test")
+	inventory.call("add_item", "item_wood", 3)
+	journal.open()
+	await process_frame
 	journal.show_tab(1)
 	var enabled := 0
 	var disabled := 0

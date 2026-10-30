@@ -32,8 +32,9 @@ La course consomme de l'endurance (barre discrète en bas) ; la boussole en haut
 - **Pancarte** : lisez le panneau au départ pour un message d'ambiance (affiché en toast, traduit FR/EN).
 - **Rochers cassables** : environ 25 petits rochers dans le canyon ont une vraie collision (impossible de les traverser) et se cassent à l'interaction en lâchant 2 à 4 pierres ramassables, avec éclats animés.
 - **Carte** (bouton Carte / touche M) : vue plein écran du canyon avec topographie coloriée par altitude, position du joueur (point bleu + cap) et ressources (pierres, bois, rochers cassables).
-- **Journal de quêtes** (bouton Journal / touche C) : onglets Quêtes (objectifs de collecte avec progression automatique), Fabrication et Sac. Cinq quêtes enchaînées (pierres, feu, hache, arc, abri) avec barres de progression ; la progression est cumulative et sauvegardée, et l'objectif en cours s'affiche sous le cap.
+- **Journal de quêtes** (bouton Journal / touche C) : onglets Quêtes (objectifs de collecte avec progression automatique), Fabrication et Sac. Cinq quêtes enchaînées (pierres, feu, hache, arc, abri) avec barres de progression et récompenses en ressources ; la progression est cumulative et sauvegardée, et l'objectif en cours s'affiche sous le cap.
 - **Fabrication / construction** : recettes (hache en pierre, arc de chasse, lit de camp, abri) consommant les ressources du sac ; base du futur mode de construction d'habitation.
+- **Constructions** : le lit de camp et l'abri fabriqués se posent depuis le Sac (bouton Poser, devant le joueur, terrain plat uniquement). Le lit rétablit l'endurance, l'abri permet de dormir la nuit jusqu'à 7 h. Elles sont sauvegardées (`user://structures.cfg`) et apparaissent sur la carte, avec le feu de camp.
 - **Animaux inoffensifs** : 6 animaux (cerfs et lièvres) errent dans le canyon, broutent et fuient le joueur s'il s'approche trop.
 
 Régénérer les images du HUD : `python3 tools/generate_ui_assets.py` puis `godot --headless --path . -s tools/make_hud_theme.gd`. Note : Godot 4.7 possède une classe native `VirtualJoystick`, notre stick s'appelle donc `TouchStick`.
