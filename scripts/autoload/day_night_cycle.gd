@@ -48,16 +48,19 @@ func _apply() -> void:
 	var day_factor := _day_factor()
 	sun.rotation.x = _base_sun_rotation.x + (hour - 12.0) / 24.0 * TAU
 	sun.visible = day_factor > 0.02
-	sun.light_energy = lerp(0.0, 1.4, day_factor)
+	sun.light_energy = lerp(0.0, 1.55, day_factor)
 	sun.light_color = Color(0.55, 0.50, 0.60).lerp(Color(1.0, 0.90, 0.75), day_factor)
 	if environment != null:
 		var sky: Sky = environment.sky
 		if sky != null and sky.sky_material is ProceduralSkyMaterial:
 			var sky_mat: ProceduralSkyMaterial = sky.sky_material
-			sky_mat.sky_top_color = Color(0.06, 0.09, 0.22).lerp(Color(0.45, 0.65, 0.85), day_factor)
-			sky_mat.sky_horizon_color = Color(0.04, 0.05, 0.10).lerp(Color(0.85, 0.60, 0.40), day_factor)
+			sky_mat.sky_top_color = Color(0.06, 0.09, 0.22).lerp(Color(0.2, 0.45, 0.86), day_factor)
+			# Horizon : plus orangé quand le soleil est bas (aube, crépuscule).
+			var low_sun := 1.0 - smoothstep(0.15, 0.7, day_factor)
+			var horizon_day := Color(0.98, 0.80, 0.58).lerp(Color(1.0, 0.5, 0.24), low_sun)
+			sky_mat.sky_horizon_color = Color(0.04, 0.05, 0.10).lerp(horizon_day, smoothstep(0.0, 0.3, day_factor))
 			sky_mat.ground_bottom_color = Color(0.02, 0.02, 0.05).lerp(Color(0.35, 0.22, 0.14), day_factor)
-			sky_mat.ground_horizon_color = Color(0.03, 0.03, 0.07).lerp(Color(0.60, 0.40, 0.25), day_factor)
+			sky_mat.ground_horizon_color = sky_mat.sky_horizon_color.lerp(Color(0.6, 0.4, 0.25), 0.35)
 			var night_factor := 1.0 - day_factor
 			sky_mat.sky_cover_modulate = Color(0.15, 0.18, 0.30, 1.0).lerp(Color(0.9, 0.85, 0.8, 1.0), day_factor)
 			sky_mat.sky_energy_multiplier = lerp(0.3, 1.0, day_factor)
@@ -66,7 +69,7 @@ func _apply() -> void:
 			environment.ambient_light_color = Color(0.10, 0.12, 0.20).lerp(Color(0.75, 0.65, 0.55), day_factor)
 			environment.ambient_light_energy = lerp(0.08, 0.6, day_factor)
 			var nf := 1.0 - day_factor
-			environment.fog_light_color = Color(0.08, 0.09, 0.14).lerp(Color(0.75, 0.55, 0.38), day_factor)
+			environment.fog_light_color = Color(0.08, 0.09, 0.14).lerp(Color(0.86, 0.66, 0.5), day_factor)
 			environment.fog_light_energy = lerp(0.15, 0.6, day_factor)
 			environment.fog_density = lerp(0.0009, 0.0018, day_factor)
 			environment.glow_enabled = true

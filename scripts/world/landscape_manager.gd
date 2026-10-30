@@ -8,6 +8,9 @@ extends Node3D
 @export var pine_count: int = 220
 @export var shrub_count: int = 180
 @export var grass_count: int = 400
+@export var cactus_count: int = 70
+@export var agave_count: int = 110
+@export var flower_count: int = 160
 @export var seed_value: int = 1887
 @export var collision_enabled: bool = true
 
@@ -216,6 +219,9 @@ func _place_props() -> void:
 		[VegetationGenerator.PlantType.PINE, pine_count, 0.45, 4.0],
 		[VegetationGenerator.PlantType.SHRUB, shrub_count, 0.0, 0.0],
 		[VegetationGenerator.PlantType.DRY_GRASS, grass_count, 0.0, 0.0],
+		[VegetationGenerator.PlantType.CACTUS, cactus_count, 0.4, 3.0],
+		[VegetationGenerator.PlantType.AGAVE, agave_count, 0.0, 0.0],
+		[VegetationGenerator.PlantType.FLOWERS, flower_count, 0.0, 0.0],
 	]
 	for plant in plants:
 		var mesh: ArrayMesh = VegetationGenerator.generate(plant[0] as VegetationGenerator.PlantType, rng)

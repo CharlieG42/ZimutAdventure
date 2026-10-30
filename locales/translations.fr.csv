@@ -121,3 +121,6 @@ TOAST_WATER_REFILL,La source a besoin de temps pour se remplir...
 TOAST_ATE,Vous mangez : %s
 STATUS_HUNGER_LOW,Vous êtes affamé !
 STATUS_THIRST_LOW,Vous avez soif !
+VITAL_HUNGER,Faim
+VITAL_THIRST,Soif
+VITAL_ENERGY,Énergie

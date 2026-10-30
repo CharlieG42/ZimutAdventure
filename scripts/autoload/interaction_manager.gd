@@ -79,6 +79,10 @@ func _process(_delta: float) -> void:
 	if _current != null and not is_instance_valid(_current):
 		_current = null
 		focus_changed.emit(null)
+	# Un objet déjà utilisé (ramassé, cassé) ne doit plus rester visé.
+	if _current != null and not (_current as Interactable).can_interact():
+		_current = null
+		focus_changed.emit(null)
 	var next: Node3D = _find_target()
 	if next != _current:
 		_current = next

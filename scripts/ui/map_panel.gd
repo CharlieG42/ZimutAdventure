@@ -91,30 +91,36 @@ func _terrain_size() -> float:
 		return maxf(1.0, float(_landscape.get("terrain_size")))
 	return 400.0
 
+func _build_terrain_texture() -> void:
+	_terrain_image = MapPanel.build_terrain_texture(_landscape, RESOLUTION)
+	_terrain_ready = _landscape != null and _landscape.has_method("terrain_height_at")
+
 ## Échantillonne terrain_height_at, colore par altitude et ajoute un ombrage de relief
 ## (lumière venant du nord-ouest) pour que les falaises et le lit du canyon se lisent.
-func _build_terrain_texture() -> void:
-	var img := Image.create(RESOLUTION, RESOLUTION, false, Image.FORMAT_RGB8)
-	if _landscape == null or not _landscape.has_method("terrain_height_at"):
+## Partagée avec la mini-carte du HUD.
+static func build_terrain_texture(landscape: Node3D, resolution: int) -> ImageTexture:
+	var img := Image.create(resolution, resolution, false, Image.FORMAT_RGB8)
+	if landscape == null or not landscape.has_method("terrain_height_at"):
 		img.fill(COLORS["mid"])
-		_terrain_image = ImageTexture.create_from_image(img)
-		return
-	var terrain_size := _terrain_size()
+		return ImageTexture.create_from_image(img)
+	var terrain_size := 400.0
+	if landscape.get("terrain_size") != null:
+		terrain_size = maxf(1.0, float(landscape.get("terrain_size")))
 	var heights := PackedFloat32Array()
-	heights.resize(RESOLUTION * RESOLUTION)
-	for py in RESOLUTION:
-		for px in RESOLUTION:
-			var wx := (float(px) / float(RESOLUTION - 1) - 0.5) * terrain_size
-			var wz := (float(py) / float(RESOLUTION - 1) - 0.5) * terrain_size
-			heights[py * RESOLUTION + px] = _landscape.call("terrain_height_at", wx, wz)
-	var cell := terrain_size / float(RESOLUTION - 1)
-	for py in RESOLUTION:
-		for px in RESOLUTION:
-			var h := heights[py * RESOLUTION + px]
-			var left := heights[py * RESOLUTION + maxi(px - 1, 0)]
-			var right := heights[py * RESOLUTION + mini(px + 1, RESOLUTION - 1)]
-			var up := heights[maxi(py - 1, 0) * RESOLUTION + px]
-			var down := heights[mini(py + 1, RESOLUTION - 1) * RESOLUTION + px]
+	heights.resize(resolution * resolution)
+	for py in resolution:
+		for px in resolution:
+			var wx := (float(px) / float(resolution - 1) - 0.5) * terrain_size
+			var wz := (float(py) / float(resolution - 1) - 0.5) * terrain_size
+			heights[py * resolution + px] = landscape.call("terrain_height_at", wx, wz)
+	var cell := terrain_size / float(resolution - 1)
+	for py in resolution:
+		for px in resolution:
+			var h := heights[py * resolution + px]
+			var left := heights[py * resolution + maxi(px - 1, 0)]
+			var right := heights[py * resolution + mini(px + 1, resolution - 1)]
+			var up := heights[maxi(py - 1, 0) * resolution + px]
+			var down := heights[mini(py + 1, resolution - 1) * resolution + px]
 			var dx := (right - left) / (2.0 * cell)
 			var dz := (down - up) / (2.0 * cell)
 			var light := clampf(0.78 + (dx + dz) * 1.4, 0.45, 1.25)
@@ -122,8 +128,7 @@ func _build_terrain_texture() -> void:
 			var color: Color = COLORS["low"].lerp(COLORS["mid"], minf(t * 2.0, 1.0))
 			color = color.lerp(COLORS["high"], clampf(t * 2.0 - 1.0, 0.0, 1.0))
 			img.set_pixel(px, py, Color(color.r * light, color.g * light, color.b * light))
-	_terrain_image = ImageTexture.create_from_image(img)
-	_terrain_ready = true
+	return ImageTexture.create_from_image(img)
 
 # --- Dessin ----------------------------------------------------------------------
 

@@ -121,3 +121,6 @@ TOAST_WATER_REFILL,The spring needs time to refill...
 TOAST_ATE,You eat: %s
 STATUS_HUNGER_LOW,You are starving!
 STATUS_THIRST_LOW,You are thirsty!
+VITAL_HUNGER,Hunger
+VITAL_THIRST,Thirst
+VITAL_ENERGY,Energy
