@@ -60,6 +60,9 @@ const QUESTS := {
 var _states: Dictionary = {}
 var _collected: Dictionary = {}
 var _autosave: bool = true
+# Les tests headless comptent exactement le contenu du sac : le vrai QuestManager (autoload)
+# n'y ajoute donc pas de récompenses, sauf demande explicite (enable_rewards_for_test).
+var _grant_rewards: bool = DisplayServer.get_name() != "headless"
 
 func _ready() -> void:
 	_load()
@@ -175,7 +178,7 @@ func _unlock_available() -> void:
 			set_state(quest_id, State.ACTIVE)
 
 func _announce(quest_id: String) -> void:
-	var reward := get_reward(quest_id)
+	var reward := get_reward(quest_id) if _grant_rewards else {}
 	var inventory := InteractionManager.get_inventory()
 	var parts: PackedStringArray = []
 	for item_id in reward:
@@ -213,6 +216,10 @@ func _save() -> void:
 	for item_id in _collected:
 		config.set_value("collected", item_id, int(_collected[item_id]))
 	config.save(SAVE_PATH)
+
+## API de test : active les récompenses (désactivées en headless).
+func enable_rewards_for_test() -> void:
+	_grant_rewards = true
 
 ## API de test : repart de zéro, sans écrire sur le disque.
 func clear_for_test() -> void:

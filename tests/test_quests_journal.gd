@@ -20,6 +20,7 @@ func _init() -> void:
 	var craft := _ensure("CraftManager", "res://scripts/autoload/craft_manager.gd")
 	await process_frame
 	quests.call("clear_for_test")
+	quests.call("enable_rewards_for_test")
 	quests.call("_unlock_available")
 
 	# Déblocage en chaîne : seules les quêtes sans prérequis sont actives au départ.
