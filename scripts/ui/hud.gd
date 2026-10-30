@@ -18,9 +18,8 @@ const BASE_MARGIN := 16
 @onready var view_button: Button = $SafeArea/VBox/BottomBar/ViewButton
 @onready var compass_label: Label = $SafeArea/VBox/TopBar/CompassLabel
 @onready var clock_label: Label = $SafeArea/VBox/TopBar/ClockLabel
-@onready var stamina_bar: ProgressBar = $SafeArea/VBox/StaminaBar
-@onready var hunger_bar: ProgressBar = $SafeArea/VBox/HungerBar
-@onready var thirst_bar: ProgressBar = $SafeArea/VBox/ThirstBar
+@onready var vitals: Control = $Overlay/Vitals
+@onready var minimap: Control = $Overlay/MiniMap
 @onready var safe_area: MarginContainer = $SafeArea
 @onready var compass_strip: CompassStrip = $Overlay/CompassStrip
 @onready var reticle: Control = $Overlay/Reticle
@@ -46,8 +45,6 @@ var _base_offsets: Dictionary = {}
 var _last_clock_minute: int = -1
 var _last_heading: int = -1
 var _focused_interactable: Interactable = null
-var _stamina_alpha: float = 0.0
-var _stamina_wanted: bool = false
 var _stamina_exhausted: bool = false
 
 func _ready() -> void:
@@ -89,6 +86,7 @@ func _ready() -> void:
 	interact_prompt.visible = false
 	toast.visible = false
 	interact_button.disabled = true
+	interact_button.visible = false
 	_refresh_attack_button()
 
 	_capture_layout()
@@ -106,6 +104,8 @@ func _ready() -> void:
 		var world: Node = get_parent() if get_parent() != null else get_tree().current_scene
 		var landscape := world.get_node_or_null("Landscape") if world != null else null
 		map_panel.set_context(landscape, _player)
+		if minimap != null:
+			minimap.set_context(landscape, _player)
 	_setup_quest_tracker()
 	if _player != null:
 		joystick.moved.connect(_player.set_joystick_vector)
@@ -142,8 +142,13 @@ func _update_quest_tracker() -> void:
 	quest_tracker.visible = true
 
 func _process(delta: float) -> void:
-	_update_stamina_fade(delta)
 	_hide_stale_prompt()
+	# La mini-carte s'efface quand un panneau plein écran est ouvert.
+	var panel_open := (map_panel != null and map_panel.visible) or (journal_panel != null and journal_panel.visible)
+	minimap.visible = not panel_open
+	vitals.visible = not panel_open
+	if panel_open and interact_button.visible:
+		_on_focus_changed(null)
 	if _player == null:
 		return
 	if _camera_joystick_vector != Vector2.ZERO and _player.has_method("apply_camera_joystick"):
@@ -237,11 +242,13 @@ func _on_focus_changed(target: Node3D) -> void:
 		interact_prompt.text = label if PlatformInfo.is_touch() else "[%s] %s" % [_interact_key_text(), label]
 		interact_prompt.visible = true
 		interact_button.disabled = not interactable.can_interact()
+		interact_button.visible = true
 		reticle.call("set_focused", true)
 		_pulse_interact(not interact_button.disabled)
 	else:
 		interact_prompt.visible = false
 		interact_button.disabled = true
+		interact_button.visible = false
 		reticle.call("set_focused", false)
 		_pulse_interact(false)
 
@@ -249,7 +256,8 @@ func _on_focus_changed(target: Node3D) -> void:
 ## cassé), l'invite et le bouton doivent s'éteindre même si le signal
 ## focus_changed n'est pas revenu.
 func _hide_stale_prompt() -> void:
-	if _focused_interactable == null:
+	# Un objet libéré compare « égal » à null : on ne se fie qu'à is_instance_valid.
+	if not interact_prompt.visible and not interact_button.visible:
 		return
 	if is_instance_valid(_focused_interactable) and _focused_interactable.can_interact():
 		return
@@ -296,32 +304,18 @@ func _on_attack_pressed() -> void:
 
 # --- Endurance ------------------------------------------------------------------
 
-## Barres faim/soif : discrètes quand pleines, teinte d'alerte quand vides.
+## Jauges latérales : faim et soif suivent SurvivalManager, l'énergie suit le joueur.
 func _on_needs_changed(hunger: float, thirst: float) -> void:
-	hunger_bar.value = hunger * 100.0
-	thirst_bar.value = thirst * 100.0
-	var full := hunger > 0.995 and thirst > 0.995
-	hunger_bar.visible = not full
-	thirst_bar.visible = not full
-	var hunger_tint := Color(1.0, 0.8, 0.45) if hunger <= 0.0 else Color(1, 1, 1)
-	var thirst_tint := Color(0.5, 0.8, 1.0) if thirst <= 0.0 else Color(1, 1, 1)
-	hunger_bar.modulate = hunger_tint
-	thirst_bar.modulate = thirst_tint
+	vitals.call("set_value", "hunger", hunger)
+	vitals.call("set_value", "thirst", thirst)
 
 func _on_stamina_changed(value: float, exhausted: bool) -> void:
-	stamina_bar.value = value * 100.0
-	_stamina_wanted = exhausted or value < 0.995
+	vitals.call("set_value", "energy", value)
 	if exhausted and not _stamina_exhausted:
 		show_toast(tr("TOAST_EXHAUSTED"), 1.6)
 		# La course verrouillée est relâchée : le bouton reflète l'état réel.
 		sprint_button.button_pressed = false
 	_stamina_exhausted = exhausted
-
-func _update_stamina_fade(delta: float) -> void:
-	var target := 1.0 if _stamina_wanted else 0.0
-	_stamina_alpha = move_toward(_stamina_alpha, target, delta * (6.0 if target > _stamina_alpha else 1.5))
-	var tint := Color(1.0, 0.55, 0.45) if _stamina_exhausted else Color(1, 1, 1)
-	stamina_bar.modulate = Color(tint.r, tint.g, tint.b, _stamina_alpha)
 
 # --- Horloge --------------------------------------------------------------------
 

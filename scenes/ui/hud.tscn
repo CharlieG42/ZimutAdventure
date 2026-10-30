@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/virtual_joystick.tscn" id="2_joy"]
@@ -11,6 +11,8 @@
 [ext_resource type="Texture2D" path="res://assets/ui/icons/sprint.png" id="9_sprint"]
 [ext_resource type="Script" path="res://scripts/ui/journal_panel.gd" id="10_journal"]
 [ext_resource type="Script" path="res://scripts/ui/map_panel.gd" id="11_map"]
+[ext_resource type="Script" path="res://scripts/ui/vitals_panel.gd" id="12_vitals"]
+[ext_resource type="Script" path="res://scripts/ui/minimap.gd" id="13_minimap"]
 
 [node name="HUD" type="CanvasLayer"]
 groups = ["hud"]
@@ -77,37 +79,6 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="StaminaBar" type="ProgressBar" parent="SafeArea/VBox"]
-modulate = Color(1, 1, 1, 0)
-custom_minimum_size = Vector2(340, 12)
-layout_mode = 2
-size_flags_horizontal = 4
-mouse_filter = 2
-theme_type_variation = &"StaminaBar"
-step = 0.1
-value = 100.0
-show_percentage = false
-
-[node name="HungerBar" type="ProgressBar" parent="SafeArea/VBox"]
-custom_minimum_size = Vector2(340, 10)
-layout_mode = 2
-size_flags_horizontal = 4
-mouse_filter = 2
-theme_type_variation = &"StaminaBar"
-step = 0.1
-value = 100.0
-show_percentage = false
-
-[node name="ThirstBar" type="ProgressBar" parent="SafeArea/VBox"]
-custom_minimum_size = Vector2(340, 10)
-layout_mode = 2
-size_flags_horizontal = 4
-mouse_filter = 2
-theme_type_variation = &"StaminaBar"
-step = 0.1
-value = 100.0
-show_percentage = false
-
 [node name="BottomBar" type="HBoxContainer" parent="SafeArea/VBox"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -143,6 +114,28 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme = ExtResource("4_theme")
+
+[node name="Vitals" type="Control" parent="Overlay"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 124.0
+offset_right = 202.0
+offset_bottom = 336.0
+mouse_filter = 2
+script = ExtResource("12_vitals")
+
+[node name="MiniMap" type="Control" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -194.0
+offset_top = 60.0
+offset_right = -24.0
+offset_bottom = 230.0
+grow_horizontal = 0
+mouse_filter = 2
+script = ExtResource("13_minimap")
 
 [node name="CompassStrip" type="Control" parent="Overlay"]
 layout_mode = 1
@@ -222,9 +215,9 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -264.0
-offset_top = -560.0
+offset_top = -500.0
 offset_right = -16.0
-offset_bottom = -336.0
+offset_bottom = -276.0
 grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2

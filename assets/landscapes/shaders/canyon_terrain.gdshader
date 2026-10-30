@@ -132,18 +132,25 @@ void fragment() {
 	vec3 crevice = mix(rock_shadow.rgb, albedo, ndotl);
 	albedo = mix(albedo, crevice, v_slope * 0.35);
 
-	// Micro-relief : accroche la lumière rasante du soir sur le sol proche.
-	if (near > 0.01 && bump_strength > 0.0) {
-		vec2 bp = w * 2.4;
-		float h0 = noise(bp);
-		float hx = noise(bp + vec2(0.1, 0.0));
-		float hz = noise(bp + vec2(0.0, 0.1));
+	// Micro-relief du sol proche + grain des falaises : accrochent la lumière rasante du soir.
+	float bump_amount = near * bump_strength + rock_factor * bump_strength * 1.4 * (1.0 - smoothstep(60.0, 160.0, view_dist));
+	if (bump_amount > 0.01) {
+		vec2 bp = w * 2.4 + vec2(v_height * 0.9, -v_height * 0.4) * rock_factor;
+		float h0 = noise(bp) + 0.5 * noise(bp * 2.3);
+		float hx = noise(bp + vec2(0.1, 0.0)) + 0.5 * noise((bp + vec2(0.1, 0.0)) * 2.3);
+		float hz = noise(bp + vec2(0.0, 0.1)) + 0.5 * noise((bp + vec2(0.0, 0.1)) * 2.3);
 		vec3 n_world = normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
-		n_world = normalize(n_world + vec3(h0 - hx, 0.0, h0 - hz) * bump_strength * 6.0 * near);
+		n_world = normalize(n_world + vec3(h0 - hx, 0.0, h0 - hz) * bump_amount * 6.0);
 		NORMAL = normalize((VIEW_MATRIX * vec4(n_world, 0.0)).xyz);
 	}
 
+	// Éclat discret du sable au soleil (grains quartz) sur le sol proche.
+	float sparkle = step(0.985, noise(w * 38.0)) * near * (1.0 - rock_factor);
+	albedo += vec3(0.5, 0.45, 0.35) * sparkle * 0.6;
+
 	ALBEDO = albedo;
-	ROUGHNESS = 0.85 + micro * 0.1;
+	ROUGHNESS = 0.85 + micro * 0.1 - sparkle * 0.5;
+	RIM = 0.15 * (1.0 - rock_factor);
+	RIM_TINT = 0.6;
 	METALLIC = 0.0;
 }

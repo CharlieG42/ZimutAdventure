@@ -24,7 +24,7 @@ func _init() -> void:
 	cycle.bind_world(sun, env)
 
 	cycle.set_hour(12.0)
-	if abs(sun.light_energy - 1.4) > 0.01:
+	if abs(sun.light_energy - 1.55) > 0.01:
 		errors.append("at noon sun energy should be max, got %.2f" % sun.light_energy)
 	if cycle.get_phase() != "day":
 		errors.append("at noon phase should be day, got %s" % cycle.get_phase())

@@ -46,7 +46,7 @@ func _init() -> void:
 			total_instances += mmi.multimesh.instance_count
 			print("Prop group: %d instances, mesh surfaces: %d" % [mmi.multimesh.instance_count, (mmi.multimesh.mesh as ArrayMesh).get_surface_count()])
 		print("Total prop instances: %d" % total_instances)
-		var expected: int = landscape.hoodoo_count + landscape.butte_count + landscape.boulder_count + landscape.pine_count + landscape.shrub_count + landscape.grass_count
+		var expected: int = landscape.hoodoo_count + landscape.butte_count + landscape.boulder_count + landscape.pine_count + landscape.shrub_count + landscape.grass_count + landscape.cactus_count + landscape.agave_count + landscape.flower_count
 		if total_instances != expected:
 			errors.append("Expected %d prop instances, got %d" % [expected, total_instances])
 
