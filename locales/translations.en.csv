@@ -114,3 +114,10 @@ QUEST_FIRST_HUNT_TITLE,First hunt
 QUEST_FIRST_HUNT_DESC,Shoot a deer with your bow to gather raw meat.
 QUEST_COOKED_MEAL_TITLE,A hot meal
 QUEST_COOKED_MEAL_DESC,Cook raw meat on a full campfire.
+ACTION_DRINK,Drink
+ACTION_EAT,Eat
+TOAST_DRANK,Fresh water! You feel better.
+TOAST_WATER_REFILL,The spring needs time to refill...
+TOAST_ATE,You eat: %s
+STATUS_HUNGER_LOW,You are starving!
+STATUS_THIRST_LOW,You are thirsty!

@@ -348,6 +348,10 @@ func _physics_process(delta: float) -> void:
 		_update_third_person_camera(delta)
 
 func _wants_sprint() -> bool:
+	# Faim et soif vides : le corps ne suit plus (SurvivalManager).
+	var survival := get_tree().root.get_node_or_null("SurvivalManager")
+	if survival != null and survival.has_method("can_sprint") and not survival.call("can_sprint"):
+		return false
 	if Input.is_action_pressed("sprint") or _sprint_lock:
 		return true
 	if not sprint_at_full_tilt:
@@ -366,7 +370,12 @@ func _update_stamina(delta: float) -> void:
 	else:
 		_regen_delay_left = maxf(0.0, _regen_delay_left - delta)
 		if _regen_delay_left <= 0.0:
-			stamina = minf(1.0, stamina + stamina_regen * delta)
+			# La faim/soif vide ralentit la récupération (SurvivalManager).
+			var regen_factor := 1.0
+			var survival := get_tree().root.get_node_or_null("SurvivalManager")
+			if survival != null and survival.has_method("stamina_regen_factor"):
+				regen_factor = float(survival.call("stamina_regen_factor"))
+			stamina = minf(1.0, stamina + stamina_regen * regen_factor * delta)
 		if _exhausted and stamina >= exhausted_recovery:
 			_exhausted = false
 	if absf(stamina - _last_emitted_stamina) > 0.002 or _exhausted != _last_emitted_exhausted:

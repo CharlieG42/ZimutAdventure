@@ -19,6 +19,8 @@ const BASE_MARGIN := 16
 @onready var compass_label: Label = $SafeArea/VBox/TopBar/CompassLabel
 @onready var clock_label: Label = $SafeArea/VBox/TopBar/ClockLabel
 @onready var stamina_bar: ProgressBar = $SafeArea/VBox/StaminaBar
+@onready var hunger_bar: ProgressBar = $SafeArea/VBox/HungerBar
+@onready var thirst_bar: ProgressBar = $SafeArea/VBox/ThirstBar
 @onready var safe_area: MarginContainer = $SafeArea
 @onready var compass_strip: CompassStrip = $Overlay/CompassStrip
 @onready var reticle: Control = $Overlay/Reticle
@@ -38,6 +40,7 @@ var _pulse_tween: Tween
 var _interaction_manager: Node
 var _inventory: Node
 var _day_night: Node
+var _survival: Node
 var _camera_joystick_vector: Vector2 = Vector2.ZERO
 var _base_offsets: Dictionary = {}
 var _last_clock_minute: int = -1
@@ -74,6 +77,10 @@ func _ready() -> void:
 	if _inventory != null:
 		_inventory.connect("item_added", _on_item_added)
 		_inventory.connect("item_removed", _on_item_removed)
+	_survival = get_tree().root.get_node_or_null("SurvivalManager") if get_tree() != null else null
+	if _survival != null:
+		_survival.connect("needs_changed", _on_needs_changed)
+		_on_needs_changed(float(_survival.call("get_hunger")), float(_survival.call("get_thirst")))
 	if _day_night != null:
 		_day_night.connect("time_changed", _on_time_changed)
 		_day_night.connect("phase_changed", _on_phase_changed)
@@ -288,6 +295,18 @@ func _on_attack_pressed() -> void:
 		_player.call("try_shoot_arrow")
 
 # --- Endurance ------------------------------------------------------------------
+
+## Barres faim/soif : discrètes quand pleines, teinte d'alerte quand vides.
+func _on_needs_changed(hunger: float, thirst: float) -> void:
+	hunger_bar.value = hunger * 100.0
+	thirst_bar.value = thirst * 100.0
+	var full := hunger > 0.995 and thirst > 0.995
+	hunger_bar.visible = not full
+	thirst_bar.visible = not full
+	var hunger_tint := Color(1.0, 0.8, 0.45) if hunger <= 0.0 else Color(1, 1, 1)
+	var thirst_tint := Color(0.5, 0.8, 1.0) if thirst <= 0.0 else Color(1, 1, 1)
+	hunger_bar.modulate = hunger_tint
+	thirst_bar.modulate = thirst_tint
 
 func _on_stamina_changed(value: float, exhausted: bool) -> void:
 	stamina_bar.value = value * 100.0

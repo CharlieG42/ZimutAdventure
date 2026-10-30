@@ -23,6 +23,7 @@ func _place_interaction_props(root: Node) -> void:
 	var props := {
 		"Campfire": Vector3(6.0, 0.0, 2.0),
 		"Signpost": Vector3(-5.0, 0.0, 4.0),
+		"WaterSource": Vector3(12.0, 0.0, -8.0),
 	}
 	for node_name in props:
 		var node := root.get_node_or_null(node_name) as Node3D

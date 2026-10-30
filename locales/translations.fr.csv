@@ -114,3 +114,10 @@ QUEST_FIRST_HUNT_TITLE,Première chasse
 QUEST_FIRST_HUNT_DESC,Abattez un cerf à l'arc pour récolter de la viande crue.
 QUEST_COOKED_MEAL_TITLE,Un repas chaud
 QUEST_COOKED_MEAL_DESC,Cuisez de la viande crue sur un feu de camp plein.
+ACTION_DRINK,Boire
+ACTION_EAT,Manger
+TOAST_DRANK,De l'eau fraîche ! Vous vous sentez mieux.
+TOAST_WATER_REFILL,La source a besoin de temps pour se remplir...
+TOAST_ATE,Vous mangez : %s
+STATUS_HUNGER_LOW,Vous êtes affamé !
+STATUS_THIRST_LOW,Vous avez soif !

@@ -88,6 +88,26 @@ step = 0.1
 value = 100.0
 show_percentage = false
 
+[node name="HungerBar" type="ProgressBar" parent="SafeArea/VBox"]
+custom_minimum_size = Vector2(340, 10)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+theme_type_variation = &"StaminaBar"
+step = 0.1
+value = 100.0
+show_percentage = false
+
+[node name="ThirstBar" type="ProgressBar" parent="SafeArea/VBox"]
+custom_minimum_size = Vector2(340, 10)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+theme_type_variation = &"StaminaBar"
+step = 0.1
+value = 100.0
+show_percentage = false
+
 [node name="BottomBar" type="HBoxContainer" parent="SafeArea/VBox"]
 layout_mode = 2
 size_flags_horizontal = 3
