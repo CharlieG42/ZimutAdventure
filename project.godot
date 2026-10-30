@@ -25,6 +25,8 @@ InteractionManager="*res://scripts/autoload/interaction_manager.gd"
 Inventory="*res://scripts/autoload/inventory.gd"
 Sfx="*res://scripts/autoload/sfx.gd"
 DayNightCycle="*res://scripts/autoload/day_night_cycle.gd"
+QuestManager="*res://scripts/autoload/quest_manager.gd"
+CraftManager="*res://scripts/autoload/craft_manager.gd"
 
 [display]
 

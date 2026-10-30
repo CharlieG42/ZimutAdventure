@@ -114,30 +114,30 @@ func _init() -> void:
 		root.add_child(hud)
 		await process_frame
 		await process_frame
-		var panel := hud.get_node_or_null("InventoryCenter/InventoryPanel")
+		var panel := hud.get_node_or_null("InventoryCenter/JournalPanel")
 		if panel == null:
-			errors.append("HUD should contain InventoryCenter/InventoryPanel")
+			errors.append("HUD should contain InventoryCenter/JournalPanel")
 		else:
 			if panel.visible:
-				errors.append("inventory panel should start hidden")
+				errors.append("journal panel should start hidden")
 			var inventory2 := inventory_node
 			inventory2.call("clear_for_test")
 			panel.call("open")
 			await process_frame
 			if not panel.visible:
-				errors.append("inventory panel open() should show it")
-			var rows: Array = panel.get("_list").get_children()
-			if rows.is_empty() or not String(rows[0].text).contains(tr("INVENTORY_EMPTY")):
+				errors.append("journal panel open() should show it")
+			var rows: Array = panel.get("_inventory_list").get_children()
+			if rows.is_empty() or not rows[0].text.contains(tr("INVENTORY_EMPTY")):
 				errors.append("empty inventory should show INVENTORY_EMPTY, got %s" % (rows[0].text if not rows.is_empty() else "nothing"))
 			inventory2.call("add_item", "item_wood", 3)
 			panel.call("open")
 			await process_frame
-			rows = panel.get("_list").get_children()
-			if rows.size() != 1 or not String(rows[0].text).contains("3"):
-				errors.append("panel should list 3x item_wood, got %d row(s)" % rows.size())
+			rows = panel.get("_inventory_list").get_children()
+			if rows.size() != 1 or not rows[0].text.contains("3"):
+				errors.append("journal should list 3x item_wood, got %d row(s)" % rows.size())
 			panel.call("close")
 			if panel.visible:
-				errors.append("inventory panel close() should hide it")
+				errors.append("journal panel close() should hide it")
 		hud.free()
 
 	# --- Scène du canyon --------------------------------------------------------------

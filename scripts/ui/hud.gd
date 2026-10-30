@@ -25,7 +25,8 @@ const BASE_MARGIN := 16
 @onready var toast: Label = $Overlay/Toast
 @onready var joystick: Control = $VirtualJoystick
 @onready var inventory_center: CenterContainer = $InventoryCenter
-@onready var inventory_panel: InventoryPanel = $InventoryCenter/InventoryPanel
+@onready var journal_panel: Control = $InventoryCenter/JournalPanel
+@onready var map_panel: Control = $MapPanel
 @onready var camera_joystick: Control = $CameraJoystick
 @onready var touch_look: Control = $TouchLook
 
@@ -39,6 +40,7 @@ var _camera_joystick_vector: Vector2 = Vector2.ZERO
 var _base_offsets: Dictionary = {}
 var _last_clock_minute: int = -1
 var _last_heading: int = -1
+var _focused_interactable: Interactable = null
 var _stamina_alpha: float = 0.0
 var _stamina_wanted: bool = false
 var _stamina_exhausted: bool = false
@@ -86,6 +88,10 @@ func _ready() -> void:
 		var parent := get_parent()
 		if parent != null:
 			_player = parent.get_node_or_null("Player") as CharacterBody3D
+	if map_panel != null:
+		var world := get_tree().current_scene
+		var landscape := world.get_node_or_null("Landscape") if world != null else null
+		map_panel.set_context(landscape, _player)
 	if _player != null:
 		joystick.moved.connect(_player.set_joystick_vector)
 		touch_look.look_delta.connect(_player.apply_touch_look)
@@ -98,6 +104,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_update_stamina_fade(delta)
+	_hide_stale_prompt()
 	if _player == null:
 		return
 	if _camera_joystick_vector != Vector2.ZERO and _player.has_method("apply_camera_joystick"):
@@ -138,15 +145,23 @@ func _on_journal_pressed() -> void:
 	if get_signal_connection_list("journal_requested").size() > 0:
 		journal_requested.emit()
 		return
-	if inventory_panel != null:
-		inventory_panel.toggle()
+	if journal_panel != null:
+		journal_panel.toggle()
+		if journal_panel.visible and map_panel != null and map_panel.visible:
+			map_panel.close()
 	else:
 		show_toast(tr("TOAST_SOON"))
 
 func _on_map_pressed() -> void:
-	if get_signal_connection_list("map_requested").is_empty():
+	if get_signal_connection_list("map_requested").size() > 0:
+		map_requested.emit()
+		return
+	if map_panel != null:
+		map_panel.toggle()
+		if map_panel.visible and journal_panel != null and journal_panel.visible:
+			journal_panel.close()
+	else:
 		show_toast(tr("TOAST_SOON"))
-	map_requested.emit()
 
 func _on_camera_joystick_moved(vector: Vector2) -> void:
 	_camera_joystick_vector = vector
@@ -177,6 +192,7 @@ func _on_focus_changed(target: Node3D) -> void:
 	var interactable: Interactable = null
 	if target != null and is_instance_valid(target) and target is Interactable:
 		interactable = target as Interactable
+	_focused_interactable = interactable
 	if interactable != null:
 		var label := tr(interactable.get_prompt())
 		interact_prompt.text = label if PlatformInfo.is_touch() else "[%s] %s" % [_interact_key_text(), label]
@@ -189,6 +205,16 @@ func _on_focus_changed(target: Node3D) -> void:
 		interact_button.disabled = true
 		reticle.call("set_focused", false)
 		_pulse_interact(false)
+
+## Sécurité : si l'objet visé a disparu ou n'est plus interactif (ramassé,
+## cassé), l'invite et le bouton doivent s'éteindre même si le signal
+## focus_changed n'est pas revenu.
+func _hide_stale_prompt() -> void:
+	if _focused_interactable == null:
+		return
+	if is_instance_valid(_focused_interactable) and _focused_interactable.can_interact():
+		return
+	_on_focus_changed(null)
 
 func _interact_key_text() -> String:
 	for event in InputMap.action_get_events("interact"):

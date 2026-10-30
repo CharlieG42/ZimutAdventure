@@ -31,6 +31,10 @@ La course consomme de l'endurance (barre discrète en bas) ; la boussole en haut
 - **Feu de camp** : près du départ, alimentez-le avec 4 bûches pour l'allumer (la lumière grandit à chaque bûche). Une fois allumé, « Se reposer » restaure l'endurance.
 - **Pancarte** : lisez le panneau au départ pour un message d'ambiance (affiché en toast, traduit FR/EN).
 - **Rochers cassables** : environ 25 petits rochers dans le canyon ont une vraie collision (impossible de les traverser) et se cassent à l'interaction en lâchant 2 à 4 pierres ramassables, avec éclats animés.
+- **Carte** (bouton Carte / touche M) : vue plein écran du canyon avec topographie coloriée par altitude, position du joueur (point bleu + cap) et ressources (pierres, bois, rochers cassables).
+- **Journal de quêtes** (bouton Journal / touche C) : onglets Quêtes (objectifs de collecte avec progression automatique), Fabrication et Sac. Trois quêtes initiales : premières pierres, feu au chaud, premiers outils.
+- **Fabrication / construction** : recettes (hache en pierre, arc de chasse, lit de camp, abri) consommant les ressources du sac ; base du futur mode de construction d'habitation.
+- **Animaux inoffensifs** : 6 animaux (biches) errent dans le canyon et fuient le joueur s'il s'approche trop.
 
 Régénérer les images du HUD : `python3 tools/generate_ui_assets.py` puis `godot --headless --path . -s tools/make_hud_theme.gd`. Note : Godot 4.7 possède une classe native `VirtualJoystick`, notre stick s'appelle donc `TouchStick`.
 

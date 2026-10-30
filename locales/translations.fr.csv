@@ -50,3 +50,23 @@ JOURNAL_INVENTORY_TITLE,Sac — inventaire
 ACTION_CLOSE,Fermer
 SIGN_CANYON_1,Sentier du canyon - méfiez-vous de la tombée de la nuit !
 ACTION_BREAK_ROCK,Casser le rocher
+QUEST_NONE,Aucune quête pour l'instant - explorez le canyon !
+QUEST_FIRST_STONE_TITLE,Premières pierres
+QUEST_FIRST_STONE_DESC,Ramassez 3 pierres (cassez les rochers avec E).
+QUEST_WARM_FIRE_TITLE,Un feu au chaud
+QUEST_WARM_FIRE_DESC,Récoltez 4 bûches pour allumer le feu de camp.
+QUEST_BUILDER_TITLE,Premiers outils
+QUEST_BUILDER_DESC,Récoltez 2 pierres et 1 bûche pour fabriquer une hache en pierre.
+JOURNAL_QUESTS,Quêtes
+JOURNAL_CRAFT,Fabrication
+ACTION_CRAFT,Fabriquer
+TOAST_CRAFTED,Fabriqué : %s
+CRAFT_STONE_AXE,Hache en pierre
+CRAFT_HUNTING_BOW,Arc de chasse
+CRAFT_CAMP_BED,Lit de camp
+CRAFT_SHELTER,Abri
+ITEM_TOOL_STONE_AXE,hache en pierre
+ITEM_TOOL_HUNTING_BOW,arc de chasse
+ITEM_FURNITURE_CAMP_BED,lit de camp
+ITEM_BUILDING_SHELTER,abri
+MAP_TITLE,Carte du canyon

@@ -50,3 +50,23 @@ JOURNAL_INVENTORY_TITLE,Belongings
 ACTION_CLOSE,Close
 SIGN_CANYON_1,Canyon trail - watch your step at dusk!
 ACTION_BREAK_ROCK,Break rock
+QUEST_NONE,No quests yet - explore the canyon!
+QUEST_FIRST_STONE_TITLE,First stones
+QUEST_FIRST_STONE_DESC,Collect 3 stones (break rocks with E).
+QUEST_WARM_FIRE_TITLE,A warm fire
+QUEST_WARM_FIRE_DESC,Gather 4 wood logs to light the campfire.
+QUEST_BUILDER_TITLE,First tools
+QUEST_BUILDER_DESC,Collect 2 stones and 1 wood to craft a stone axe.
+JOURNAL_QUESTS,Quests
+JOURNAL_CRAFT,Crafting
+ACTION_CRAFT,Craft
+TOAST_CRAFTED,Crafted: %s
+CRAFT_STONE_AXE,Stone axe
+CRAFT_HUNTING_BOW,Hunting bow
+CRAFT_CAMP_BED,Camp bed
+CRAFT_SHELTER,Shelter
+ITEM_TOOL_STONE_AXE,stone axe
+ITEM_TOOL_HUNTING_BOW,hunting bow
+ITEM_FURNITURE_CAMP_BED,camp bed
+ITEM_BUILDING_SHELTER,shelter
+MAP_TITLE,Canyon map
