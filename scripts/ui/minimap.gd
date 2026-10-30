@@ -2,7 +2,9 @@ class_name MiniMap
 extends Control
 ## Mini-carte toujours visible : relief ombré centré sur le joueur, Nord en haut,
 ## flèche du joueur orientée selon son cap, repères de ressources/animaux/feu/camp.
-## Elle ne capte aucun toucher (les joysticks restent utilisables dessous).
+## Un appui sur la mini-carte ouvre la carte plein écran (signal `pressed`).
+
+signal pressed
 
 const SIZE_PX := 170.0
 ## Rayon du monde affiché (mètres) : les repères proches restent lisibles.
@@ -18,9 +20,19 @@ var _texture: ImageTexture
 var _elapsed: float = 0.0
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	custom_minimum_size = Vector2(SIZE_PX, SIZE_PX)
 	size = Vector2(SIZE_PX, SIZE_PX)
+
+func _gui_input(event: InputEvent) -> void:
+	var is_press: bool = false
+	if event is InputEventMouseButton:
+		is_press = event.pressed and event.button_index == MOUSE_BUTTON_LEFT
+	elif event is InputEventScreenTouch:
+		is_press = event.pressed
+	if is_press:
+		accept_event()
+		pressed.emit()
 
 func set_context(landscape: Node3D, player: Node3D) -> void:
 	_landscape = landscape
