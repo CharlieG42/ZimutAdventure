@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/passive_animal.gd" id="1_animal"]
 
@@ -6,29 +6,12 @@
 radius = 0.35
 height = 1.2
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
-radius = 0.35
-height = 1.2
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fur"]
-albedo_color = Color(0.72, 0.55, 0.35, 1)
-roughness = 0.9
-
 [node name="PassiveAnimal" type="CharacterBody3D" groups=["animals"]]
 collision_layer = 1
 collision_mask = 1
+floor_snap_length = 0.6
 script = ExtResource("1_animal")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 shape = SubResource("CapsuleShape3D_body")
-
-[node name="Body" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
-mesh = SubResource("CapsuleMesh_body")
-surface_material_override/0 = SubResource("StandardMaterial3D_fur")
-
-[node name="Head" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0.42)
-mesh = SubResource("CapsuleMesh_body")
-surface_material_override/0 = SubResource("StandardMaterial3D_fur")

@@ -18,6 +18,17 @@ script = ExtResource("1_hud")
 
 [node name="TouchLook" parent="." instance=ExtResource("3_look")]
 
+[node name="MapPanel" type="Control" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+theme = ExtResource("4_theme")
+script = ExtResource("11_map")
+
 [node name="SafeArea" type="MarginContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
@@ -172,6 +183,17 @@ theme_type_variation = &"PillLabel"
 theme_override_font_sizes/font_size = 28
 horizontal_alignment = 1
 
+[node name="QuestTracker" type="Label" parent="Overlay"]
+visible = false
+layout_mode = 0
+offset_left = 16.0
+offset_top = 68.0
+offset_right = 420.0
+offset_bottom = 104.0
+mouse_filter = 2
+theme_type_variation = &"PillLabel"
+theme_override_font_sizes/font_size = 20
+
 [node name="ActionPad" type="Control" parent="Overlay"]
 layout_mode = 1
 anchors_preset = 3
@@ -241,16 +263,6 @@ visible = false
 layout_mode = 2
 mouse_filter = 1
 script = ExtResource("10_journal")
-
-[node name="MapPanel" type="Control" parent="."]
-visible = false
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 1
-script = ExtResource("11_map")
 
 [node name="VirtualJoystick" parent="." instance=ExtResource("2_joy")]
 anchors_preset = 7

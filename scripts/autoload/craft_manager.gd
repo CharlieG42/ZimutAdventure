@@ -44,6 +44,29 @@ func get_ingredients(recipe_id: String) -> Dictionary:
 func get_recipe_ids() -> Array:
 	return RECIPES.keys()
 
+func get_category(recipe_id: String) -> String:
+	if RECIPES.has(recipe_id):
+		return String(RECIPES[recipe_id].get("category", ""))
+	return ""
+
+## Recettes d'une catégorie, dans l'ordre de déclaration.
+func get_recipes_in_category(category: String) -> Array:
+	var ids: Array = []
+	for recipe_id in RECIPES:
+		if RECIPES[recipe_id].get("category", "") == category:
+			ids.append(recipe_id)
+	return ids
+
+## Quantité manquante pour chaque ingrédient (0 = disponible).
+func get_missing(recipe_id: String) -> Dictionary:
+	var missing := {}
+	var inventory := InteractionManager.get_inventory()
+	for item_id in get_ingredients(recipe_id):
+		var need := int(get_ingredients(recipe_id)[item_id])
+		var have := int(inventory.call("count_of", item_id)) if inventory != null else 0
+		missing[item_id] = maxi(0, need - have)
+	return missing
+
 func can_craft(recipe_id: String) -> bool:
 	if not RECIPES.has(recipe_id):
 		return false

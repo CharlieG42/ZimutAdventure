@@ -56,7 +56,7 @@ QUEST_FIRST_STONE_DESC,Collect 3 stones (break rocks with E).
 QUEST_WARM_FIRE_TITLE,A warm fire
 QUEST_WARM_FIRE_DESC,Gather 4 wood logs to light the campfire.
 QUEST_BUILDER_TITLE,First tools
-QUEST_BUILDER_DESC,Collect 2 stones and 1 wood to craft a stone axe.
+QUEST_BUILDER_DESC,Craft a stone axe (2 stones and 1 log) from the journal.
 JOURNAL_QUESTS,Quests
 JOURNAL_CRAFT,Crafting
 ACTION_CRAFT,Craft
@@ -70,3 +70,22 @@ ITEM_TOOL_HUNTING_BOW,hunting bow
 ITEM_FURNITURE_CAMP_BED,camp bed
 ITEM_BUILDING_SHELTER,shelter
 MAP_TITLE,Canyon map
+QUEST_HUNTER_TITLE,Hunter
+QUEST_HUNTER_DESC,Craft a hunting bow (3 logs) from the journal.
+QUEST_SHELTER_TITLE,A roof over your head
+QUEST_SHELTER_DESC,Build a shelter (8 logs and 4 stones) to get through the night.
+QUEST_LOCKED_HINT,More quests to unlock...
+QUEST_TRACKER,Goal: %s (%d/%d)
+TOAST_QUEST_DONE,Quest complete: %s
+JOURNAL_DONE,Completed
+CAT_TOOLS,Tools
+CAT_WEAPONS,Weapons
+CAT_FURNITURE,Furniture
+CAT_BUILDINGS,Buildings
+CRAFT_OWNED,Owned: %d
+MAP_LEGEND_STONE,Stone
+MAP_LEGEND_WOOD,Wood
+MAP_LEGEND_ROCK,Rock
+MAP_LEGEND_ANIMAL,Animal
+MAP_LEGEND_YOU,You
+MAP_HINT,Press M or the Close button

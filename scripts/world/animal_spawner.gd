@@ -29,6 +29,8 @@ func _spawn_all() -> void:
 		if y < min_terrain_height:
 			continue
 		var animal := animal_scene.instantiate() as Node3D
+		# Un lièvre sur trois, le reste des cerfs (l'espèce se choisit avant _ready).
+		animal.set("species", "rabbit" if spawned % 3 == 2 else "deer")
 		add_child(animal)
 		animal.position = Vector3(x, y + 1.0, z)
 		spawned += 1

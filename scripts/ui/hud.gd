@@ -27,6 +27,7 @@ const BASE_MARGIN := 16
 @onready var inventory_center: CenterContainer = $InventoryCenter
 @onready var journal_panel: Control = $InventoryCenter/JournalPanel
 @onready var map_panel: Control = $MapPanel
+@onready var quest_tracker: Label = $Overlay/QuestTracker
 @onready var camera_joystick: Control = $CameraJoystick
 @onready var touch_look: Control = $TouchLook
 
@@ -89,9 +90,12 @@ func _ready() -> void:
 		if parent != null:
 			_player = parent.get_node_or_null("Player") as CharacterBody3D
 	if map_panel != null:
-		var world := get_tree().current_scene
+		# Le paysage est un frère du HUD dans la scène du monde (current_scene peut être
+		# nul quand le monde est instancié à la main, par exemple en test).
+		var world: Node = get_parent() if get_parent() != null else get_tree().current_scene
 		var landscape := world.get_node_or_null("Landscape") if world != null else null
 		map_panel.set_context(landscape, _player)
+	_setup_quest_tracker()
 	if _player != null:
 		joystick.moved.connect(_player.set_joystick_vector)
 		touch_look.look_delta.connect(_player.apply_touch_look)
@@ -101,6 +105,30 @@ func _ready() -> void:
 		if _player.has_signal("stamina_changed"):
 			_player.connect("stamina_changed", _on_stamina_changed)
 		_on_view_changed(_player.call("is_first_person"))
+
+## Rappel discret de l'objectif en cours (sous le cap), mis à jour par QuestManager.
+func _setup_quest_tracker() -> void:
+	var quests := get_node_or_null("/root/QuestManager")
+	if quests == null or quest_tracker == null:
+		return
+	quests.connect("quest_state_changed", _on_quest_changed)
+	quests.connect("quest_progress_changed", _on_quest_changed)
+	_update_quest_tracker.call_deferred()
+
+func _on_quest_changed(_a = null, _b = null, _c = null) -> void:
+	_update_quest_tracker.call_deferred()
+
+func _update_quest_tracker() -> void:
+	var quests := get_node_or_null("/root/QuestManager")
+	if quests == null or quest_tracker == null:
+		return
+	var quest_id: String = quests.call("get_tracked")
+	if quest_id == "":
+		quest_tracker.visible = false
+		return
+	var progress: Vector2i = quests.call("get_progress", quest_id)
+	quest_tracker.text = tr("QUEST_TRACKER") % [tr(quests.call("get_title", quest_id)), progress.x, progress.y]
+	quest_tracker.visible = true
 
 func _process(delta: float) -> void:
 	_update_stamina_fade(delta)
