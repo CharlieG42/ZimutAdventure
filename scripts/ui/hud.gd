@@ -14,7 +14,6 @@ const BASE_MARGIN := 16
 @onready var jump_button: Button = $Overlay/ActionPad/JumpButton
 @onready var sprint_button: Button = $Overlay/ActionPad/SprintButton
 @onready var journal_button: Button = $SafeArea/VBox/BottomBar/JournalButton
-@onready var map_button: Button = $SafeArea/VBox/BottomBar/MapButton
 @onready var view_button: Button = $SafeArea/VBox/BottomBar/ViewButton
 @onready var compass_label: Label = $SafeArea/VBox/TopBar/CompassLabel
 @onready var clock_label: Label = $SafeArea/VBox/TopBar/ClockLabel
@@ -51,7 +50,6 @@ func _ready() -> void:
 	var is_touch := PlatformInfo.is_touch()
 	action_pad.visible = is_touch
 	journal_button.visible = is_touch
-	map_button.visible = is_touch
 	view_button.visible = true
 	joystick.visible = true
 	camera_joystick.visible = true
@@ -62,7 +60,7 @@ func _ready() -> void:
 	jump_button.button_down.connect(_on_jump_pressed)
 	sprint_button.toggled.connect(_on_sprint_toggled)
 	journal_button.pressed.connect(_on_journal_pressed)
-	map_button.pressed.connect(_on_map_pressed)
+	minimap.connect("pressed", _on_map_pressed)
 	view_button.pressed.connect(_on_view_pressed)
 
 	_interaction_manager = InteractionManager

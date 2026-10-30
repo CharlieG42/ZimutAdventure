@@ -93,12 +93,6 @@ layout_mode = 2
 focus_mode = 0
 text = "ACTION_OPEN_JOURNAL"
 
-[node name="MapButton" type="Button" parent="SafeArea/VBox/BottomBar"]
-custom_minimum_size = Vector2(0, 56)
-layout_mode = 2
-focus_mode = 0
-text = "ACTION_OPEN_MAP"
-
 [node name="ViewButton" type="Button" parent="SafeArea/VBox/BottomBar"]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
@@ -134,7 +128,6 @@ offset_top = 60.0
 offset_right = -24.0
 offset_bottom = 230.0
 grow_horizontal = 0
-mouse_filter = 2
 script = ExtResource("13_minimap")
 
 [node name="CompassStrip" type="Control" parent="Overlay"]
