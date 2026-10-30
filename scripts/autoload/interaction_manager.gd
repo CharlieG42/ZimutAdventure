@@ -66,6 +66,14 @@ static func get_survival() -> Node:
 		return tree.root.get_node_or_null("SurvivalManager")
 	return null
 
+static func get_progression() -> Node:
+	if Engine.has_singleton("Progression"):
+		return Engine.get_singleton("Progression")
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree != null and tree.root != null:
+		return tree.root.get_node_or_null("Progression")
+	return null
+
 static func get_day_night() -> Node:
 	if Engine.has_singleton("DayNightCycle"):
 		return Engine.get_singleton("DayNightCycle")

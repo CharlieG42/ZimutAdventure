@@ -40,12 +40,36 @@ const QUESTS := {
 		"requires": "quest_first_stone",
 		"reward": {"item_wood": 3},
 	},
+	"quest_lumberjack": {
+		"title": "QUEST_LUMBERJACK_TITLE",
+		"description": "QUEST_LUMBERJACK_DESC",
+		"goal_item": "stat_trees",
+		"goal_count": 3,
+		"requires": "quest_builder",
+		"reward": {"item_stone": 3},
+	},
+	"quest_sickle": {
+		"title": "QUEST_SICKLE_TITLE",
+		"description": "QUEST_SICKLE_DESC",
+		"goal_item": "tool_sickle",
+		"goal_count": 1,
+		"requires": "quest_lumberjack",
+		"reward": {"item_wood": 2},
+	},
+	"quest_berries": {
+		"title": "QUEST_BERRIES_TITLE",
+		"description": "QUEST_BERRIES_DESC",
+		"goal_item": "item_berries",
+		"goal_count": 6,
+		"requires": "quest_sickle",
+		"reward": {"arrow": 2},
+	},
 	"quest_hunter": {
 		"title": "QUEST_HUNTER_TITLE",
 		"description": "QUEST_HUNTER_DESC",
 		"goal_item": "tool_hunting_bow",
 		"goal_count": 1,
-		"requires": "quest_builder",
+		"requires": "quest_lumberjack",
 		"reward": {"item_wood": 5, "item_stone": 4},
 	},
 	"quest_shelter": {
@@ -85,6 +109,9 @@ func _ready() -> void:
 	var inventory := InteractionManager.get_inventory()
 	if inventory != null:
 		inventory.connect("item_added", _on_item_added)
+	var progression := InteractionManager.get_progression()
+	if progression != null:
+		progression.connect("stat_changed", _on_stat_changed)
 	_unlock_available()
 	_evaluate_all(false)
 
@@ -142,6 +169,12 @@ func get_reward(quest_id: String) -> Dictionary:
 		return (QUESTS[quest_id].get("reward", {}) as Dictionary).duplicate()
 	return {}
 
+## XP offerte à la fin de la quête (40 par défaut).
+func get_xp_reward(quest_id: String) -> int:
+	if QUESTS.has(quest_id):
+		return int(QUESTS[quest_id].get("xp", 40))
+	return 0
+
 func get_goal_item(quest_id: String) -> String:
 	if QUESTS.has(quest_id):
 		return String(QUESTS[quest_id].get("goal_item", ""))
@@ -156,6 +189,11 @@ func get_progress(quest_id: String) -> Vector2i:
 	var item_id: String = quest.get("goal_item", "")
 	var goal := int(quest.get("goal_count", 1))
 	var have := int(_collected.get(item_id, 0))
+	if item_id.begins_with("stat_"):
+		# Compteur d'actions (arbres coupés...) tenu par Progression.
+		var progression := InteractionManager.get_progression()
+		have = int(progression.call("get_stat", item_id)) if progression != null else 0
+		return Vector2i(mini(have, goal), goal)
 	var inventory := InteractionManager.get_inventory()
 	if inventory != null:
 		have = maxi(have, int(inventory.call("count_of", item_id)))
@@ -170,6 +208,9 @@ func get_tracked() -> String:
 
 func _on_item_added(item_id: String, amount: int) -> void:
 	_collected[item_id] = int(_collected.get(item_id, 0)) + amount
+	_evaluate_all(true)
+
+func _on_stat_changed(_stat: String, _value: int) -> void:
 	_evaluate_all(true)
 
 func _evaluate_all(announce: bool) -> void:
@@ -194,6 +235,9 @@ func _unlock_available() -> void:
 			set_state(quest_id, State.ACTIVE)
 
 func _announce(quest_id: String) -> void:
+	var progression := InteractionManager.get_progression()
+	if progression != null:
+		progression.call("add_xp", get_xp_reward(quest_id))
 	var reward := get_reward(quest_id) if _grant_rewards else {}
 	var inventory := InteractionManager.get_inventory()
 	var parts: PackedStringArray = []

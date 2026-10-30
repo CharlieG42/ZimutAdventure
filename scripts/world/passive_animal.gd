@@ -143,6 +143,11 @@ func take_arrow_hit(_from_position: Vector3) -> void:
 	if inventory == null:
 		return
 	var drops: int = {"deer": 2, "rabbit": 1}.get(species, 1)
+	var progression := InteractionManager.get_progression()
+	if progression != null:
+		drops = int(progression.call("roll_loot", drops))
+		progression.call("add_stat", "stat_hunts", 1)
+		progression.call("add_xp_for", "hunt")
 	inventory.add_item("item_raw_meat", drops)
 	var hud := get_tree().get_first_node_in_group("hud") as Node
 	if hud != null and hud.has_method("show_toast"):

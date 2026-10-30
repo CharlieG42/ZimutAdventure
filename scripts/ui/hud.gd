@@ -19,6 +19,7 @@ const BASE_MARGIN := 16
 @onready var clock_label: Label = $SafeArea/VBox/TopBar/ClockLabel
 @onready var vitals: Control = $Overlay/Vitals
 @onready var minimap: Control = $Overlay/MiniMap
+@onready var hotbar: Control = $Overlay/Hotbar
 @onready var safe_area: MarginContainer = $SafeArea
 @onready var compass_strip: CompassStrip = $Overlay/CompassStrip
 @onready var reticle: Control = $Overlay/Reticle
@@ -72,6 +73,7 @@ func _ready() -> void:
 	if _inventory != null:
 		_inventory.connect("item_added", _on_item_added)
 		_inventory.connect("item_removed", _on_item_removed)
+		_inventory.connect("equipped_changed", _on_equipped_changed)
 	_survival = get_tree().root.get_node_or_null("SurvivalManager") if get_tree() != null else null
 	if _survival != null:
 		_survival.connect("needs_changed", _on_needs_changed)
@@ -160,6 +162,11 @@ func _process(delta: float) -> void:
 			compass_label.text = "%s %03d°" % [tr(CompassStrip.cardinal_key(heading)), rounded]
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		var slot: int = int(event.physical_keycode) - int(KEY_1)
+		if slot >= 0 and slot < 4:
+			hotbar.call("select_index", slot)
+			return
 	if event.is_action_pressed("open_journal"):
 		_on_journal_pressed()
 	elif event.is_action_pressed("open_map"):
@@ -285,16 +292,19 @@ func _on_item_added(item_id: String, amount: int) -> void:
 		Input.vibrate_handheld(25)
 	_refresh_attack_button()
 
+func _on_equipped_changed(_item_id: String) -> void:
+	_refresh_attack_button()
+
 func _on_item_removed(_item_id: String, _amount: int) -> void:
 	_refresh_attack_button()
 
-## Le bouton de tir n'apparaît (tactile) que si le joueur possède l'arc de chasse.
+## Le bouton de tir n'apparaît (tactile) que lorsque l'arc de chasse est ÉQUIPÉ.
 func _refresh_attack_button() -> void:
 	if not PlatformInfo.is_touch() or _inventory == null:
 		return
-	var owned: bool = _inventory.has_item("tool_hunting_bow", 1)
-	if attack_button.visible != owned:
-		attack_button.visible = owned
+	var ready_to_shoot: bool = _inventory.is_equipped("tool_hunting_bow")
+	if attack_button.visible != ready_to_shoot:
+		attack_button.visible = ready_to_shoot
 
 func _on_attack_pressed() -> void:
 	if _player != null and _player.has_method("try_shoot_arrow"):

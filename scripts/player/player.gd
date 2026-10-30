@@ -191,9 +191,10 @@ func try_shoot_arrow() -> void:
 	var inventory := InteractionManager.get_inventory()
 	if inventory == null:
 		return
-	if not inventory.has_item("tool_hunting_bow", 1):
+	if not inventory.is_equipped("tool_hunting_bow"):
 		return
 	if not inventory.remove_item("arrow", 1):
+		_hud_toast(tr("TOAST_NO_ARROWS"))
 		return
 	var camera := get_viewport().get_camera_3d()
 	if camera == null:
@@ -215,6 +216,11 @@ func try_shoot_arrow() -> void:
 	arrow.look_at(from + aim, Vector3.UP)
 	arrow.linear_velocity = aim * 26.0
 	arrow.angular_velocity = Vector3.ZERO
+
+func _hud_toast(message: String) -> void:
+	var hud := get_tree().get_first_node_in_group("hud") if get_tree() != null else null
+	if hud != null and hud.has_method("show_toast"):
+		hud.show_toast(message, 1.6)
 
 ## Zone morte + courbe de réponse d'un stick analogique.
 ## Renvoie un vecteur de longueur 0..1 (0 sous la zone morte).
@@ -375,6 +381,9 @@ func _update_stamina(delta: float) -> void:
 			var survival := get_tree().root.get_node_or_null("SurvivalManager")
 			if survival != null and survival.has_method("stamina_regen_factor"):
 				regen_factor = float(survival.call("stamina_regen_factor"))
+			var progression := InteractionManager.get_progression()
+			if progression != null:
+				regen_factor *= float(progression.call("stamina_regen_multiplier"))
 			stamina = minf(1.0, stamina + stamina_regen * regen_factor * delta)
 		if _exhausted and stamina >= exhausted_recovery:
 			_exhausted = false

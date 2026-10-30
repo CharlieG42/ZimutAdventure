@@ -58,19 +58,19 @@ func _init() -> void:
 		errors.append("dépenser des pierres ne doit pas annuler une quête terminée")
 	if quests.call("state_of", "quest_builder") != 2:
 		errors.append("fabriquer la hache doit terminer quest_builder")
-	if quests.call("state_of", "quest_hunter") != 1:
-		errors.append("quest_hunter doit se débloquer après la hache")
-	if quests.call("get_tracked") != "quest_hunter":
+	if quests.call("state_of", "quest_lumberjack") != 1:
+		errors.append("quest_lumberjack doit se débloquer après la hache")
+	if quests.call("get_tracked") != "quest_lumberjack":
 		errors.append("l'objectif suivi doit être la première quête active : %s" % quests.call("get_tracked"))
 
 	# Aides de fabrication.
 	var missing: Dictionary = craft.call("get_missing", "building_shelter")
-	var want_wood: int = 8 - int(inventory.call("count_of", "item_wood"))
-	var want_stone: int = 4 - int(inventory.call("count_of", "item_stone"))
+	var want_wood: int = maxi(0, 8 - int(inventory.call("count_of", "item_wood")))
+	var want_stone: int = maxi(0, 4 - int(inventory.call("count_of", "item_stone")))
 	if int(missing.get("item_wood", 0)) != want_wood or int(missing.get("item_stone", 0)) != want_stone:
 		errors.append("get_missing doit lister %d bois et %d pierres : %s" % [want_wood, want_stone, str(missing)])
-	if (craft.call("get_recipes_in_category", "tools") as Array).size() != 1:
-		errors.append("la catégorie outils doit contenir une recette")
+	if (craft.call("get_recipes_in_category", "tools") as Array).size() != 2:
+		errors.append("la catégorie outils doit contenir hache et serpette")
 
 	# --- Journal -----------------------------------------------------------------
 	var world := (load("res://scenes/world/canyon_playground.tscn") as PackedScene).instantiate()

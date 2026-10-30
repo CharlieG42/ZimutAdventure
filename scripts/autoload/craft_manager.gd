@@ -10,27 +10,38 @@ const RECIPES := {
 		"name": "CRAFT_STONE_AXE",
 		"category": "tools",
 		"ingredients": {"item_stone": 2, "item_wood": 1},
+		"level": 1,
+	},
+	"tool_sickle": {
+		"name": "CRAFT_SICKLE",
+		"category": "tools",
+		"ingredients": {"item_wood": 2, "item_stone": 1},
+		"level": 2,
 	},
 	"tool_hunting_bow": {
 		"name": "CRAFT_HUNTING_BOW",
 		"category": "weapons",
 		"ingredients": {"item_wood": 3},
+		"level": 2,
 	},
 	"arrow": {
 		"name": "CRAFT_ARROWS",
 		"category": "weapons",
 		"ingredients": {"item_wood": 1, "item_stone": 1},
 		"batch": 4,
+		"level": 2,
 	},
 	"furniture_camp_bed": {
 		"name": "CRAFT_CAMP_BED",
 		"category": "furniture",
 		"ingredients": {"item_wood": 4},
+		"level": 3,
 	},
 	"building_shelter": {
 		"name": "CRAFT_SHELTER",
 		"category": "buildings",
 		"ingredients": {"item_wood": 8, "item_stone": 4},
+		"level": 4,
 	},
 }
 
@@ -41,6 +52,19 @@ func get_recipe_name(recipe_id: String) -> String:
 	if RECIPES.has(recipe_id):
 		return RECIPES[recipe_id].get("name", recipe_id)
 	return recipe_id
+
+## Niveau de personnage requis (1 = aucun).
+func get_required_level(recipe_id: String) -> int:
+	if RECIPES.has(recipe_id):
+		return int(RECIPES[recipe_id].get("level", 1))
+	return 1
+
+## Le niveau actuel du personnage suffit-il ? (toujours vrai sans système de niveaux).
+func meets_level(recipe_id: String) -> bool:
+	var progression := InteractionManager.get_progression()
+	if progression == null:
+		return true
+	return bool(progression.call("meets_level", get_required_level(recipe_id)))
 
 func get_ingredients(recipe_id: String) -> Dictionary:
 	if RECIPES.has(recipe_id):
@@ -77,7 +101,7 @@ func can_craft(recipe_id: String) -> bool:
 	if not RECIPES.has(recipe_id):
 		return false
 	var inventory := InteractionManager.get_inventory()
-	if inventory == null:
+	if inventory == null or not meets_level(recipe_id):
 		return false
 	for item_id in RECIPES[recipe_id]["ingredients"]:
 		if not inventory.has_item(item_id, int(RECIPES[recipe_id]["ingredients"][item_id])):
