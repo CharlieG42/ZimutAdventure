@@ -80,8 +80,7 @@ func _build() -> void:
 	add_child(box)
 
 func _add_tab(title: String) -> VBoxContainer:
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := KineticScroll.new()
 	scroll.name = title
 	var list := VBoxContainer.new()
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
