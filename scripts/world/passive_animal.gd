@@ -10,6 +10,7 @@ const FLEE_DISTANCE := 5.0
 const TURN_SPEED := 6.0
 const GRAVITY := 18.0
 const STUCK_SECONDS := 1.2
+const HUNT_FLEE_SECONDS := 6.0
 
 enum Mode { WALK, GRAZE }
 
@@ -36,6 +37,8 @@ var _stuck_time: float = 0.0
 var _player: Node3D
 var _gait: float = 0.0
 var _fleeing: bool = false
+var _dead: bool = false
+var _hp: int = 2
 var _legs: Array[Node3D] = []
 var _neck: Node3D
 var _head: Node3D
@@ -118,6 +121,32 @@ func _track_stuck(wanted: Vector3, delta: float) -> void:
 		_stuck_time += delta
 	else:
 		_stuck_time = 0.0
+
+## Touché par une flèche de chasse : blessure, fuite prolongée, puis dépôt de viande.
+## Le joueur ne tue pas l'animal à l'écran : il s'effondre hors de vue après sa course.
+func take_arrow_hit(_from_position: Vector3) -> void:
+	if _dead:
+		return
+	_dead = true
+	_hp -= 1
+	# Fuite immédiate, loin du tireur.
+	var away := global_position - _from_position
+	away.y = 0.0
+	if away.length_squared() > 0.001:
+		_center = global_position + away.normalized() * wander_radius
+	_target = _center
+	_mode = Mode.WALK
+	_mode_left = HUNT_FLEE_SECONDS
+	_fleeing = true
+	# Récompense : viande crue déposée à l'endroit de la chute.
+	var inventory := InteractionManager.get_inventory()
+	if inventory == null:
+		return
+	var drops: int = {"deer": 2, "rabbit": 1}.get(species, 1)
+	inventory.add_item("item_raw_meat", drops)
+	var hud := get_tree().get_first_node_in_group("hud") as Node
+	if hud != null and hud.has_method("show_toast"):
+		hud.show_toast(tr("TOAST_HUNT_SUCCESS") % tr("ITEM_ITEM_RAW_MEAT"))
 
 func _start_walk() -> void:
 	_mode = Mode.WALK

@@ -185,6 +185,37 @@ func try_interact() -> void:
 func _try_interact() -> void:
 	try_interact()
 
+## Tir à l'arc de chasse : nécessite l'arc ET une flèche dans le sac.
+## La flèche part de la caméra vers le point visé, avec une balistique légère.
+func try_shoot_arrow() -> void:
+	var inventory := InteractionManager.get_inventory()
+	if inventory == null:
+		return
+	if not inventory.has_item("tool_hunting_bow", 1):
+		return
+	if not inventory.remove_item("arrow", 1):
+		return
+	var camera := get_viewport().get_camera_3d()
+	if camera == null:
+		inventory.add_item("arrow", 1)
+		return
+	var arrow_scene := load("res://scenes/interaction/arrow.tscn") as PackedScene
+	if arrow_scene == null:
+		inventory.add_item("arrow", 1)
+		return
+	var arrow := arrow_scene.instantiate() as RigidBody3D
+	var host := get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	if host == null:
+		inventory.add_item("arrow", 1)
+		return
+	host.add_child(arrow)
+	var from := camera.global_position + camera.global_transform.basis.z * -0.4
+	var aim := -camera.global_transform.basis.z
+	arrow.global_position = from
+	arrow.look_at(from + aim, Vector3.UP)
+	arrow.linear_velocity = aim * 26.0
+	arrow.angular_velocity = Vector3.ZERO
+
 ## Zone morte + courbe de réponse d'un stick analogique.
 ## Renvoie un vecteur de longueur 0..1 (0 sous la zone morte).
 static func shape_stick(raw: Vector2, deadzone: float, curve: float) -> Vector2:
@@ -245,6 +276,8 @@ func _update_third_person_camera(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not _is_touch:
 		_rotate_look(event.relative * Vector2(mouse_sensitivity, mouse_sensitivity))
+	elif event.is_action_pressed("attack"):
+		try_shoot_arrow()
 
 # --- Physique ----------------------------------------------------------------
 

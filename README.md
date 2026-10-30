@@ -36,6 +36,7 @@ La course consomme de l'endurance (barre discrète en bas) ; la boussole en haut
 - **Fabrication / construction** : recettes (hache en pierre, arc de chasse, lit de camp, abri) consommant les ressources du sac ; base du futur mode de construction d'habitation.
 - **Constructions** : le lit de camp et l'abri fabriqués se posent depuis le Sac (bouton Poser, devant le joueur, terrain plat uniquement). Le lit rétablit l'endurance, l'abri permet de dormir la nuit jusqu'à 7 h. Elles sont sauvegardées (`user://structures.cfg`) et apparaissent sur la carte, avec le feu de camp.
 - **Animaux inoffensifs** : 6 animaux (cerfs et lièvres) errent dans le canyon, broutent et fuient le joueur s'il s'approche trop.
+- **Chasse et cuisson** : fabriquez l'arc de chasse et des flèches (x4 avec 1 bois + 1 pierre), tirez avec clic gauche / bouton tactile dédié (apparaît quand l'arc est possédé). Une proie touchée fuit puis lâche de la viande crue ; cuisez-la sur un feu de camp plein (« Cuire la viande »). Chaîne de quêtes : première chasse → repas chaud.
 
 Régénérer les images du HUD : `python3 tools/generate_ui_assets.py` puis `godot --headless --path . -s tools/make_hud_theme.gd`. Note : Godot 4.7 possède une classe native `VirtualJoystick`, notre stick s'appelle donc `TouchStick`.
 

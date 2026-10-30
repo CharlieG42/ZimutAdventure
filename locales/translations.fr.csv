@@ -102,3 +102,15 @@ TOAST_SLEPT,Vous dormez jusqu'à l'aube. Endurance rétablie.
 QUEST_REWARD,Récompense : %s
 MAP_LEGEND_FIRE,Feu de camp
 MAP_LEGEND_CAMP,Campement
+CRAFT_ARROWS,Flèches (x4)
+ITEM_ARROW,flèche
+ITEM_ITEM_RAW_MEAT,viande crue
+ITEM_ITEM_COOKED_MEAT,viande cuite
+ACTION_COOK,Cuire la viande
+TOAST_NEED_MEAT,Pas de viande crue à cuire !
+TOAST_MEAT_COOKED,La viande embaume...
+TOAST_HUNT_SUCCESS,Proie abattue ! Vous récoltez %s.
+QUEST_FIRST_HUNT_TITLE,Première chasse
+QUEST_FIRST_HUNT_DESC,Abattez un cerf à l'arc pour récolter de la viande crue.
+QUEST_COOKED_MEAL_TITLE,Un repas chaud
+QUEST_COOKED_MEAL_DESC,Cuisez de la viande crue sur un feu de camp plein.

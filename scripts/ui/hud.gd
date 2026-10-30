@@ -10,6 +10,7 @@ const BASE_MARGIN := 16
 
 @onready var action_pad: Control = $Overlay/ActionPad
 @onready var interact_button: Button = $Overlay/ActionPad/InteractButton
+@onready var attack_button: Button = $Overlay/ActionPad/AttackButton
 @onready var jump_button: Button = $Overlay/ActionPad/JumpButton
 @onready var sprint_button: Button = $Overlay/ActionPad/SprintButton
 @onready var journal_button: Button = $SafeArea/VBox/BottomBar/JournalButton
@@ -57,6 +58,7 @@ func _ready() -> void:
 	touch_look.visible = is_touch
 
 	interact_button.pressed.connect(_on_interact_pressed)
+	attack_button.pressed.connect(_on_attack_pressed)
 	jump_button.button_down.connect(_on_jump_pressed)
 	sprint_button.toggled.connect(_on_sprint_toggled)
 	journal_button.pressed.connect(_on_journal_pressed)
@@ -71,6 +73,7 @@ func _ready() -> void:
 		_interaction_manager.connect("focus_changed", _on_focus_changed)
 	if _inventory != null:
 		_inventory.connect("item_added", _on_item_added)
+		_inventory.connect("item_removed", _on_item_removed)
 	if _day_night != null:
 		_day_night.connect("time_changed", _on_time_changed)
 		_day_night.connect("phase_changed", _on_phase_changed)
@@ -79,6 +82,7 @@ func _ready() -> void:
 	interact_prompt.visible = false
 	toast.visible = false
 	interact_button.disabled = true
+	_refresh_attack_button()
 
 	_capture_layout()
 	_apply_safe_area()
@@ -266,6 +270,22 @@ func _on_item_added(item_id: String, amount: int) -> void:
 	show_toast(tr("TOAST_COLLECTED") % [amount, tr("ITEM_" + item_id.to_upper())])
 	if PlatformInfo.is_touch():
 		Input.vibrate_handheld(25)
+	_refresh_attack_button()
+
+func _on_item_removed(_item_id: String, _amount: int) -> void:
+	_refresh_attack_button()
+
+## Le bouton de tir n'apparaît (tactile) que si le joueur possède l'arc de chasse.
+func _refresh_attack_button() -> void:
+	if not PlatformInfo.is_touch() or _inventory == null:
+		return
+	var owned: bool = _inventory.has_item("tool_hunting_bow", 1)
+	if attack_button.visible != owned:
+		attack_button.visible = owned
+
+func _on_attack_pressed() -> void:
+	if _player != null and _player.has_method("try_shoot_arrow"):
+		_player.call("try_shoot_arrow")
 
 # --- Endurance ------------------------------------------------------------------
 

@@ -247,6 +247,19 @@ icon = ExtResource("8_interact")
 icon_alignment = 1
 expand_icon = true
 
+[node name="AttackButton" type="Button" parent="Overlay/ActionPad"]
+visible = false
+layout_mode = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 112.0
+offset_bottom = 112.0
+focus_mode = 0
+theme_type_variation = &"RoundButton"
+icon = ExtResource("8_interact")
+icon_alignment = 1
+expand_icon = true
+
 [node name="InventoryCenter" type="CenterContainer" parent="."]
 anchors_preset = 8
 anchor_left = 0.5

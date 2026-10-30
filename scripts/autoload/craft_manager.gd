@@ -16,6 +16,12 @@ const RECIPES := {
 		"category": "weapons",
 		"ingredients": {"item_wood": 3},
 	},
+	"arrow": {
+		"name": "CRAFT_ARROWS",
+		"category": "weapons",
+		"ingredients": {"item_wood": 1, "item_stone": 1},
+		"batch": 4,
+	},
 	"furniture_camp_bed": {
 		"name": "CRAFT_CAMP_BED",
 		"category": "furniture",
@@ -85,7 +91,8 @@ func craft(recipe_id: String) -> bool:
 	var inventory := InteractionManager.get_inventory()
 	for item_id in RECIPES[recipe_id]["ingredients"]:
 		inventory.remove_item(item_id, int(RECIPES[recipe_id]["ingredients"][item_id]))
-	inventory.add_item(recipe_id, 1)
+	var batch := int(RECIPES[recipe_id].get("batch", 1))
+	inventory.add_item(recipe_id, batch)
 	crafted.emit(recipe_id)
 	return true
 
