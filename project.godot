@@ -28,6 +28,7 @@ DayNightCycle="*res://scripts/autoload/day_night_cycle.gd"
 QuestManager="*res://scripts/autoload/quest_manager.gd"
 CraftManager="*res://scripts/autoload/craft_manager.gd"
 SurvivalManager="*res://scripts/autoload/survival_manager.gd"
+Progression="*res://scripts/autoload/progression.gd"
 
 [display]
 

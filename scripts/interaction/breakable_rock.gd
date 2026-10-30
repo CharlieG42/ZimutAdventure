@@ -37,6 +37,9 @@ func _drop_stones(interactor: Node3D) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
 	var count := rng.randi_range(drops_min, drops_max)
+	var progression := InteractionManager.get_progression()
+	if progression != null:
+		count = int(progression.call("roll_loot", count))
 	var collectible_scene := load("res://scenes/interaction/collectible_item.tscn") as PackedScene
 	if collectible_scene == null:
 		return

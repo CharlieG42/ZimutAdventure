@@ -124,3 +124,31 @@ STATUS_THIRST_LOW,You are thirsty!
 VITAL_HUNGER,Hunger
 VITAL_THIRST,Thirst
 VITAL_ENERGY,Energy
+ACTION_CHOP,Chop the tree
+ACTION_NEED_AXE,Chop the tree (axe required)
+ACTION_PICK_BERRIES,Pick the berries
+ACTION_NEED_SICKLE,Pick the berries (sickle required)
+TOAST_NEED_AXE,You need an equipped axe to chop this tree.
+TOAST_NEED_SICKLE,You need an equipped sickle to pick these berries.
+TOAST_TREE_FELLED,Tree felled! +%d wood
+TOAST_NO_ARROWS,Out of arrows! Craft some from the journal.
+TOAST_LEVEL_UP,Level %d reached!
+PERK_STAMINA_LOOT,Stamina +%d%% and loot +%d%% per level
+CRAFT_LEVEL_REQUIRED,Level %d required
+QUEST_XP,+%d XP
+LEVEL_TITLE,Level %d
+LEVEL_MAX,Max level
+HINT_TOOL_STONE_AXE,Axe equipped: get close to a tree and act to chop it.
+HINT_TOOL_SICKLE,Sickle equipped: get close to a berry bush to pick the berries.
+HINT_TOOL_HUNTING_BOW,Bow equipped: aim at an animal and press Shoot (left click).
+QUEST_LUMBERJACK_TITLE,Lumberjack
+QUEST_LUMBERJACK_DESC,Equip the axe (tool bar) and fell 3 trees: get close and act several times.
+QUEST_SICKLE_TITLE,A sickle for foraging
+QUEST_SICKLE_DESC,Craft a sickle from the journal (level 2 required).
+QUEST_BERRIES_TITLE,Wild berries
+QUEST_BERRIES_DESC,Equip the sickle and pick 6 berries from the red bushes.
+CRAFT_SICKLE,Sickle
+ITEM_TOOL_SICKLE,sickle
+ITEM_ITEM_BERRIES,wild berries
+MAP_LEGEND_TREE,Tree
+MAP_LEGEND_BERRY,Berries

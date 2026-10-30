@@ -54,11 +54,19 @@ func _init() -> void:
 	if not craft.call("craft", "tool_hunting_bow"):
 		errors.append("l'arc doit être fabricable avec 3 bois")
 	await process_frame
+	# Chaîne de quêtes : le bûcheron (3 arbres abattus) précède l'arc.
+	root.get_node("Progression").call("add_stat", "stat_trees", 3)
 	quests.call("_evaluate_all", true)
 	await process_frame
 	var active: Array = quests.call("get_active")
 	if not ("quest_first_hunt" in active):
 		errors.append("quest_first_hunt doit se débloquer après quest_hunter (actives : %s)" % str(active))
+	# --- L'arc possédé mais non équipé ne tire pas (la hache, obtenue d'abord, est équipée) ---
+	var arrows_before_equip := int(inventory.call("count_of", "arrow"))
+	player.call("try_shoot_arrow")
+	if int(inventory.call("count_of", "arrow")) != arrows_before_equip:
+		errors.append("tirer avec l'arc non équipé ne doit pas consommer de flèche")
+	inventory.call("equip", "tool_hunting_bow")
 	# --- Tir avec arc : la flèche part et touche l'animal visé ------------------------
 	var animals := world.get_node("Animals")
 	var prey: Node = null

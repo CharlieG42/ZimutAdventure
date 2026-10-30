@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/virtual_joystick.tscn" id="2_joy"]
@@ -13,6 +13,8 @@
 [ext_resource type="Script" path="res://scripts/ui/map_panel.gd" id="11_map"]
 [ext_resource type="Script" path="res://scripts/ui/vitals_panel.gd" id="12_vitals"]
 [ext_resource type="Script" path="res://scripts/ui/minimap.gd" id="13_minimap"]
+[ext_resource type="Script" path="res://scripts/ui/hotbar.gd" id="14_hotbar"]
+[ext_resource type="Script" path="res://scripts/ui/level_badge.gd" id="15_badge"]
 
 [node name="HUD" type="CanvasLayer"]
 groups = ["hud"]
@@ -93,12 +95,6 @@ layout_mode = 2
 focus_mode = 0
 text = "ACTION_OPEN_JOURNAL"
 
-[node name="MapButton" type="Button" parent="SafeArea/VBox/BottomBar"]
-custom_minimum_size = Vector2(0, 56)
-layout_mode = 2
-focus_mode = 0
-text = "ACTION_OPEN_MAP"
-
 [node name="ViewButton" type="Button" parent="SafeArea/VBox/BottomBar"]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
@@ -115,12 +111,37 @@ grow_vertical = 2
 mouse_filter = 2
 theme = ExtResource("4_theme")
 
+[node name="LevelBadge" type="Control" parent="Overlay"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 112.0
+offset_right = 202.0
+offset_bottom = 148.0
+mouse_filter = 2
+script = ExtResource("15_badge")
+
+[node name="Hotbar" type="HBoxContainer" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -170.0
+offset_right = 200.0
+offset_bottom = -88.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("14_hotbar")
+
 [node name="Vitals" type="Control" parent="Overlay"]
 layout_mode = 0
 offset_left = 16.0
-offset_top = 124.0
+offset_top = 160.0
 offset_right = 202.0
-offset_bottom = 336.0
+offset_bottom = 372.0
 mouse_filter = 2
 script = ExtResource("12_vitals")
 
@@ -134,7 +155,6 @@ offset_top = 60.0
 offset_right = -24.0
 offset_bottom = 230.0
 grow_horizontal = 0
-mouse_filter = 2
 script = ExtResource("13_minimap")
 
 [node name="CompassStrip" type="Control" parent="Overlay"]

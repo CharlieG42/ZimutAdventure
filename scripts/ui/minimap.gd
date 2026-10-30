@@ -2,7 +2,9 @@ class_name MiniMap
 extends Control
 ## Mini-carte toujours visible : relief ombré centré sur le joueur, Nord en haut,
 ## flèche du joueur orientée selon son cap, repères de ressources/animaux/feu/camp.
-## Elle ne capte aucun toucher (les joysticks restent utilisables dessous).
+## Un appui sur la mini-carte ouvre la carte plein écran (signal `pressed`).
+
+signal pressed
 
 const SIZE_PX := 170.0
 ## Rayon du monde affiché (mètres) : les repères proches restent lisibles.
@@ -10,7 +12,7 @@ const VIEW_RADIUS := 55.0
 const REFRESH_PERIOD := 0.12
 const FRAME := Color(0.88, 0.64, 0.36, 1.0)
 const OUTLINE := Color(0.08, 0.05, 0.03, 0.9)
-const GROUPS := ["breakable", "wood", "stone", "animals", "campfire", "structures"]
+const GROUPS := ["breakable", "wood", "stone", "animals", "campfire", "structures", "choppable", "berries"]
 
 var _landscape: Node3D
 var _player: Node3D
@@ -18,9 +20,19 @@ var _texture: ImageTexture
 var _elapsed: float = 0.0
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	custom_minimum_size = Vector2(SIZE_PX, SIZE_PX)
 	size = Vector2(SIZE_PX, SIZE_PX)
+
+func _gui_input(event: InputEvent) -> void:
+	var is_press: bool = false
+	if event is InputEventMouseButton:
+		is_press = event.pressed and event.button_index == MOUSE_BUTTON_LEFT
+	elif event is InputEventScreenTouch:
+		is_press = event.pressed
+	if is_press:
+		accept_event()
+		pressed.emit()
 
 func set_context(landscape: Node3D, player: Node3D) -> void:
 	_landscape = landscape
@@ -123,6 +135,12 @@ func _draw_marker(kind: String, pos: Vector2) -> void:
 		"campfire":
 			draw_colored_polygon(PackedVector2Array([pos + Vector2(0, -8), pos + Vector2(6, 5), pos + Vector2(-6, 5)]), OUTLINE)
 			draw_colored_polygon(PackedVector2Array([pos + Vector2(0, -5), pos + Vector2(3.5, 3.5), pos + Vector2(-3.5, 3.5)]), Color(1.0, 0.55, 0.15))
+		"choppable":
+			draw_colored_polygon(PackedVector2Array([pos + Vector2(0, -8), pos + Vector2(6, 5), pos + Vector2(-6, 5)]), OUTLINE)
+			draw_colored_polygon(PackedVector2Array([pos + Vector2(0, -5), pos + Vector2(3.5, 3), pos + Vector2(-3.5, 3)]), Color(0.3, 0.6, 0.25))
+		"berries":
+			draw_circle(pos, 4.0, OUTLINE)
+			draw_circle(pos, 2.6, Color(0.9, 0.15, 0.25))
 		"structures":
 			draw_colored_polygon(PackedVector2Array([pos + Vector2(-7, -1), pos + Vector2(0, -8), pos + Vector2(7, -1), pos + Vector2(7, 6), pos + Vector2(-7, 6)]), OUTLINE)
 			draw_colored_polygon(PackedVector2Array([pos + Vector2(-4.5, 0), pos + Vector2(0, -4.5), pos + Vector2(4.5, 0), pos + Vector2(4.5, 4), pos + Vector2(-4.5, 4)]), Color(0.55, 0.85, 0.5))

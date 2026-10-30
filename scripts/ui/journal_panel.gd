@@ -103,6 +103,10 @@ func _connect_live_updates() -> void:
 	if _inventory != null:
 		_inventory.connect("item_added", _on_data_changed)
 		_inventory.connect("item_removed", _on_data_changed)
+	var progression := InteractionManager.get_progression()
+	if progression != null:
+		progression.connect("xp_changed", _on_data_changed)
+		progression.connect("stat_changed", _on_data_changed)
 
 func _on_data_changed(_a = null, _b = null, _c = null) -> void:
 	if visible:
@@ -117,6 +121,7 @@ func _refresh() -> void:
 
 func _refresh_quests() -> void:
 	_clear(_quests_list)
+	_add_level_card(_quests_list)
 	if _quest_manager == null:
 		return
 	var active: Array = _quest_manager.call("get_active")
@@ -133,6 +138,35 @@ func _refresh_quests() -> void:
 		_add_label(_quests_list, tr("JOURNAL_DONE"), 18, ACCENT)
 		for quest_id in completed:
 			_quests_list.add_child(_quest_card(quest_id, true))
+
+## Niveau du personnage et progression vers le suivant, en tête du journal.
+func _add_level_card(parent: Container) -> void:
+	var progression := InteractionManager.get_progression()
+	if progression == null:
+		return
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", _box(Color(0.16, 0.12, 0.05, 0.9), ACCENT, 2, 12, 10))
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	card.add_child(box)
+	var level: int = int(progression.call("get_level"))
+	var title := Label.new()
+	title.text = tr("LEVEL_TITLE") % level
+	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_color_override("font_color", ACCENT)
+	box.add_child(title)
+	var bar := ProgressBar.new()
+	bar.theme_type_variation = &"StaminaBar"
+	bar.custom_minimum_size = Vector2(0, 14)
+	bar.max_value = 1.0
+	bar.value = float(progression.call("get_xp_fraction"))
+	bar.show_percentage = false
+	box.add_child(bar)
+	var detail := "%d / %d XP" % [int(progression.call("get_xp")), int(progression.call("get_xp_needed"))]
+	if level >= int(progression.get("MAX_LEVEL")):
+		detail = tr("LEVEL_MAX")
+	_add_label(box, detail, 15, DIM)
+	parent.add_child(card)
 
 func _quest_card(quest_id: String, done: bool) -> Control:
 	var card := PanelContainer.new()
@@ -165,6 +199,8 @@ func _quest_card(quest_id: String, done: bool) -> Control:
 	bar.show_percentage = false
 	box.add_child(bar)
 
+	if not done:
+		_add_label(box, tr("QUEST_XP") % int(_quest_manager.call("get_xp_reward", quest_id)), 15, ACCENT)
 	var reward: Dictionary = _quest_manager.call("get_reward", quest_id)
 	if not reward.is_empty() and not done:
 		var parts: PackedStringArray = []
@@ -229,6 +265,11 @@ func _recipe_row(recipe_id: String) -> Control:
 			tr("ITEM_" + String(item_id).to_upper())])
 	cost.text = "   ".join(parts)
 	info.add_child(cost)
+
+	var required_level: int = int(_craft_manager.call("get_required_level", recipe_id))
+	var level_ok: bool = bool(_craft_manager.call("meets_level", recipe_id))
+	if required_level > 1:
+		_add_label(info, tr("CRAFT_LEVEL_REQUIRED") % required_level, 15, GOOD if level_ok else BAD)
 
 	var owned := _owned_count(recipe_id)
 	if owned > 0:
@@ -298,6 +339,11 @@ func _refresh_inventory() -> void:
 const EDIBLE := {
 	"item_cooked_meat": 0.45,
 	"item_raw_meat": 0.15,
+	"item_berries": 0.08,
+}
+## Aliments juteux : ils étanchent aussi un peu la soif.
+const THIRST_BONUS := {
+	"item_berries": 0.05,
 }
 
 ## Mange un aliment : restaure la faim (la viande crue restaure peu).
@@ -309,6 +355,8 @@ func _on_eat_pressed(item_id: String) -> void:
 	if not _inventory.remove_item(item_id, 1):
 		return
 	survival.call("eat", EDIBLE.get(item_id, 0.1))
+	if THIRST_BONUS.has(item_id):
+		survival.call("drink", THIRST_BONUS[item_id])
 	_notify(tr("TOAST_ATE") % tr("ITEM_" + item_id.to_upper()))
 	_refresh()
 

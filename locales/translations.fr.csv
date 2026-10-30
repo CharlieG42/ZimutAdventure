@@ -124,3 +124,31 @@ STATUS_THIRST_LOW,Vous avez soif !
 VITAL_HUNGER,Faim
 VITAL_THIRST,Soif
 VITAL_ENERGY,Énergie
+ACTION_CHOP,Couper l'arbre
+ACTION_NEED_AXE,Couper l'arbre (hache requise)
+ACTION_PICK_BERRIES,Cueillir les baies
+ACTION_NEED_SICKLE,Cueillir les baies (serpette requise)
+TOAST_NEED_AXE,Il faut une hache équipée pour couper cet arbre.
+TOAST_NEED_SICKLE,Il faut une serpette équipée pour cueillir ces baies.
+TOAST_TREE_FELLED,Arbre abattu ! +%d bois
+TOAST_NO_ARROWS,Plus de flèches ! Fabriquez-en depuis le journal.
+TOAST_LEVEL_UP,Niveau %d atteint !
+PERK_STAMINA_LOOT,Endurance +%d%% et butin +%d%% par niveau
+CRAFT_LEVEL_REQUIRED,Niveau %d requis
+QUEST_XP,+%d XP
+LEVEL_TITLE,Niveau %d
+LEVEL_MAX,Niveau maximum
+HINT_TOOL_STONE_AXE,Hache équipée : approchez-vous d'un arbre et agissez pour le couper.
+HINT_TOOL_SICKLE,Serpette équipée : approchez-vous d'un buisson de baies pour les cueillir.
+HINT_TOOL_HUNTING_BOW,Arc équipé : visez un animal et appuyez sur Tirer (clic gauche).
+QUEST_LUMBERJACK_TITLE,Bûcheron
+QUEST_LUMBERJACK_DESC,Équipez la hache (barre d'outils) et abattez 3 arbres : approchez-vous et agissez plusieurs fois.
+QUEST_SICKLE_TITLE,Une serpette pour la cueillette
+QUEST_SICKLE_DESC,Fabriquez une serpette depuis le journal (niveau 2 requis).
+QUEST_BERRIES_TITLE,Baies sauvages
+QUEST_BERRIES_DESC,Équipez la serpette et cueillez 6 baies sur les buissons rouges.
+CRAFT_SICKLE,Serpette
+ITEM_TOOL_SICKLE,serpette
+ITEM_ITEM_BERRIES,baies sauvages
+MAP_LEGEND_TREE,Arbre
+MAP_LEGEND_BERRY,Baies
