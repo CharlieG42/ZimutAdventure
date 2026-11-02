@@ -347,6 +347,10 @@ const EDIBLE := {
 	"item_roast_vegetables": 0.38,
 	"item_bread": 0.42,
 	"item_soup": 0.55,
+	"item_fish": 0.12,
+	"item_fish_big": 0.2,
+	"item_grilled_fish": 0.4,
+	"item_grilled_fish_big": 0.6,
 }
 ## Soins apportés par un aliment (part de la santé rendue).
 const HEAL_BONUS := {
@@ -355,6 +359,8 @@ const HEAL_BONUS := {
 	"item_roast_vegetables": 0.1,
 	"item_bread": 0.08,
 	"item_soup": 0.25,
+	"item_grilled_fish": 0.1,
+	"item_grilled_fish_big": 0.16,
 	"item_berries": 0.02,
 }
 ## Aliments juteux : ils étanchent aussi un peu la soif.

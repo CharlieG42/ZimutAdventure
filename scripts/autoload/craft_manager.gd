@@ -30,6 +30,12 @@ const RECIPES := {
 		"ingredients": {"item_wood": 2, "item_stone": 3},
 		"level": 4,
 	},
+	"tool_fishing_rod": {
+		"name": "CRAFT_FISHING_ROD",
+		"category": "tools",
+		"ingredients": {"item_wood": 3, "item_stone": 1},
+		"level": 2,
+	},
 	"tool_hunting_bow": {
 		"name": "CRAFT_HUNTING_BOW",
 		"category": "weapons",

@@ -200,6 +200,22 @@ const QUESTS := {
 		"requires": "quest_explore",
 		"reward": {"item_wood": 6, "item_stone": 6},
 	},
+	"quest_fish": {
+		"title": "QUEST_FISH_TITLE",
+		"description": "QUEST_FISH_DESC",
+		"goal_item": "stat_fished",
+		"goal_count": 3,
+		"requires": "quest_camp",
+		"reward": {"item_wood": 3, "item_berries": 3},
+	},
+	"quest_grill": {
+		"title": "QUEST_GRILL_TITLE",
+		"description": "QUEST_GRILL_DESC",
+		"goal_item": "stat_fish_cooked",
+		"goal_count": 2,
+		"requires": "quest_fish",
+		"reward": {"item_stone": 5},
+	},
 	"quest_dog": {
 		"title": "QUEST_DOG_TITLE",
 		"description": "QUEST_DOG_DESC",

@@ -34,6 +34,10 @@ func _draw() -> void:
 			draw_arc(c + Vector2(-16, 6) * u, 10.0 * u, deg_to_rad(90.0), deg_to_rad(270.0), 12, DARK, 5.0 * u, true)
 			draw_circle(c + Vector2(28, -6) * u, 2.5 * u, water)
 			draw_circle(c + Vector2(24, 2) * u, 2.5 * u, water)
+		"tool_fishing_rod":
+			_line(c + Vector2(-20, 22) * u, c + Vector2(20, -22) * u, WOOD, 5.0 * u)
+			draw_line(c + Vector2(20, -22) * u, c + Vector2(24, 8) * u, Color(1, 1, 1, 0.85), 1.5 * u)
+			draw_circle(c + Vector2(24, 12) * u, 3.0 * u, Color(0.9, 0.2, 0.15))
 		"tool_hunting_bow":
 			draw_arc(c + Vector2(-8, 0) * u, 26.0 * u, deg_to_rad(-62.0), deg_to_rad(62.0), 20, DARK, 8.0 * u, true)
 			draw_arc(c + Vector2(-8, 0) * u, 26.0 * u, deg_to_rad(-62.0), deg_to_rad(62.0), 20, WOOD, 5.0 * u, true)

@@ -300,3 +300,25 @@ QUEST_EXPLORE_TITLE,Explorateur
 QUEST_EXPLORE_DESC,"Découvrez 3 sites (ruines, grottes) en vous en approchant : la carte se dévoile et le voyage rapide s'ouvre (niveau 3)."
 QUEST_TREASURE_TITLE,Chasseur de reliques
 QUEST_TREASURE_DESC,"Ouvrez les coffres des sites et rapportez 2 reliques anciennes."
+CRAFT_FISHING_ROD,Canne à pêche
+ITEM_TOOL_FISHING_ROD,canne à pêche
+ITEM_ITEM_FISH,truite
+ITEM_ITEM_FISH_BIG,grosse carpe
+ITEM_ITEM_GRILLED_FISH,truite grillée
+ITEM_ITEM_GRILLED_FISH_BIG,carpe grillée
+ACTION_FISH_NEED_ROD,Étang (canne requise)
+ACTION_FISH_CAST,Lancer la ligne
+ACTION_FISH_REEL,Relever la ligne
+ACTION_FISH_STRIKE,Ferrer !
+TOAST_FISH_NEED_ROD,Il faut une canne à pêche (niveau 2).
+TOAST_FISH_CAST,La ligne est à l'eau… patience.
+TOAST_FISH_TOO_EARLY,Rien ne mord : vous relevez la ligne.
+TOAST_FISH_BITE,Ça mord ! Ferrez vite !
+TOAST_FISH_ESCAPED,Le poisson s'est échappé.
+TOAST_FISH_CAUGHT,Pris : %s !
+TOAST_FISH_GRILLED,Le poisson grille à merveille.
+MAP_LEGEND_POND,Étang de pêche
+QUEST_FISH_TITLE,Au bord de l'eau
+QUEST_FISH_DESC,"Fabriquez une canne à pêche (niveau 2), approchez-vous d'un étang, lancez la ligne et ferrez dès que ça mord : attrapez 3 poissons. Aube, crépuscule et pluie font mordre plus vite."
+QUEST_GRILL_TITLE,Poisson grillé
+QUEST_GRILL_DESC,"Faites griller 2 poissons au feu de camp."
