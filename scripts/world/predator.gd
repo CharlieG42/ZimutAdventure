@@ -7,9 +7,11 @@ extends PassiveAnimal
 const PREDATORS := {
 	"wolf": {"scale": 0.85, "fur": Color(0.4, 0.4, 0.44), "belly": Color(0.74, 0.74, 0.76),
 			"ear": 0.22, "neck": 0.28, "hop": 0.0, "speed": 1.0,
+			"tail_len": 0.6, "tail_color": Color(0.3, 0.3, 0.34),
 			"hp": 4, "damage": 0.14, "chase": 5.6, "detect": 26.0, "pelts": 2},
 	"coyote": {"scale": 0.65, "fur": Color(0.64, 0.5, 0.32), "belly": Color(0.86, 0.76, 0.6),
 			"ear": 0.24, "neck": 0.24, "hop": 0.0, "speed": 1.1,
+			"tail_len": 0.42, "tail_color": Color(0.5, 0.38, 0.24),
 			"hp": 2, "damage": 0.08, "chase": 5.2, "detect": 18.0, "pelts": 1},
 }
 const BITE_RANGE := 1.9
@@ -46,17 +48,6 @@ func _ready() -> void:
 	_decorate()
 
 func _decorate() -> void:
-	var tail := MeshInstance3D.new()
-	var capsule := CapsuleMesh.new()
-	capsule.radius = 0.06
-	capsule.height = 0.5
-	var fur := StandardMaterial3D.new()
-	fur.albedo_color = (_config["fur"] as Color).darkened(0.15)
-	capsule.material = fur
-	tail.mesh = capsule
-	tail.position = Vector3(0.0, 1.0, -0.6)
-	tail.rotation_degrees = Vector3(-60.0, 0.0, 0.0)
-	_model.add_child(tail)
 	if _head == null:
 		return
 	# Yeux rougeoyants : on les repère dans le noir.

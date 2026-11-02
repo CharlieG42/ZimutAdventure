@@ -43,6 +43,11 @@ var _legs: Array[Node3D] = []
 var _neck: Node3D
 var _head: Node3D
 var _model: Node3D
+var _tail: Node3D
+var _anim_time: float = 0.0
+## Mouvement de queue : vitesse et amplitude (le chien apprivoisé remue vite).
+var _tail_speed: float = 1.6
+var _tail_amp: float = 0.1
 var _config: Dictionary
 var _rng := RandomNumberGenerator.new()
 
@@ -205,8 +210,20 @@ func _build_model() -> void:
 	# Corps : capsule couchée le long de l'axe Z (l'avant de l'animal est +Z).
 	_add_mesh(_model, _capsule(0.29, 1.1), fur, Vector3(0.0, 0.86, 0.0), Vector3(90.0, 0.0, 0.0))
 	_add_mesh(_model, _capsule(0.2, 0.8), belly, Vector3(0.0, 0.76, 0.02), Vector3(90.0, 0.0, 0.0))
-	# Queue claire.
-	_add_mesh(_model, _sphere(0.08), belly, Vector3(0.0, 0.98, -0.52), Vector3.ZERO)
+	# Hanches et épaules : donnent du volume au corps plutôt qu'une simple capsule.
+	for side in [-1.0, 1.0]:
+		_add_mesh(_model, _sphere(0.17), fur, Vector3(0.19 * side, 0.88, -0.3), Vector3.ZERO, Vector3(0.85, 1.1, 1.25))
+		_add_mesh(_model, _sphere(0.16), fur, Vector3(0.18 * side, 0.9, 0.3), Vector3.ZERO, Vector3(0.85, 1.1, 1.15))
+	# Queue : un pivot qui balance ; claire par défaut, plus longue selon l'espèce.
+	_tail = Node3D.new()
+	_tail.name = "Tail"
+	_tail.position = Vector3(0.0, 0.98, -0.52)
+	_model.add_child(_tail)
+	_add_mesh(_tail, _sphere(0.08), belly, Vector3.ZERO, Vector3.ZERO)
+	var tail_len: float = float(_config.get("tail_len", 0.0))
+	if tail_len > 0.0:
+		var tail_color: Color = _config.get("tail_color", _config["fur"])
+		_add_mesh(_tail, _capsule(0.05, tail_len), _material(tail_color), Vector3(0.0, -tail_len * 0.4, -tail_len * 0.25), Vector3(-25.0, 0.0, 0.0))
 
 	# Cou et tête (pivots : le broutage et le trot les font bouger).
 	_neck = Node3D.new()
@@ -224,11 +241,19 @@ func _build_model() -> void:
 	_add_mesh(_head, _sphere(0.12), fur, Vector3(0.0, 0.03, 0.06), Vector3.ZERO, Vector3(0.95, 0.95, 1.25))
 	_add_mesh(_head, _sphere(0.06), belly, Vector3(0.0, -0.02, 0.2), Vector3.ZERO, Vector3(0.9, 0.8, 1.1))
 	_add_mesh(_head, _sphere(0.03), dark, Vector3(0.0, 0.0, 0.27), Vector3.ZERO)
+	var inner_ear := _material(Color(0.86, 0.62, 0.58))
+	var shine := StandardMaterial3D.new()
+	shine.albedo_color = Color(1, 1, 1)
+	shine.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	for side in [-1.0, 1.0]:
 		var ear_len: float = _config["ear"]
 		var ear := _cone(0.045, ear_len)
 		_add_mesh(_head, ear, fur, Vector3(0.07 * side, 0.15 + ear_len * 0.25, -0.02), Vector3(-10.0, 0.0, -18.0 * side))
-		_add_mesh(_head, _sphere(0.016), dark, Vector3(0.085 * side, 0.06, 0.12), Vector3.ZERO)
+		if ear_len > 0.05:
+			_add_mesh(_head, _cone(0.028, ear_len * 0.8), inner_ear, Vector3(0.07 * side, 0.15 + ear_len * 0.22, 0.0), Vector3(-10.0, 0.0, -18.0 * side))
+		# Œil : pupille sombre et petit reflet, plus lisible que le simple point d'avant.
+		_add_mesh(_head, _sphere(0.026), dark, Vector3(0.088 * side, 0.06, 0.11), Vector3.ZERO)
+		_add_mesh(_head, _sphere(0.008), shine, Vector3(0.098 * side, 0.07, 0.125), Vector3.ZERO)
 
 	# Pattes : un pivot à la hanche par patte pour pouvoir les balancer.
 	for z in [0.32, -0.32]:
@@ -239,10 +264,38 @@ func _build_model() -> void:
 			_add_mesh(hip, _cylinder(0.03, 0.045, 0.78), fur, Vector3(0.0, -0.39, 0.0), Vector3.ZERO)
 			_add_mesh(hip, _cylinder(0.04, 0.04, 0.06), dark, Vector3(0.0, -0.76, 0.0), Vector3.ZERO)
 			_legs.append(hip)
+	_add_ground_shadow(s)
+
+## Ombre portée simplifiée (disque sombre sous l'animal) : lisible même avec le rendu léger du mobile.
+func _add_ground_shadow(model_scale: float) -> void:
+	var disc := MeshInstance3D.new()
+	disc.name = "GroundShadow"
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.62 * model_scale
+	mesh.bottom_radius = 0.62 * model_scale
+	mesh.height = 0.01
+	mesh.radial_segments = 14
+	mesh.rings = 1
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = Color(0.0, 0.0, 0.0, 0.28)
+	mesh.material = material
+	disc.mesh = mesh
+	disc.scale = Vector3(1.0, 1.0, 1.7)
+	disc.position = Vector3(0.0, 0.04, 0.0)
+	disc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(disc)
 
 func _animate(delta: float) -> void:
 	if _model == null:
 		return
+	_anim_time += delta
+	if _tail != null:
+		_tail.rotation.y = sin(_anim_time * _tail_speed) * _tail_amp
+		_tail.rotation.x = lerpf(_tail.rotation.x, -0.5 if _fleeing else 0.0, minf(1.0, 6.0 * delta))
+	# Respiration : le torse se soulève très légèrement à l'arrêt.
+	_model.scale.y = lerpf(_model.scale.y, float(_config["scale"]) * (1.0 + 0.015 * sin(_anim_time * 2.2)), minf(1.0, 8.0 * delta))
 	var horizontal := Vector2(velocity.x, velocity.z).length()
 	var moving := horizontal > 0.15
 	var rate := horizontal * (2.4 if _fleeing else 3.2) / maxf(0.5, float(_config["scale"]) + 0.3)
