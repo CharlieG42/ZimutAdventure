@@ -13,6 +13,9 @@ extends Node3D
 @export var flower_count: int = 160
 @export var seed_value: int = 1887
 @export var collision_enabled: bool = true
+## Props GLB externes (assets/props/kenney/) à la place des maillages procéduraux
+## quand ils sont disponibles ; sinon retombe sur le procédural.
+@export var use_glb_props: bool = true
 
 var rng := RandomNumberGenerator.new()
 var _terrain: MeshInstance3D
@@ -203,32 +206,66 @@ func _place_props() -> void:
 
 	# [type, nombre, grand rocher ?, forme sphérique ?, part du rayon du maillage]
 	var rocks := [
-		[RockGenerator.RockType.HOODOO, hoodoo_count, true, false, 0.7],
-		[RockGenerator.RockType.BUTTE, butte_count, true, false, 0.85],
-		[RockGenerator.RockType.BOULDER, boulder_count, false, true, 0.85],
+		[RockGenerator.RockType.HOODOO, hoodoo_count, true, false, 0.7, ""],
+		[RockGenerator.RockType.BUTTE, butte_count, true, false, 0.85, ""],
+		[RockGenerator.RockType.BOULDER, boulder_count, false, true, 0.85, "boulder"],
 	]
 	for rock in rocks:
-		var mesh: ArrayMesh = RockGenerator.generate(rock[0] as RockGenerator.RockType, rng)
+		var meshes := _rock_meshes(rock[0] as RockGenerator.RockType, rock[5] as String)
+		for entry in _split_counts(rock[1] as int, meshes.size()):
+			var mesh: Mesh = meshes[entry[0]]
 		# Collision calquée sur le maillage réellement généré (tailles aléatoires).
-		var box := mesh.get_aabb()
-		var radius := maxf(box.size.x, box.size.z) * 0.5 * (rock[4] as float)
-		_props_root.add_child(_place_multimesh(mesh, rock[1] as int, rock[2] as bool,
-				radius, box.size.y, rock[3] as bool, box.position.y + box.size.y * 0.5))
+			var box := mesh.get_aabb()
+			var radius := maxf(box.size.x, box.size.z) * 0.5 * (rock[4] as float)
+			_props_root.add_child(_place_multimesh(mesh, entry[1] as int, rock[2] as bool,
+					radius, box.size.y, rock[3] as bool, box.position.y + box.size.y * 0.5))
 
 	var plants := [
-		[VegetationGenerator.PlantType.PINE, pine_count, 0.45, 4.0],
-		[VegetationGenerator.PlantType.SHRUB, shrub_count, 0.0, 0.0],
-		[VegetationGenerator.PlantType.DRY_GRASS, grass_count, 0.0, 0.0],
-		[VegetationGenerator.PlantType.CACTUS, cactus_count, 0.4, 3.0],
-		[VegetationGenerator.PlantType.AGAVE, agave_count, 0.0, 0.0],
-		[VegetationGenerator.PlantType.FLOWERS, flower_count, 0.0, 0.0],
+		[VegetationGenerator.PlantType.PINE, pine_count, 0.45, 4.0, "pine"],
+		[VegetationGenerator.PlantType.SHRUB, shrub_count, 0.0, 0.0, "shrub"],
+		[VegetationGenerator.PlantType.DRY_GRASS, grass_count, 0.0, 0.0, "grass"],
+		[VegetationGenerator.PlantType.CACTUS, cactus_count, 0.4, 3.0, "cactus"],
+		[VegetationGenerator.PlantType.AGAVE, agave_count, 0.0, 0.0, ""],
+		[VegetationGenerator.PlantType.FLOWERS, flower_count, 0.0, 0.0, "flowers"],
 	]
 	for plant in plants:
-		var mesh: ArrayMesh = VegetationGenerator.generate(plant[0] as VegetationGenerator.PlantType, rng)
-		_props_root.add_child(_place_multimesh(mesh, plant[1] as int, false,
-				plant[2] as float, plant[3] as float, false))
+		var meshes := _plant_meshes(plant[0] as VegetationGenerator.PlantType, plant[4] as String)
+		for entry in _split_counts(plant[1] as int, meshes.size()):
+			var mesh: Mesh = meshes[entry[0]]
+			var box := mesh.get_aabb()
+			var cr: float = plant[2] as float
+			var ch: float = plant[3] as float
+			if cr > 0.0:
+				# Le cylindre de collision épouse le tronc : rayon borné, hauteur du maillage.
+				cr = minf(cr, maxf(box.size.x, box.size.z) * 0.5)
+				ch = box.size.y
+			_props_root.add_child(_place_multimesh(mesh, entry[1] as int, false, cr, ch, false))
 
-func _place_multimesh(mesh: ArrayMesh, count: int, is_large_rock: bool,
+## Maillages d'un type de rocher : variantes GLB si disponibles, sinon procédural.
+func _rock_meshes(type: RockGenerator.RockType, glb_key: String) -> Array:
+	if use_glb_props and not glb_key.is_empty():
+		var variants := GlbPropLibrary.get_variant_meshes(glb_key)
+		if not variants.is_empty():
+			return variants
+	return [RockGenerator.generate(type, rng)]
+
+func _plant_meshes(type: VegetationGenerator.PlantType, glb_key: String) -> Array:
+	if use_glb_props and not glb_key.is_empty():
+		var variants := GlbPropLibrary.get_variant_meshes(glb_key)
+		if not variants.is_empty():
+			return variants
+	return [VegetationGenerator.generate(type, rng)]
+
+## Répartit `total` instances sur `n` variantes en gardant la somme exacte.
+static func _split_counts(total: int, n: int) -> Array:
+	var out := []
+	var base := total / n
+	var rem := total % n
+	for i in range(n):
+		out.append([i, base + (1 if i < rem else 0)])
+	return out
+
+func _place_multimesh(mesh: Mesh, count: int, is_large_rock: bool,
 		collider_radius: float = 0.0, collider_height: float = 0.0,
 		collider_sphere: bool = false, collider_center_y: float = -1.0) -> MultiMeshInstance3D:
 	var multimesh := MultiMesh.new()

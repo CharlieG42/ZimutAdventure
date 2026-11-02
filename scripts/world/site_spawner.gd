@@ -90,13 +90,20 @@ func _build_site(site_id: String, kind: String, pos: Vector3, index: int) -> voi
 	var stone := StandardMaterial3D.new()
 	stone.albedo_color = Color(0.58, 0.52, 0.44) if kind == "ruin" else Color(0.38, 0.34, 0.32)
 	stone.roughness = 1.0
+	var used_glb_ruin := false
 	if kind == "ruin":
-		for i in 5:
-			var angle := float(i) / 5.0 * TAU
-			var height := 2.2 + float((i * 7 + index) % 4) * 0.7
-			_column(root, Vector3(cos(angle) * 4.5, 0.0, sin(angle) * 4.5), height, stone)
-		_block(root, Vector3(3.0, 0.8, 0.6), Vector3(0.0, 0.4, 5.6), stone)
-		_block(root, Vector3(0.6, 0.6, 2.5), Vector3(-4.3, 0.3, 0.0), stone)
+		var ruin := GlbPropLibrary.instantiate_scene("ruin") if GlbPropLibrary.has_prop("ruin") else null
+		if ruin != null:
+			used_glb_ruin = true
+			root.add_child(ruin)
+			_add_scene_colliders(ruin)
+		else:
+			for i in 5:
+				var angle := float(i) / 5.0 * TAU
+				var height := 2.2 + float((i * 7 + index) % 4) * 0.7
+				_column(root, Vector3(cos(angle) * 4.5, 0.0, sin(angle) * 4.5), height, stone)
+			_block(root, Vector3(3.0, 0.8, 0.6), Vector3(0.0, 0.4, 5.6), stone)
+			_block(root, Vector3(0.6, 0.6, 2.5), Vector3(-4.3, 0.3, 0.0), stone)
 	else:
 		_block(root, Vector3(1.6, 4.2, 2.4), Vector3(-2.2, 2.1, 0.0), stone)
 		_block(root, Vector3(1.6, 4.2, 2.4), Vector3(2.2, 2.1, 0.0), stone)
@@ -112,8 +119,32 @@ func _build_site(site_id: String, kind: String, pos: Vector3, index: int) -> voi
 		inside.position = Vector3(0.0, 1.7, -1.1)
 		root.add_child(inside)
 	var chest := TreasureChest.create(site_id, loot_for(index))
-	chest.position = Vector3(0.0, 0.0, 0.6) if kind == "cave" else Vector3(0.0, 0.0, 0.0)
+	if kind == "cave":
+		chest.position = Vector3(0.0, 0.0, 0.6)
+	elif used_glb_ruin:
+		# Hors de l'empreinte de la ruine GLB (~13 m de large), atteignable à pied.
+		chest.position = Vector3(7.0, 0.0, 7.0)
 	root.add_child(chest)
+
+## Collision d'une scène GLB : une boîte englobante par MeshInstance3D, en espace
+## local du nœud (elle hérite ainsi de sa transformée).
+func _add_scene_colliders(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		if mi.mesh != null:
+			var aabb := mi.mesh.get_aabb()
+			var body := StaticBody3D.new()
+			body.collision_layer = SOLID_LAYER
+			body.collision_mask = 0
+			var shape := CollisionShape3D.new()
+			var box := BoxShape3D.new()
+			box.size = aabb.size
+			shape.shape = box
+			shape.position = aabb.get_center()
+			body.add_child(shape)
+			mi.add_child(body)
+	for child in node.get_children():
+		_add_scene_colliders(child)
 
 func _column(parent: Node3D, at: Vector3, height: float, material: Material) -> void:
 	var mesh := CylinderMesh.new()

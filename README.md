@@ -41,6 +41,8 @@ La course consomme de l'endurance (barre discrète en bas) ; la boussole en haut
 
 Régénérer les images du HUD : `python3 tools/generate_ui_assets.py` puis `godot --headless --path . -s tools/make_hud_theme.gd`. Note : Godot 4.7 possède une classe native `VirtualJoystick`, notre stick s'appelle donc `TouchStick`.
 
+Régénérer les props GLB (Kenney CC0 + ruines composées) : `python3 tools/make_glb_props.py all --kenney-root <checkout du miroir github.com/shorepine/kenney>` — voir [assets/props/README.md](assets/props/README.md).
+
 ## Structure du projet
 
 ```
@@ -49,7 +51,7 @@ assets/
     models/        # photos de référence (modèles pour le world design)
     shaders/       # shader du terrain (strates rocheuses)
     materials/     # matériaux Godot
-  props/           # (réservé) meshes de props externes
+  props/           # meshes GLB externes (Kenney CC0) + ruines composées — voir assets/props/README.md
 scenes/
   player/          # scène du joueur (CharacterBody3D + caméra FPS)
   world/           # canyon_playground.tscn : scène de test jouable
