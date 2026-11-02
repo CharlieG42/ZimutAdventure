@@ -348,6 +348,15 @@ const EDIBLE := {
 	"item_bread": 0.42,
 	"item_soup": 0.55,
 }
+## Soins apportés par un aliment (part de la santé rendue).
+const HEAL_BONUS := {
+	"item_cooked_meat": 0.12,
+	"item_boiled_egg": 0.06,
+	"item_roast_vegetables": 0.1,
+	"item_bread": 0.08,
+	"item_soup": 0.25,
+	"item_berries": 0.02,
+}
 ## Aliments juteux : ils étanchent aussi un peu la soif.
 const THIRST_BONUS := {
 	"item_berries": 0.05,
@@ -365,6 +374,8 @@ func _on_eat_pressed(item_id: String) -> void:
 	if not _inventory.remove_item(item_id, 1):
 		return
 	survival.call("eat", EDIBLE.get(item_id, 0.1))
+	if HEAL_BONUS.has(item_id) and survival.has_method("heal"):
+		survival.call("heal", HEAL_BONUS[item_id])
 	if THIRST_BONUS.has(item_id):
 		survival.call("drink", THIRST_BONUS[item_id])
 	_notify(tr("TOAST_ATE") % tr("ITEM_" + item_id.to_upper()))

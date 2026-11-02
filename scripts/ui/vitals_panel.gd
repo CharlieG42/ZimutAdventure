@@ -8,9 +8,10 @@ const GAUGE_WIDTH := 52.0
 const GAUGE_HEIGHT := 150.0
 const GAP := 10.0
 const LOW_LEVEL := 0.2
-const KINDS := ["hunger", "thirst", "energy"]
-const LABELS := {"hunger": "VITAL_HUNGER", "thirst": "VITAL_THIRST", "energy": "VITAL_ENERGY"}
+const KINDS := ["health", "hunger", "thirst", "energy"]
+const LABELS := {"health": "VITAL_HEALTH", "hunger": "VITAL_HUNGER", "thirst": "VITAL_THIRST", "energy": "VITAL_ENERGY"}
 const COLORS := {
+	"health": Color(0.9, 0.2, 0.28),
 	"hunger": Color(0.96, 0.58, 0.18),
 	"thirst": Color(0.28, 0.66, 1.0),
 	"energy": Color(0.62, 0.86, 0.26),
@@ -19,7 +20,7 @@ const OUTLINE := Color(0.08, 0.05, 0.03, 0.92)
 const BACK := Color(0.06, 0.04, 0.03, 0.62)
 const ALERT := Color(1.0, 0.25, 0.2)
 
-var values: Dictionary = {"hunger": 1.0, "thirst": 1.0, "energy": 1.0}
+var values: Dictionary = {"health": 1.0, "hunger": 1.0, "thirst": 1.0, "energy": 1.0}
 var _time: float = 0.0
 
 func _ready() -> void:
@@ -27,7 +28,7 @@ func _ready() -> void:
 	custom_minimum_size = panel_size()
 
 static func panel_size() -> Vector2:
-	return Vector2(GAUGE_WIDTH * 3.0 + GAP * 2.0, GAUGE_HEIGHT + 62.0)
+	return Vector2(GAUGE_WIDTH * float(KINDS.size()) + GAP * float(KINDS.size() - 1), GAUGE_HEIGHT + 62.0)
 
 func set_value(kind: String, value: float) -> void:
 	values[kind] = clampf(value, 0.0, 1.0)
@@ -84,6 +85,11 @@ func _draw() -> void:
 
 func _draw_icon(kind: String, c: Vector2, color: Color) -> void:
 	match kind:
+		"health":
+			# Cœur : deux lobes et une pointe.
+			draw_circle(c + Vector2(-5, -3), 6.5, color)
+			draw_circle(c + Vector2(5, -3), 6.5, color)
+			draw_colored_polygon(PackedVector2Array([c + Vector2(-11, 0), c + Vector2(11, 0), c + Vector2(0, 12)]), color)
 		"hunger":
 			# Cuisse de viande : masse ronde + os.
 			draw_circle(c + Vector2(-3, -3), 9.0, color)

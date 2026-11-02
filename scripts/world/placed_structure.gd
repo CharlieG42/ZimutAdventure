@@ -55,6 +55,9 @@ func _on_interact(interactor: Node3D) -> void:
 func _rest(interactor: Node3D) -> void:
 	if interactor != null and interactor.has_method("restore_stamina"):
 		interactor.restore_stamina()
+	var survival := InteractionManager.get_survival()
+	if survival != null:
+		survival.call("heal", 1.0 if kind == "wool_bed" else 0.5)
 	_toast("TOAST_BED_REST")
 
 func _sleep(interactor: Node3D) -> void:

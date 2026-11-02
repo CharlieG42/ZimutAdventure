@@ -248,3 +248,18 @@ TOAST_RAIN,It starts to rain: your crops are watered.
 TOAST_SNOW,Snow begins to fall.
 QUEST_SEASONS_TITLE,Through the seasons
 QUEST_SEASONS_DESC,"Watch two seasons go by (6 game days each). Crops grow slower in winter and thirst is sharper in summer; rain waters your plots."
+VITAL_HEALTH,Health
+ANIMAL_WOLF,The wolf
+ANIMAL_COYOTE,The coyote
+ITEM_ITEM_PELT,pelt
+ITEM_ARMOR_FUR_CLOAK,fur cloak
+CRAFT_FUR_CLOAK,Fur cloak
+TOAST_PREDATOR_NEAR,%s has spotted you! Use the bow or the axe (or get close to a fire).
+TOAST_PREDATOR_KILLED,%s is down. You collect pelts and meat.
+TOAST_BITTEN,You are bitten!
+TOAST_RAIDED,%s was frightened by a prowler: its production is delayed. A pen would protect it.
+TOAST_DIED,You passed out: you come to at the starting camp.
+QUEST_PREDATOR_TITLE,The night prowler
+QUEST_PREDATOR_DESC,"Coyotes (from level 2) and wolves (from level 4) prowl at night. Equip the bow or the axe (attack button) and take one down; a well-fed campfire keeps them away."
+QUEST_CLOAK_TITLE,A fur cloak
+QUEST_CLOAK_DESC,"Craft a cloak from 3 pelts and 1 wool (level 3): it reduces damage taken by 35%."

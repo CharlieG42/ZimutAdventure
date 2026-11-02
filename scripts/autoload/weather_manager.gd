@@ -224,7 +224,7 @@ func _refresh_particles() -> void:
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	if kind == RAIN:
 		var streak := BoxMesh.new()
-		streak.size = Vector3(0.022, 0.7, 0.022)
+		streak.size = Vector3(0.016, 0.7, 0.016)
 		material.albedo_color = Color(0.8, 0.88, 1.0, 0.65)
 		streak.material = material
 		_particles.mesh = streak

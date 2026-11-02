@@ -36,6 +36,12 @@ const RECIPES := {
 		"ingredients": {"item_wood": 3},
 		"level": 2,
 	},
+	"armor_fur_cloak": {
+		"name": "CRAFT_FUR_CLOAK",
+		"category": "weapons",
+		"ingredients": {"item_pelt": 3, "item_wool": 1},
+		"level": 3,
+	},
 	"arrow": {
 		"name": "CRAFT_ARROWS",
 		"category": "weapons",

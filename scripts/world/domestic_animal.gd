@@ -194,6 +194,16 @@ func _collect_product() -> void:
 	_update_indicator()
 	state_changed.emit(self)
 
+## Un prédateur est passé : la bête, effrayée, produit avec retard.
+func scare_by_predator() -> void:
+	if not tamed:
+		return
+	if PRODUCTS.has(species):
+		ready_at = maxf(ready_at, _now()) + 120.0
+		_update_indicator()
+	_toast(tr("TOAST_RAIDED") % tr("ANIMAL_" + species.to_upper()))
+	state_changed.emit(self)
+
 func _production_seconds() -> float:
 	var seconds := float(PRODUCTS[species]["seconds"])
 	return seconds * (PEN_PRODUCTION_FACTOR if penned else 1.0)
