@@ -18,11 +18,11 @@ enum Mode { WALK, GRAZE }
 const SPECIES := {
 	"deer": {
 		"scale": 1.0, "fur": Color(0.5, 0.31, 0.18), "belly": Color(0.86, 0.74, 0.56),
-		"ear": 0.2, "neck": 0.38, "hop": 0.0, "speed": 1.0,
+		"ear": 0.2, "neck": 0.38, "hop": 0.0, "speed": 1.0, "spots": true,
 	},
 	"rabbit": {
 		"scale": 0.36, "fur": Color(0.58, 0.5, 0.4), "belly": Color(0.9, 0.86, 0.78),
-		"ear": 0.42, "neck": 0.18, "hop": 0.22, "speed": 1.4,
+		"ear": 0.42, "neck": 0.18, "hop": 0.22, "speed": 1.4, "spots": false,
 	},
 }
 
@@ -206,6 +206,19 @@ func _build_model() -> void:
 	_model.name = "Model"
 	_model.scale = Vector3.ONE * s
 	add_child(_model)
+
+	# Teinte individuelle : chaque animal est légèrement différent.
+	var tint := 0.88 + _rng.randf() * 0.24
+	fur.albedo_color = fur.albedo_color * Color(tint, tint, tint)
+	belly.albedo_color = belly.albedo_color * Color(tint, tint, tint)
+	# Taches du cerf sur le dos (petites sphères aplaties sombres).
+	if bool(_config.get("spots", false)):
+		var spot := _material(_config["fur"] * Color(0.5, 0.45, 0.4))
+		for i in range(9):
+			var a := _rng.randf() * TAU
+			_add_mesh(_model, _sphere(0.028 + _rng.randf() * 0.02), spot,
+				Vector3(cos(a) * 0.17, 1.06 + _rng.randf_range(-0.03, 0.03), _rng.randf_range(-0.42, 0.42)),
+				Vector3.ZERO, Vector3(1.0, 0.45, 1.0))
 
 	# Corps : capsule couchée le long de l'axe Z (l'avant de l'animal est +Z).
 	_add_mesh(_model, _capsule(0.29, 1.1), fur, Vector3(0.0, 0.86, 0.0), Vector3(90.0, 0.0, 0.0))

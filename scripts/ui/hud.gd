@@ -19,6 +19,7 @@ const BASE_MARGIN := 16
 @onready var clock_label: Label = $SafeArea/VBox/TopBar/ClockLabel
 @onready var vitals: Control = $Overlay/Vitals
 @onready var minimap: Control = $Overlay/MiniMap
+@onready var level_badge: Control = $Overlay/LevelBadge
 @onready var hotbar: Control = $Overlay/Hotbar
 @onready var safe_area: MarginContainer = $SafeArea
 @onready var compass_strip: CompassStrip = $Overlay/CompassStrip
@@ -48,6 +49,10 @@ var _damage_flash: ColorRect
 var _last_heading: int = -1
 var _focused_interactable: Interactable = null
 var _stamina_exhausted: bool = false
+## Un panneau plein écran est ouvert : la souris est alors libérée (voir _sync_mouse_mode).
+var _panels_open: bool = false
+## Le joueur vise à l'arc : le réticule s'affiche même sans objet visé.
+var _aiming: bool = false
 
 func _ready() -> void:
 	var is_touch := PlatformInfo.is_touch()
@@ -97,8 +102,8 @@ func _ready() -> void:
 	interact_button.visible = false
 	_refresh_attack_button()
 
-	_capture_layout()
-	_apply_safe_area()
+	_capture_layout.call_deferred()
+	_apply_safe_area.call_deferred()
 	get_viewport().size_changed.connect(_apply_safe_area)
 
 	_player = get_tree().get_first_node_in_group("player") as CharacterBody3D
@@ -153,6 +158,9 @@ func _process(delta: float) -> void:
 	_hide_stale_prompt()
 	# La mini-carte s'efface quand un panneau plein écran est ouvert.
 	var panel_open := (map_panel != null and map_panel.visible) or (journal_panel != null and journal_panel.visible)
+	if panel_open != _panels_open:
+		_panels_open = panel_open
+		_sync_mouse_mode()
 	minimap.visible = not panel_open
 	vitals.visible = not panel_open
 	if panel_open and interact_button.visible:
@@ -170,6 +178,13 @@ func _process(delta: float) -> void:
 			compass_label.text = "%s %03d°" % [tr(CompassStrip.cardinal_key(heading)), rounded]
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Clic sur la mini-carte : en jeu la souris est capturée, le clic n'atteint donc
+	# jamais le contrôle ; on l'intercepte ici (marche aussi souris capturée).
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if minimap != null and minimap.visible and minimap.get_global_rect().has_point(event.position):
+			_on_map_pressed()
+			get_viewport().set_input_as_handled()
+			return
 	if event is InputEventKey and event.pressed and not event.echo:
 		var slot: int = int(event.physical_keycode) - int(KEY_1)
 		if slot >= 0 and slot < 4:
@@ -245,6 +260,17 @@ func _hide_toast() -> void:
 
 # --- Interaction ----------------------------------------------------------------
 
+## Souris libérée quand un panneau est ouvert (clic carte/journal), recapturée à la fermeture.
+func _sync_mouse_mode() -> void:
+	if PlatformInfo.is_touch():
+		return
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if _panels_open else Input.MOUSE_MODE_CAPTURED
+
+## Le joueur vise à l'arc : le réticule reste actif même sans objet interactif visé.
+func set_aiming(value: bool) -> void:
+	_aiming = value
+	reticle.call("set_focused", _aiming or _focused_interactable != null)
+
 func _on_focus_changed(target: Node3D) -> void:
 	var interactable: Interactable = null
 	if target != null and is_instance_valid(target) and target is Interactable:
@@ -252,6 +278,10 @@ func _on_focus_changed(target: Node3D) -> void:
 	_focused_interactable = interactable
 	if interactable != null:
 		var label := tr(interactable.get_prompt())
+		if interactable.has_method("get_prompt_args"):
+			var args: Array = interactable.call("get_prompt_args")
+			if not args.is_empty() and "%s" in label:
+				label = label % args
 		interact_prompt.text = label if PlatformInfo.is_touch() else "[%s] %s" % [_interact_key_text(), label]
 		interact_prompt.visible = true
 		interact_button.disabled = not interactable.can_interact()
@@ -262,7 +292,7 @@ func _on_focus_changed(target: Node3D) -> void:
 		interact_prompt.visible = false
 		interact_button.disabled = true
 		interact_button.visible = false
-		reticle.call("set_focused", false)
+		reticle.call("set_focused", _aiming)
 		_pulse_interact(false)
 
 ## Sécurité : si l'objet visé a disparu ou n'est plus interactif (ramassé,
@@ -380,9 +410,19 @@ func _refresh_clock(hour: float) -> void:
 
 # --- Zone sûre (encoches, coins arrondis) ---------------------------------------
 
+## Capture la mise en page d'origine en coordonnées ABSOLUES (layout_mode = 0) :
+## _fit_to_viewport recalcule ensuite tout explicitement, à n'importe quelle taille.
 func _capture_layout() -> void:
-	for node: Control in [joystick, camera_joystick, action_pad]:
-		_base_offsets[node] = Vector4(node.offset_left, node.offset_top, node.offset_right, node.offset_bottom)
+	var nodes: Array[Control] = [joystick, camera_joystick, action_pad, minimap, vitals, level_badge, quest_tracker, hotbar,
+		sprint_button, jump_button, interact_button, attack_button]
+	for node: Control in nodes:
+		var rect := node.get_global_rect()
+		node.layout_mode = 0
+		node.offset_left = rect.position.x
+		node.offset_top = rect.position.y
+		node.offset_right = rect.end.x
+		node.offset_bottom = rect.end.y
+		_base_offsets[node] = Vector4(rect.position.x, rect.position.y, rect.end.x, rect.end.y)
 
 func _apply_safe_area() -> void:
 	var inset := _safe_insets()
@@ -393,6 +433,7 @@ func _apply_safe_area() -> void:
 	_shift(joystick, Vector2(inset.x, -inset.w))
 	_shift(camera_joystick, Vector2(-inset.z, -inset.w))
 	_shift(action_pad, Vector2(-inset.z, -inset.w))
+	_fit_to_viewport()
 
 func _shift(node: Control, offset: Vector2) -> void:
 	if not _base_offsets.has(node):
@@ -402,6 +443,70 @@ func _shift(node: Control, offset: Vector2) -> void:
 	node.offset_right = base.z + offset.x
 	node.offset_top = base.y + offset.y
 	node.offset_bottom = base.w + offset.y
+
+# --- Mise en page selon la taille d'écran -----------------------------------------
+
+## Deux modes : "roomy" (grand écran) et "compact" (petit écran / portrait).
+## En compact : stick caméra masqué (glisser sur l'écran suffit), mini-carte, jauges
+## et hotbar réduits/replacés, pad d'actions au-dessus du stick de déplacement, badge
+## de niveau masqué — aucun contrôle tactile ne chevauche un autre.
+## `vp_override` sert aux tests (sinon taille réelle du viewport).
+func _fit_to_viewport(vp_override: Vector2 = Vector2.ZERO) -> void:
+	if _base_offsets.is_empty():
+		return
+	var vp := vp_override if vp_override.x > 0.0 else get_viewport().get_visible_rect().size
+	var compact := vp.x < 700.0 or vp.y < 800.0
+	if compact:
+		var joy := 200.0
+		# Stick de déplacement, en bas à gauche.
+		_set_offsets(joystick, Vector4(30.0, vp.y - joy, 30.0 + joy, vp.y))
+		# Stick caméra masqué : le glisser sur l'écran (TouchLook) fait office de visée.
+		camera_joystick.visible = false
+		# Pad d'actions en colonne verticale sur le bord droit (boutons 80 px).
+		action_pad.scale = Vector2.ONE
+		var pad_buttons: Array[Control] = [sprint_button, jump_button, interact_button, attack_button]
+		for i in range(pad_buttons.size()):
+			var y := 8.0 + i * 88.0
+			_set_offsets(pad_buttons[i], Vector4(4.0, y, 84.0, y + 80.0))
+		_set_offsets(action_pad, Vector4(vp.x - 96.0, 236.0, vp.x - 16.0, 244.0 + pad_buttons.size() * 88.0))
+		# Suivi de quête en haut à gauche (sous la boussole).
+		_set_offsets(quest_tracker, Vector4(16.0, 64.0, vp.x - 16.0, 108.0))
+		# Jauges sous la quête, réduites.
+		vitals.scale = Vector2(0.5, 0.5)
+		vitals.pivot_offset = Vector2.ZERO
+		_set_offsets(vitals, Vector4(16.0, 116.0, 16.0 + 238.0, 116.0 + 212.0))
+		# Mini-carte en haut à droite, réduite.
+		_set_offsets(minimap, Vector4(vp.x - 136.0, 116.0, vp.x - 16.0, 236.0))
+		# Hotbar au-dessus du stick de déplacement, à gauche.
+		var hb: Vector4 = _base_offsets[hotbar]
+		var hw := minf(200.0, vp.x - 62.0)
+		var h_bottom := vp.y - joy - 8.0
+		_set_offsets(hotbar, Vector4(30.0, h_bottom - (hb.w - hb.y), 30.0 + hw, h_bottom))
+		# Badge de niveau masqué (le niveau reste visible dans le journal).
+		level_badge.visible = false
+	else:
+		_set_offsets(joystick, _base_offsets[joystick])
+		camera_joystick.visible = true
+		_set_offsets(camera_joystick, _base_offsets[camera_joystick])
+		# Pad d'actions : boutons restaurés, pad remonté au-dessus du stick caméra.
+		action_pad.scale = Vector2.ONE
+		for b: Control in [sprint_button, jump_button, interact_button, attack_button]:
+			_set_offsets(b, _base_offsets[b])
+		var pb: Vector4 = _base_offsets[action_pad]
+		var pad_bottom := vp.y - 320.0 - 12.0
+		_set_offsets(action_pad, Vector4(pb.x, pad_bottom - 224.0, pb.z, pad_bottom))
+		_set_offsets(minimap, _base_offsets[minimap])
+		vitals.scale = Vector2.ONE
+		_set_offsets(vitals, _base_offsets[vitals])
+		_set_offsets(hotbar, _base_offsets[hotbar])
+		_set_offsets(quest_tracker, _base_offsets[quest_tracker])
+		level_badge.visible = true
+
+func _set_offsets(c: Control, v: Vector4) -> void:
+	c.offset_left = v.x
+	c.offset_top = v.y
+	c.offset_right = v.z
+	c.offset_bottom = v.w
 
 ## Marges (gauche, haut, droite, bas) à ménager, en unités du viewport.
 func _safe_insets() -> Vector4:

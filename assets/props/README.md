@@ -16,6 +16,9 @@ retombe automatiquement sur les maillages procéduraux (`RockGenerator`,
   pièces du Castle Kit, copiée à côté des ruines composées.
 - `kenney/castle/ruin_a.glb` / `ruin_b.glb` : **composés maison** à partir de pièces du
   Castle Kit (tour, murs, engins de siège démantelés), teintés grès ocre.
+- `generated/cactus_saguaro_{a,b,c}.glb` : saguaros générés en Python pur
+  (`tools/make_cactus_glb.py`, côtes, bras, couleurs dans les sommets) ; même pour
+  `generated/rock_{1..6}.glb` (`tools/make_rock_glb.py`, rochers de grès).
 
 ## Régénération
 
@@ -27,6 +30,7 @@ cd /tmp/kenney && git sparse-checkout set 3d/nature 3d/castle
 cd -  # retour à la racine du projet
 python3 tools/make_glb_props.py all --kenney-root /tmp/kenney
 python3 tools/make_glb_props.py inspect assets/props/kenney/nature/pine_tall_a.glb
+python3 tools/make_cactus_glb.py all   # saguaros -> assets/props/generated/
 ```
 
 `tools/make_glb_props.py` (stdlib Python pure, pas de Blender) :
@@ -44,7 +48,7 @@ python3 tools/make_glb_props.py inspect assets/props/kenney/nature/pine_tall_a.g
 | `shrub` | 4 | buissons |
 | `grass` | 3 | herbes sèches |
 | `flowers` | 9 | fleurs |
-| `cactus` | 2 | cactus |
+| `cactus` | 5 (2 Kenney + 3 saguaros générés) | cactus |
 | `ruin` | 2 | sites « ruine » (scène instanciée, collision boîte par maillage) |
 
 Hoodoos, buttes et agaves restent procéduraux (pas d'équivalent GLB satisfaisant).

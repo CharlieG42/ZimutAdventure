@@ -106,7 +106,7 @@ func get_prompt_key() -> String:
 	if mounted:
 		return "ACTION_DISMOUNT"
 	if not tamed:
-		return "ACTION_TAME" if _food_item() != "" else "ACTION_NEED_FOOD"
+		return "ACTION_TAME_WITH_FOOD" if _food_item() != "" else "ACTION_NEED_FOOD_LIST"
 	match species:
 		"horse":
 			return "ACTION_MOUNT"
@@ -140,6 +140,20 @@ func _voice() -> void:
 		"cow": sfx.call("play_event", "moo", -6.0)
 		"sheep", "goat": sfx.call("play_event", "moo", -8.0, 1.6)
 		"dog": sfx.call("play_event", "bark", -6.0)
+
+## Nourriture affichée dans l'invite d'apprivoisement : l'item disponible dans le
+## sac, sinon la liste des nourritures acceptées (noms localisés).
+func get_prompt_args() -> Array:
+	if mounted or tamed:
+		return []
+	var inventory := InteractionManager.get_inventory()
+	for item_id in FOOD.get(species, []):
+		if inventory != null and inventory.has_item(item_id, 1):
+			return [tr("ITEM_" + String(item_id).to_upper())]
+	var names: PackedStringArray = []
+	for item_id in FOOD.get(species, []):
+		names.append(tr("ITEM_" + String(item_id).to_upper()))
+	return [" / ".join(names)] if not names.is_empty() else []
 
 func _food_item() -> String:
 	var inventory := InteractionManager.get_inventory()

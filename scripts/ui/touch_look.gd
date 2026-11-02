@@ -10,7 +10,7 @@ var _joystick_zones: Array[Control] = []
 
 func _ready() -> void:
 	visible = PlatformInfo.is_touch()
-	for name in ["VirtualJoystick", "CameraJoystick"]:
+	for name in ["VirtualJoystick", "CameraJoystick", "Overlay/MiniMap"]:
 		var zone := get_node_or_null("../" + name) as Control
 		if zone != null:
 			_joystick_zones.append(zone)

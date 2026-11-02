@@ -161,6 +161,8 @@ TOAST_NEED_SEEDS,You need seeds (pick berries to find some).
 TOAST_PLANTED,Seed sown: the harvest will be ready in a few minutes.
 ACTION_TAME,Feed to tame
 ACTION_NEED_FOOD,Tame (food required)
+ACTION_TAME_WITH_FOOD,Feed %s to tame
+ACTION_NEED_FOOD_LIST,Needs: %s
 ACTION_MILK,Milk
 ACTION_SHEAR,Shear (sickle)
 ACTION_EGGS,Collect eggs

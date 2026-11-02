@@ -27,6 +27,12 @@ func get_prompt() -> String:
 		return String(animal.call("get_prompt_key"))
 	return prompt_text
 
+## Transmet les arguments d'invite (nourriture requise pour apprivoiser, etc.).
+func get_prompt_args() -> Array:
+	if animal != null and is_instance_valid(animal) and animal.has_method("get_prompt_args"):
+		return animal.call("get_prompt_args")
+	return []
+
 func _on_interact(interactor: Node3D) -> void:
 	if animal != null and is_instance_valid(animal):
 		animal.call("interact_with", interactor)
