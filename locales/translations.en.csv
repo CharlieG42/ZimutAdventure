@@ -235,3 +235,16 @@ QUEST_WOOL_BED_TITLE,A cosy bed
 QUEST_WOOL_BED_DESC,"Shear sheep with the sickle and craft a wool bed (level 4): it lets you sleep at night."
 QUEST_PEN_TITLE,A pen for the livestock
 QUEST_PEN_DESC,"Craft a pen (level 4) and place it: tamed livestock nearby moves in and produces faster."
+SEASON_SPRING,Spring
+SEASON_SUMMER,Summer
+SEASON_AUTUMN,Autumn
+SEASON_WINTER,Winter
+WEATHER_CLEAR,clear
+WEATHER_CLOUDY,cloudy
+WEATHER_RAIN,rain
+WEATHER_SNOW,snow
+TOAST_SEASON,New season: %s
+TOAST_RAIN,It starts to rain: your crops are watered.
+TOAST_SNOW,Snow begins to fall.
+QUEST_SEASONS_TITLE,Through the seasons
+QUEST_SEASONS_DESC,"Watch two seasons go by (6 game days each). Crops grow slower in winter and thirst is sharper in summer; rain waters your plots."

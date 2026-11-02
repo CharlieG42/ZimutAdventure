@@ -81,6 +81,10 @@ func _ready() -> void:
 	if _day_night != null:
 		_day_night.connect("time_changed", _on_time_changed)
 		_day_night.connect("phase_changed", _on_phase_changed)
+		var weather_node := InteractionManager.get_weather()
+		if weather_node != null:
+			weather_node.connect("weather_changed", _on_weather_changed)
+			weather_node.connect("season_changed", _on_weather_changed)
 		_refresh_clock(float(_day_night.get("hour")))
 
 	interact_prompt.visible = false
@@ -334,6 +338,10 @@ func _on_time_changed(hour: float) -> void:
 	_last_clock_minute = total_minutes
 	_refresh_clock(hour)
 
+func _on_weather_changed(_value: String) -> void:
+	if _day_night != null:
+		_refresh_clock(float(_day_night.get("hour")))
+
 func _on_phase_changed(_phase: String) -> void:
 	if _day_night != null:
 		_refresh_clock(float(_day_night.get("hour")))
@@ -342,7 +350,11 @@ func _refresh_clock(hour: float) -> void:
 	var phase_text := ""
 	if _day_night != null and _day_night.has_method("get_phase"):
 		phase_text = tr("PHASE_" + String(_day_night.call("get_phase")).to_upper())
-	clock_label.text = "%02d:%02d  %s" % [int(hour) % 24, int(fmod(hour, 1.0) * 60.0), phase_text]
+	var calendar := ""
+	var weather := InteractionManager.get_weather()
+	if weather != null and bool(weather.call("effects_active")):
+		calendar = "  ·  %s, %s" % [tr("SEASON_" + String(weather.call("get_season")).to_upper()), tr("WEATHER_" + String(weather.call("get_weather")).to_upper())]
+	clock_label.text = "%02d:%02d  %s%s" % [int(hour) % 24, int(fmod(hour, 1.0) * 60.0), phase_text, calendar]
 
 # --- Zone sûre (encoches, coins arrondis) ---------------------------------------
 

@@ -2,6 +2,7 @@ extends Node
 
 signal time_changed(hour: float)
 signal phase_changed(phase: String)
+signal day_changed(day: int)
 
 const PHASE_DAY := "day"
 const PHASE_DUSK := "dusk"
@@ -13,6 +14,12 @@ const PHASE_DAWN := "dawn"
 @export var start_hour: float = 10.0
 
 var hour: float = start_hour
+## Jours écoulés depuis le début de la partie (le calendrier est tenu par Weather).
+var day: int = 0
+## Aspect imposé par la météo (0 = ciel dégagé) et la saison.
+var weather_dim: float = 0.0
+var weather_fog: float = 0.0
+var season_tint: Color = Color.WHITE
 var sun: DirectionalLight3D
 var environment: Environment
 
@@ -31,7 +38,11 @@ func bind_world(sun_light: DirectionalLight3D, env: Environment) -> void:
 func _process(delta: float) -> void:
 	if not enabled:
 		return
-	hour = fmod(hour + 24.0 * delta / day_length, 24.0)
+	var next_hour := hour + 24.0 * delta / day_length
+	if next_hour >= 24.0:
+		day += 1
+		day_changed.emit(day)
+	hour = fmod(next_hour, 24.0)
 	_apply()
 	time_changed.emit(hour)
 
@@ -39,7 +50,12 @@ func get_phase() -> String:
 	return _phase
 
 func set_hour(new_hour: float) -> void:
-	hour = fmod(new_hour, 24.0)
+	var wrapped := fmod(new_hour, 24.0)
+	# Dormir jusqu'au matin fait passer minuit : un nouveau jour commence.
+	if wrapped < hour - 6.0:
+		day += 1
+		day_changed.emit(day)
+	hour = wrapped
 	_apply()
 
 func _apply() -> void:
@@ -48,8 +64,9 @@ func _apply() -> void:
 	var day_factor := _day_factor()
 	sun.rotation.x = _base_sun_rotation.x + (hour - 12.0) / 24.0 * TAU
 	sun.visible = day_factor > 0.02
-	sun.light_energy = lerp(0.0, 1.55, day_factor)
-	sun.light_color = Color(0.55, 0.50, 0.60).lerp(Color(1.0, 0.90, 0.75), day_factor)
+	var cloud := 1.0 - 0.55 * weather_dim
+	sun.light_energy = lerp(0.0, 1.55, day_factor) * cloud
+	sun.light_color = (Color(0.55, 0.50, 0.60).lerp(Color(1.0, 0.90, 0.75), day_factor) * season_tint).clamp()
 	if environment != null:
 		var sky: Sky = environment.sky
 		if sky != null and sky.sky_material is ProceduralSkyMaterial:
@@ -63,15 +80,16 @@ func _apply() -> void:
 			sky_mat.ground_horizon_color = sky_mat.sky_horizon_color.lerp(Color(0.6, 0.4, 0.25), 0.35)
 			var night_factor := 1.0 - day_factor
 			sky_mat.sky_cover_modulate = Color(0.15, 0.18, 0.30, 1.0).lerp(Color(0.9, 0.85, 0.8, 1.0), day_factor)
-			sky_mat.sky_energy_multiplier = lerp(0.3, 1.0, day_factor)
+			sky_mat.sky_energy_multiplier = lerp(0.3, 1.0, day_factor) * (1.0 - 0.35 * weather_dim)
 			sky_mat.ground_energy_multiplier = lerp(0.2, 1.0, day_factor)
 		if environment.background_mode == Environment.BG_SKY:
 			environment.ambient_light_color = Color(0.10, 0.12, 0.20).lerp(Color(0.75, 0.65, 0.55), day_factor)
-			environment.ambient_light_energy = lerp(0.08, 0.6, day_factor)
+			environment.ambient_light_energy = lerp(0.08, 0.6, day_factor) * (1.0 - 0.2 * weather_dim)
 			var nf := 1.0 - day_factor
-			environment.fog_light_color = Color(0.08, 0.09, 0.14).lerp(Color(0.86, 0.66, 0.5), day_factor)
+			environment.fog_light_color = (Color(0.08, 0.09, 0.14).lerp(Color(0.86, 0.66, 0.5), day_factor) * season_tint).clamp()
+			environment.fog_light_color = environment.fog_light_color.lerp(Color(0.62, 0.66, 0.72) * lerp(0.25, 1.0, day_factor), weather_fog * 0.6)
 			environment.fog_light_energy = lerp(0.15, 0.6, day_factor)
-			environment.fog_density = lerp(0.0009, 0.0018, day_factor)
+			environment.fog_density = lerp(0.0009, 0.0018, day_factor) + weather_fog * 0.004
 			environment.glow_enabled = true
 			environment.glow_intensity = lerp(0.4, 0.8, day_factor)
 			environment.glow_bloom = lerp(0.05, 0.15, day_factor)

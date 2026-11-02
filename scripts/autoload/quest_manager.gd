@@ -144,6 +144,14 @@ const QUESTS := {
 		"requires": "quest_dairy",
 		"reward": {"item_wheat": 4, "item_wood": 4},
 	},
+	"quest_seasons": {
+		"title": "QUEST_SEASONS_TITLE",
+		"description": "QUEST_SEASONS_DESC",
+		"goal_item": "stat_seasons",
+		"goal_count": 2,
+		"requires": "quest_harvest",
+		"reward": {"item_wheat": 3, "item_cooked_meat": 2},
+	},
 	"quest_dog": {
 		"title": "QUEST_DOG_TITLE",
 		"description": "QUEST_DOG_DESC",

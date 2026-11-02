@@ -41,8 +41,11 @@ func _process(delta: float) -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	var sprinting: bool = player != null and player.has_method("is_sprinting") and bool(player.call("is_sprinting"))
 	var rate := sprint_multiplier if sprinting else 1.0
-	_hunger = maxf(0.0, _hunger - hunger_drain * rate * delta)
-	_thirst = maxf(0.0, _thirst - thirst_drain * rate * delta)
+	var weather := InteractionManager.get_weather()
+	var hunger_weather := float(weather.call("hunger_factor")) if weather != null else 1.0
+	var thirst_weather := float(weather.call("thirst_factor")) if weather != null else 1.0
+	_hunger = maxf(0.0, _hunger - hunger_drain * rate * hunger_weather * delta)
+	_thirst = maxf(0.0, _thirst - thirst_drain * rate * thirst_weather * delta)
 	_reemit()
 	_elapsed_save += delta
 	if _elapsed_save > 5.0:
