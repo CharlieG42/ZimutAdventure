@@ -74,3 +74,8 @@ func _spawn_shards() -> void:
 		tween.tween_property(shard, "position", shard.position + dir * rng.randf_range(1.0, 2.0), shard_lifetime)
 		tween.tween_property(shard, "scale", Vector3.ZERO, shard_lifetime)
 		tween.chain().tween_callback(shard.queue_free)
+	# Éclats de poussière texturés (Kenney CC0) en plus des éclats solides.
+	var rock_color := Color(0.55, 0.52, 0.5)
+	if mesh_instance != null and mesh_instance.get_active_material(0) is StandardMaterial3D:
+		rock_color = (mesh_instance.get_active_material(0) as StandardMaterial3D).albedo_color
+	VfxParticles.rock_shards(parent_node, global_position + aabb.size * 0.25, rock_color, 8)

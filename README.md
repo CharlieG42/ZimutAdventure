@@ -40,7 +40,7 @@ La course consomme de l'endurance (barre discrète en bas) ; la boussole en haut
 - **Faim et soif** : deux jauges (barres discrètes sous l'endurance) décroissent avec le temps — plus vite en courant. Vides, elles ralentissent la récupération d'endurance ; les deux vides bloquent la course. Buvez aux sources du canyon (E, avec remplissage), mangez la viande cuite depuis le Sac (bouton Manger). Sauvegarde automatique.
 - **Chasse et cuisson** : fabriquez l'arc de chasse et des flèches (x4 avec 1 bois + 1 pierre), visez avec le clic droit maintenu (zoom + tir tendu, moins de dispersion), tirez avec clic gauche / bouton tactile dédié (apparaît quand l'arc est possédé). Une proie touchée fuit puis lâche de la viande crue ; cuisez-la sur un feu de camp plein (« Cuire la viande »). Chaîne de quêtes : première chasse → repas chaud.
 
-Régénérer les images du HUD : `python3 tools/generate_ui_assets.py` puis `godot --headless --path . -s tools/make_hud_theme.gd`. Note : Godot 4.7 possède une classe native `VirtualJoystick`, notre stick s'appelle donc `TouchStick`.
+Régénérer les images du HUD : `python3 tools/generate_ui_assets.py` puis `godot --headless --path . -s tools/make_hud_theme.gd`. Icônes d'items/outils (sac, hotbar) : `python3 tools/generate_item_icons.py` (Pillow). Note : Godot 4.7 possède une classe native `VirtualJoystick`, notre stick s'appelle donc `TouchStick`.
 
 Régénérer les props GLB (Kenney CC0 + ruines composées) : `python3 tools/make_glb_props.py all --kenney-root <checkout du miroir github.com/shorepine/kenney>` — voir [assets/props/README.md](assets/props/README.md).
 Régénérer les cactus saguaro : `python3 tools/make_cactus_glb.py all` (stdlib pur, aucune dépendance).
@@ -54,6 +54,7 @@ assets/
     shaders/       # shader du terrain (strates rocheuses)
     materials/     # matériaux Godot
   props/           # meshes GLB externes (Kenney CC0) + ruines composées — voir assets/props/README.md
+  vfx/             # textures de particules (Kenney Particle Pack CC0) — voir assets/vfx/README.md
 scenes/
   player/          # scène du joueur (CharacterBody3D + caméra FPS)
   world/           # canyon_playground.tscn : scène de test jouable

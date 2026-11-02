@@ -29,6 +29,8 @@ func _ready() -> void:
 	prompt_text = "ACTION_STOKE_FIRE"
 	_light = get_node_or_null("FireLight") as OmniLight3D
 	_mesh = get_node_or_null("Flames") as MeshInstance3D
+	# Particules texturées (Kenney CC0) : flammes + fumée + braises au-dessus du cercle.
+	VfxParticles.campfire(self, Vector3(0.0, 0.3, 0.0))
 	_refresh()
 
 func get_prompt() -> String:
@@ -113,10 +115,16 @@ func _notify(interactor: Node3D, key: String) -> void:
 			hud.show_toast(tr(key))
 
 func _refresh() -> void:
+	var lit := _stage > 0
+	var scale_factor := maxf(0.4, _stage / float(STAGES))
 	if _light != null:
 		_light.light_energy = fire_light_energy * _stage / float(STAGES)
-		_light.visible = _stage > 0
+		_light.visible = lit
 	if _mesh != null:
-		_mesh.visible = _stage > 0
-		var scale_factor := maxf(0.4, _stage / float(STAGES))
+		_mesh.visible = lit
 		_mesh.scale = Vector3.ONE * scale_factor
+	# VFX : intensité des flammes/fumée/braises selon l'alimentation du feu.
+	for p in get_children():
+		if p is GPUParticles3D:
+			p.emitting = lit
+			p.amount_ratio = scale_factor

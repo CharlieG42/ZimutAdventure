@@ -127,13 +127,13 @@ func _init() -> void:
 			if not panel.visible:
 				errors.append("journal panel open() should show it")
 			var rows: Array = panel.get("_inventory_list").get_children()
-			if rows.is_empty() or not rows[0].text.contains(tr("INVENTORY_EMPTY")):
-				errors.append("empty inventory should show INVENTORY_EMPTY, got %s" % (rows[0].text if not rows.is_empty() else "nothing"))
+			if rows.is_empty() or not _row_text(rows[0]).contains(tr("INVENTORY_EMPTY")):
+				errors.append("empty inventory should show INVENTORY_EMPTY, got %s" % (_row_text(rows[0]) if not rows.is_empty() else "nothing"))
 			inventory2.call("add_item", "item_wood", 3)
 			panel.call("open")
 			await process_frame
 			rows = panel.get("_inventory_list").get_children()
-			if rows.size() != 1 or not rows[0].text.contains("3"):
+			if rows.size() != 1 or not _row_text(rows[0]).contains("3"):
 				errors.append("journal should list 3x item_wood, got %d row(s)" % rows.size())
 			panel.call("close")
 			if panel.visible:
@@ -172,3 +172,12 @@ func _init() -> void:
 		for e in errors:
 			printerr("TEST_ENVIRONMENT_INTERACTION FAIL: " + e)
 	quit(exit_code)
+
+## Texte d'une ligne du sac : Label direct, ou Label enfant d'un HBoxContainer (icône + texte).
+func _row_text(row: Node) -> String:
+	if row is Label:
+		return (row as Label).text
+	for c in row.get_children():
+		if c is Label:
+			return (c as Label).text
+	return ""
