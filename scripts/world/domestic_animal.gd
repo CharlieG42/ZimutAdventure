@@ -27,10 +27,10 @@ const DOMESTIC := {
 const LIVESTOCK := ["cow", "sheep", "goat", "chicken"]
 ## Nourriture acceptée (la première disponible dans le sac est utilisée).
 const FOOD := {
-	"cow": ["item_vegetables", "item_berries"],
-	"sheep": ["item_vegetables", "item_berries"],
-	"goat": ["item_vegetables", "item_berries"],
-	"chicken": ["item_seeds"],
+	"cow": ["item_wheat", "item_vegetables", "item_berries"],
+	"sheep": ["item_wheat", "item_vegetables", "item_berries"],
+	"goat": ["item_wheat", "item_vegetables", "item_berries"],
+	"chicken": ["item_grain_seeds", "item_seeds"],
 	"horse": ["item_vegetables", "item_berries"],
 	"dog": ["item_cooked_meat", "item_raw_meat"],
 }
@@ -46,7 +46,12 @@ const PRODUCTS := {
 	"chicken": {"item": "item_egg", "seconds": 90.0, "amount": 1, "prompt": "ACTION_EGGS", "tool": ""},
 }
 
+## En enclos : l'animal reste dans la clôture et produit plus vite.
+const PEN_PRODUCTION_FACTOR := 0.6
+
 var tamed: bool = false
+var penned: bool = false
+var is_livestock: bool = false
 var trust: int = 0
 var spawn_key: String = ""
 var following: bool = true
@@ -155,6 +160,7 @@ func tame() -> void:
 	_center = global_position
 	ready_at = _now() + float(PRODUCTS[species]["seconds"]) if PRODUCTS.has(species) else 0.0
 	_refresh_tamed_state()
+	_try_join_pen()
 	var progression := InteractionManager.get_progression()
 	if progression != null:
 		progression.call("add_stat", "stat_tamed", 1)
@@ -184,11 +190,35 @@ func _collect_product() -> void:
 		progression.call("add_stat", "stat_products", 1)
 		progression.call("add_xp_for", "product")
 	inventory.call("add_item", String(product["item"]), amount)
-	ready_at = _now() + float(product["seconds"])
+	ready_at = _now() + _production_seconds()
 	_update_indicator()
 	state_changed.emit(self)
 
+func _production_seconds() -> float:
+	var seconds := float(PRODUCTS[species]["seconds"])
+	return seconds * (PEN_PRODUCTION_FACTOR if penned else 1.0)
+
+## Entre dans un enclos : l'animal s'y installe et ne quitte plus ses abords.
+func enter_pen(spot: Vector3, radius: float) -> void:
+	penned = true
+	global_position = spot + Vector3(0.0, 0.5, 0.0)
+	velocity = Vector3.ZERO
+	_center = spot
+	wander_radius = radius
+	_start_walk()
+	state_changed.emit(self)
+
+## Cherche un enclos de la région pour y installer l'animal qui vient d'être apprivoisé.
+func _try_join_pen() -> void:
+	if not is_inside_tree() or not is_livestock or penned:
+		return
+	for pen in get_tree().get_nodes_in_group("pens"):
+		if pen.global_position.distance_to(global_position) <= 40.0 and pen.admit(self):
+			_toast(tr("TOAST_PENNED"))
+			return
+
 func _refresh_tamed_state() -> void:
+	is_livestock = LIVESTOCK.has(species)
 	if tamed:
 		add_to_group("tamed")
 	wander_radius = (12.0 if species == "horse" else 8.0)
@@ -290,13 +320,16 @@ func take_arrow_hit(from_position: Vector3) -> void:
 
 func get_state() -> Dictionary:
 	return {"key": spawn_key, "species": species, "pos": _center if not mounted else global_position,
-			"ready_at": ready_at, "following": following}
+			"ready_at": ready_at, "following": following, "penned": penned}
 
 func apply_state(state: Dictionary) -> void:
 	tamed = true
 	trust = int(TRUST_NEEDED.get(species, 3))
 	ready_at = float(state.get("ready_at", 0.0))
 	following = bool(state.get("following", true))
+	penned = bool(state.get("penned", false))
+	if penned:
+		wander_radius = 3.0
 	spawn_key = String(state.get("key", spawn_key))
 	if is_inside_tree():
 		_center = global_position

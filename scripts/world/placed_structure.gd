@@ -23,14 +23,31 @@ static func create(structure_kind: String) -> Area3D:
 func _ready() -> void:
 	add_to_group("structures")
 	prompt_text = "ACTION_SLEEP" if kind == "shelter" else "ACTION_REST_BED"
+	if kind == "wool_bed" and _is_night():
+		prompt_text = "ACTION_SLEEP"
 	match kind:
 		"shelter":
 			_build_shelter()
 		_:
 			_build_bed()
 
+## Il fait nuit (le lit en laine permet de dormir comme l'abri).
+func _is_night() -> bool:
+	var clock := get_node_or_null("/root/DayNightCycle")
+	if clock == null:
+		return false
+	var hour := float(clock.get("hour"))
+	return hour >= 19.0 or hour < 5.0
+
+func get_prompt() -> String:
+	if kind == "wool_bed":
+		return "ACTION_SLEEP" if _is_night() else "ACTION_REST_BED"
+	return prompt_text
+
 func _on_interact(interactor: Node3D) -> void:
-	if kind == "shelter":
+	if kind == "wool_bed" and not _is_night():
+		_rest(interactor)
+	elif kind == "shelter" or kind == "wool_bed":
 		_sleep(interactor)
 	else:
 		_rest(interactor)
@@ -64,7 +81,7 @@ func _toast(key: String) -> void:
 
 func _build_bed() -> void:
 	var wood := _material(Color(0.42, 0.27, 0.15))
-	var cloth := _material(Color(0.62, 0.3, 0.2))
+	var cloth := _material(Color(0.93, 0.9, 0.82) if kind == "wool_bed" else Color(0.62, 0.3, 0.2))
 	var pillow := _material(Color(0.9, 0.84, 0.7))
 	# Cadre (4 pieds + 2 longerons), matelas, oreiller. Avant du lit : +Z.
 	_box(self, Vector3(0.9, 0.12, 2.0), Vector3(0.0, 0.36, 0.0), wood)

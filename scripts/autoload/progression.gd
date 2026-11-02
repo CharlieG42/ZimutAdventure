@@ -21,6 +21,9 @@ const XP := {
 	"farm": 10,
 	"product": 6,
 	"tame": 35,
+	"cook": 10,
+	"water": 3,
+	"build": 20,
 }
 ## Bonus par niveau au-delà du niveau 1.
 const STAMINA_REGEN_PER_LEVEL := 0.06

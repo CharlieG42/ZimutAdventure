@@ -7,6 +7,15 @@ const STAGES := 4
 @export var wood_per_stage: int = 1
 @export var fire_light_energy: float = 2.2
 
+## Recettes du feu, dans l'ordre de priorité : {ingrédients} -> plat.
+const COOK_RECIPES := [
+	{"in": {"item_raw_meat": 1}, "out": "item_cooked_meat", "toast": "TOAST_MEAT_COOKED"},
+	{"in": {"item_milk": 1, "item_vegetables": 1}, "out": "item_soup", "toast": "TOAST_COOKED"},
+	{"in": {"item_wheat": 2}, "out": "item_bread", "toast": "TOAST_COOKED"},
+	{"in": {"item_egg": 1}, "out": "item_boiled_egg", "toast": "TOAST_COOKED"},
+	{"in": {"item_vegetables": 1}, "out": "item_roast_vegetables", "toast": "TOAST_COOKED"},
+]
+
 var _stage: int = 0
 var _light: OmniLight3D
 var _mesh: MeshInstance3D
@@ -19,18 +28,28 @@ func _ready() -> void:
 	_refresh()
 
 func get_prompt() -> String:
-	if _stage >= STAGES and _has_raw_meat():
+	if _stage >= STAGES and not _current_recipe().is_empty():
 		return "ACTION_COOK"
 	return "ACTION_REST" if _stage >= STAGES else prompt_text
 
-## Cuisson possible seulement sur un feu plein, avec de la viande crue sur soi.
-func _has_raw_meat() -> bool:
+## Première recette réalisable avec le contenu du sac (vide si aucune).
+func _current_recipe() -> Dictionary:
 	var inv := InteractionManager.get_inventory()
-	return inv != null and inv.has_item("item_raw_meat", 1)
+	if inv == null:
+		return {}
+	for recipe in COOK_RECIPES:
+		var ok := true
+		for item_id in recipe["in"]:
+			if not inv.has_item(item_id, int(recipe["in"][item_id])):
+				ok = false
+				break
+		if ok:
+			return recipe
+	return {}
 
 func _on_interact(interactor: Node3D) -> void:
 	if _stage >= STAGES:
-		if _has_raw_meat():
+		if not _current_recipe().is_empty():
 			_cook(interactor)
 		else:
 			_rest(interactor)
@@ -47,14 +66,21 @@ func _on_interact(interactor: Node3D) -> void:
 		sfx.play(load("res://assets/audio/pickup/collect.wav"), -4.0, 0.8)
 	_notify(interactor, "TOAST_FIRE_STOKED")
 
-## Cuit la viande crue portée : chaque interaction convertit une viande.
+## Cuisine un plat : chaque interaction prépare une portion de la première recette possible.
 func _cook(interactor: Node3D) -> void:
 	var inventory := InteractionManager.get_inventory()
-	if inventory == null or not inventory.remove_item("item_raw_meat", 1):
+	var recipe := _current_recipe()
+	if inventory == null or recipe.is_empty():
 		_notify(interactor, "TOAST_NEED_MEAT")
 		return
-	inventory.add_item("item_cooked_meat", 1)
-	_notify(interactor, "TOAST_MEAT_COOKED")
+	for item_id in recipe["in"]:
+		inventory.remove_item(item_id, int(recipe["in"][item_id]))
+	inventory.add_item(String(recipe["out"]), 1)
+	var progression := InteractionManager.get_progression()
+	if progression != null:
+		progression.call("add_stat", "stat_cooked", 1)
+		progression.call("add_xp_for", "cook")
+	_notify(interactor, String(recipe["toast"]))
 
 func _rest(interactor: Node3D) -> void:
 	if interactor is CharacterBody3D and interactor.has_method("restore_stamina"):

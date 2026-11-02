@@ -5,7 +5,7 @@ signal item_removed(item_id: String, amount: int)
 signal equipped_changed(item_id: String)
 
 ## Outils qui peuvent être équipés (un seul à la fois, dans la barre d'outils du HUD).
-const TOOLS := ["tool_stone_axe", "tool_sickle", "tool_hoe", "tool_hunting_bow"]
+const TOOLS := ["tool_stone_axe", "tool_sickle", "tool_hoe", "tool_watering_can", "tool_hunting_bow"]
 
 const SAVE_PATH := "user://inventory.cfg"
 
