@@ -11,17 +11,22 @@ signal state_changed(animal)
 
 const DOMESTIC := {
 	"cow": {"scale": 1.3, "fur": Color(0.94, 0.92, 0.88), "belly": Color(0.86, 0.8, 0.74),
-			"ear": 0.12, "neck": 0.2, "hop": 0.0, "speed": 0.7},
+			"ear": 0.12, "neck": 0.2, "hop": 0.0, "speed": 0.7,
+			"tail_len": 0.55, "tail_color": Color(0.2, 0.17, 0.15)},
 	"sheep": {"scale": 0.8, "fur": Color(0.93, 0.92, 0.86), "belly": Color(0.22, 0.18, 0.16),
-			"ear": 0.1, "neck": 0.2, "hop": 0.0, "speed": 0.8},
+			"ear": 0.1, "neck": 0.2, "hop": 0.0, "speed": 0.8,
+			"tail_len": 0.16, "tail_color": Color(0.93, 0.92, 0.86)},
 	"goat": {"scale": 0.8, "fur": Color(0.58, 0.52, 0.45), "belly": Color(0.86, 0.82, 0.74),
-			"ear": 0.14, "neck": 0.26, "hop": 0.05, "speed": 1.0},
+			"ear": 0.14, "neck": 0.26, "hop": 0.05, "speed": 1.0,
+			"tail_len": 0.2},
 	"chicken": {"scale": 0.3, "fur": Color(0.96, 0.95, 0.9), "belly": Color(0.85, 0.5, 0.2),
 			"ear": 0.0, "neck": 0.12, "hop": 0.02, "speed": 0.8},
 	"horse": {"scale": 1.5, "fur": Color(0.47, 0.29, 0.15), "belly": Color(0.3, 0.19, 0.1),
-			"ear": 0.14, "neck": 0.52, "hop": 0.0, "speed": 1.6},
+			"ear": 0.14, "neck": 0.52, "hop": 0.0, "speed": 1.6,
+			"tail_len": 0.8, "tail_color": Color(0.12, 0.08, 0.05)},
 	"dog": {"scale": 0.62, "fur": Color(0.62, 0.45, 0.27), "belly": Color(0.92, 0.86, 0.74),
-			"ear": 0.13, "neck": 0.22, "hop": 0.04, "speed": 1.8},
+			"ear": 0.13, "neck": 0.22, "hop": 0.04, "speed": 1.8,
+			"tail_len": 0.5},
 }
 
 const LIVESTOCK := ["cow", "sheep", "goat", "chicken"]
@@ -231,6 +236,10 @@ func _refresh_tamed_state() -> void:
 	is_livestock = LIVESTOCK.has(species)
 	if tamed:
 		add_to_group("tamed")
+		# Un chien apprivoisé remue joyeusement la queue.
+		if species == "dog":
+			_tail_speed = 11.0
+			_tail_amp = 0.6
 	wander_radius = (12.0 if species == "horse" else 8.0)
 
 # --- Monture ----------------------------------------------------------------------------
@@ -415,7 +424,6 @@ func _decorate() -> void:
 			_add_mesh(_head, _sphere(0.1), mane, Vector3(0.0, 0.0, 0.16), Vector3.ZERO, Vector3(0.9, 0.9, 1.5))
 			_add_mesh(_model, _sphere(0.2), _material(Color(0.45, 0.3, 0.18)), Vector3(0.0, 1.17, -0.02), Vector3.ZERO, Vector3(1.4, 0.3, 1.8))
 		"dog":
-			_add_mesh(_model, _capsule(0.04, 0.4), _material(_config["fur"]), Vector3(0.0, 1.08, -0.62), Vector3(-50.0, 0.0, 0.0))
 			_add_mesh(_head, _sphere(0.05), dark, Vector3(0.0, 0.0, 0.3), Vector3.ZERO)
 
 func _build_chicken() -> void:
