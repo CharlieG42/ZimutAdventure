@@ -36,5 +36,16 @@ func _initialize() -> void:
 			if not ok:
 				_failures += 1
 				print("  FAIL - variante métallique dans ", prop_id)
+	var rocks: Array = library.get_variant_meshes("sandstone")
+	_check(rocks.size() == 6, "six rochers de grès chargés (%d)" % rocks.size())
+	if not rocks.is_empty():
+		var rock := rocks[0] as Mesh
+		var mat := rock.surface_get_material(0) as StandardMaterial3D
+		_check(mat != null and mat.vertex_color_use_as_albedo, "rocher de grès : couleurs de sommets actives")
+		var arrays := rock.surface_get_arrays(0)
+		_check(arrays[Mesh.ARRAY_COLOR] != null, "rocher de grès : couleurs conservées à la fusion")
+		_check(rock.get_aabb().position.y > -0.01 and rock.get_aabb().size.y > 1.0, "rocher posé au sol")
+		var triangles := (arrays[Mesh.ARRAY_INDEX] as PackedInt32Array).size() / 3
+		_check(triangles <= 1500, "budget triangles mobile (%d)" % triangles)
 	print("RESULT: %s" % ("PASS" if _failures == 0 else "FAIL (%d)" % _failures))
 	quit(0 if _failures == 0 else 1)

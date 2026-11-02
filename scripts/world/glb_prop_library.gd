@@ -31,6 +31,12 @@ const PROPS := {
 		"nature/flower_yellow_a.glb", "nature/flower_yellow_b.glb", "nature/flower_yellow_c.glb",
 	],
 	"cactus": ["nature/cactus_short.glb", "nature/cactus_tall.glb"],
+	# Rochers de grès générés en Python (tools/make_rock_glb.py) : couleurs dans les sommets.
+	"sandstone": [
+		"res://assets/props/generated/rock_1.glb", "res://assets/props/generated/rock_2.glb",
+		"res://assets/props/generated/rock_3.glb", "res://assets/props/generated/rock_4.glb",
+		"res://assets/props/generated/rock_5.glb", "res://assets/props/generated/rock_6.glb",
+	],
 	"ruin": ["castle/ruin_a.glb", "castle/ruin_b.glb"],
 }
 
@@ -48,20 +54,26 @@ const DESERT_COLORS := {
 static var _mesh_cache: Dictionary = {}
 
 ## Matériau corrigé (copie) : couleur du désert ou couleur d'origine relue en sRGB, mat, non métallique.
-static func adapt_material(mat: Material) -> Material:
+static func adapt_material(mat: Material, vertex_colors: bool = false) -> Material:
 	var std := mat as StandardMaterial3D
 	if std == null:
 		return mat
 	var fixed := std.duplicate() as StandardMaterial3D
 	fixed.metallic = 0.0
 	fixed.roughness = 0.92
-	if std.albedo_texture == null:
+	if vertex_colors:
+		fixed.vertex_color_use_as_albedo = true
+		fixed.albedo_color = Color.WHITE
+	elif std.albedo_texture == null:
 		var key := String(std.resource_name)
 		if DESERT_COLORS.has(key):
 			fixed.albedo_color = DESERT_COLORS[key]
 		else:
 			fixed.albedo_color = std.albedo_color.srgb_to_linear()
 	return fixed
+
+static func _full_path(rel: String) -> String:
+	return rel if rel.begins_with("res://") else PROP_ROOT + rel
 
 static func get_paths(prop_id: String) -> Array:
 	return PROPS.get(prop_id, [])
@@ -75,7 +87,7 @@ static func get_variant_meshes(prop_id: String) -> Array:
 		return _mesh_cache[prop_id]
 	var meshes: Array = []
 	for rel in get_paths(prop_id):
-		var mesh := _load_merged_mesh(PROP_ROOT + rel)
+		var mesh := _load_merged_mesh(_full_path(rel))
 		if mesh != null:
 			meshes.append(mesh)
 	_mesh_cache[prop_id] = meshes
@@ -86,7 +98,7 @@ static func instantiate_scene(prop_id: String, rng := RandomNumberGenerator.new(
 	var paths := get_paths(prop_id)
 	if paths.is_empty():
 		return null
-	var packed: PackedScene = load(PROP_ROOT + paths[rng.randi() % paths.size()])
+	var packed: PackedScene = load(_full_path(paths[rng.randi() % paths.size()]))
 	if packed == null:
 		return null
 	return packed.instantiate()
@@ -139,9 +151,10 @@ static func _collect_into(node: Node3D, parent_xform: Transform3D, groups: Array
 			g["arrays"].resize(Mesh.ARRAY_MAX)
 			var v := PackedVector3Array()
 			v.resize(verts.size())
-			var n: PackedVector3Array = arr[Mesh.ARRAY_NORMAL]
-			var uv: PackedVector2Array = arr[Mesh.ARRAY_TEX_UV]
-			var indices: PackedInt32Array = arr[Mesh.ARRAY_INDEX]
+			var n = arr[Mesh.ARRAY_NORMAL]
+			var uv = arr[Mesh.ARRAY_TEX_UV]
+			var indices = arr[Mesh.ARRAY_INDEX]
+			var colors = arr[Mesh.ARRAY_COLOR]
 			var basis := xform.basis
 			for i in range(verts.size()):
 				v[i] = xform * verts[i]
@@ -159,10 +172,13 @@ static func _collect_into(node: Node3D, parent_xform: Transform3D, groups: Array
 			if uv != null and not uv.is_empty():
 				g["arrays"][Mesh.ARRAY_TEX_UV] = uv
 			g["arrays"][Mesh.ARRAY_INDEX] = idx
+			var has_colors: bool = colors != null and (colors as PackedColorArray).size() == verts.size()
+			if has_colors:
+				g["arrays"][Mesh.ARRAY_COLOR] = colors
 			var mat: Material = mi.mesh.surface_get_material(si)
 			if mat == null:
 				mat = mi.material_override
-			g["material"] = adapt_material(mat) if mat != null else null
+			g["material"] = adapt_material(mat, has_colors) if mat != null else null
 			groups.append(g)
 	for child in node.get_children():
 		if child is Node3D:
