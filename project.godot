@@ -30,6 +30,7 @@ CraftManager="*res://scripts/autoload/craft_manager.gd"
 SurvivalManager="*res://scripts/autoload/survival_manager.gd"
 Progression="*res://scripts/autoload/progression.gd"
 Weather="*res://scripts/autoload/weather_manager.gd"
+Exploration="*res://scripts/autoload/exploration_manager.gd"
 
 [display]
 

@@ -12,7 +12,7 @@ const VIEW_RADIUS := 55.0
 const REFRESH_PERIOD := 0.12
 const FRAME := Color(0.88, 0.64, 0.36, 1.0)
 const OUTLINE := Color(0.08, 0.05, 0.03, 0.9)
-const GROUPS := ["breakable", "wood", "stone", "animals", "campfire", "structures", "choppable", "berries", "domestic"]
+const GROUPS := ["breakable", "wood", "stone", "animals", "campfire", "structures", "choppable", "berries", "domestic", "sites"]
 
 var _landscape: Node3D
 var _player: Node3D
@@ -116,6 +116,10 @@ func _draw_markers(center: Vector2, radius: float) -> void:
 			var pos := world_to_local((node as Node3D).global_position.x, (node as Node3D).global_position.z)
 			if pos.distance_to(center) > radius - 7.0:
 				continue
+			if group == "sites":
+				var exploration := InteractionManager.get_exploration()
+				if exploration == null or not bool(exploration.call("is_discovered", String(node.name).trim_prefix("Site_"))):
+					continue
 			_draw_marker(group, pos)
 
 func _draw_marker(kind: String, pos: Vector2) -> void:
@@ -144,6 +148,13 @@ func _draw_marker(kind: String, pos: Vector2) -> void:
 		"berries":
 			draw_circle(pos, 4.0, OUTLINE)
 			draw_circle(pos, 2.6, Color(0.9, 0.15, 0.25))
+		"sites":
+			var star := PackedVector2Array([pos + Vector2(0, -8), pos + Vector2(2, -2), pos + Vector2(8, 0), pos + Vector2(2, 2), pos + Vector2(0, 8), pos + Vector2(-2, 2), pos + Vector2(-8, 0), pos + Vector2(-2, -2)])
+			draw_colored_polygon(star, OUTLINE)
+			var core := PackedVector2Array()
+			for point in star:
+				core.append(pos + (point - pos) * 0.7)
+			draw_colored_polygon(core, Color(1.0, 0.82, 0.25))
 		"structures":
 			draw_colored_polygon(PackedVector2Array([pos + Vector2(-7, -1), pos + Vector2(0, -8), pos + Vector2(7, -1), pos + Vector2(7, 6), pos + Vector2(-7, 6)]), OUTLINE)
 			draw_colored_polygon(PackedVector2Array([pos + Vector2(-4.5, 0), pos + Vector2(0, -4.5), pos + Vector2(4.5, 0), pos + Vector2(4.5, 4), pos + Vector2(-4.5, 4)]), Color(0.55, 0.85, 0.5))

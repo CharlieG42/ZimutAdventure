@@ -29,6 +29,8 @@ var _terrain_image: ImageTexture
 var _terrain_ready: bool = false
 var _close_button: Button
 var _elapsed: float = 0.0
+var _travel_button: Button
+var _selected_site: String = ""
 
 func _ready() -> void:
 	visible = false
@@ -39,6 +41,12 @@ func _ready() -> void:
 	_close_button.custom_minimum_size = Vector2(150, 56)
 	_close_button.pressed.connect(close)
 	add_child(_close_button)
+	_travel_button = Button.new()
+	_travel_button.focus_mode = Control.FOCUS_NONE
+	_travel_button.custom_minimum_size = Vector2(220, 60)
+	_travel_button.visible = false
+	_travel_button.pressed.connect(_on_travel_pressed)
+	add_child(_travel_button)
 	_layout_close_button()
 
 func toggle() -> void:
@@ -55,6 +63,62 @@ func open() -> void:
 
 func close() -> void:
 	visible = false
+	_select_site("")
+
+# --- Sites et voyage rapide ------------------------------------------------------------------
+
+func _select_site(site_id: String) -> void:
+	_selected_site = site_id
+	if _travel_button == null:
+		return
+	_travel_button.visible = site_id != ""
+	if site_id != "":
+		var exploration := InteractionManager.get_exploration()
+		var site: Dictionary = exploration.call("get_site", site_id) if exploration != null else {}
+		_travel_button.text = tr("MAP_TRAVEL_TO") % tr(String(site.get("name", "")))
+		_travel_button.position = Vector2((size.x - _travel_button.custom_minimum_size.x) * 0.5, size.y - 86.0 - _travel_button.custom_minimum_size.y)
+	queue_redraw()
+
+func _on_travel_pressed() -> void:
+	var exploration := InteractionManager.get_exploration()
+	if exploration == null or _selected_site == "":
+		return
+	var error := String(exploration.call("fast_travel", _selected_site, _player))
+	if error != "":
+		_show_toast(tr(error))
+		return
+	close()
+
+func _show_toast(message: String) -> void:
+	var hud := get_tree().get_first_node_in_group("hud") as Node
+	if hud != null and hud.has_method("show_toast"):
+		hud.show_toast(message, 2.4)
+
+func _gui_input(event: InputEvent) -> void:
+	var pressed := false
+	var at := Vector2.ZERO
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		pressed = true
+		at = event.position
+	elif event is InputEventScreenTouch and event.pressed:
+		pressed = true
+		at = event.position
+	if not pressed:
+		return
+	var exploration := InteractionManager.get_exploration()
+	if exploration == null:
+		return
+	var to_map := _world_to_map_transform(_map_rect())
+	var best := ""
+	var best_distance := 36.0
+	for site_id in exploration.call("get_discovered_ids"):
+		var site: Dictionary = exploration.call("get_site", site_id)
+		var pos3: Vector3 = site["pos"]
+		var distance := (to_map * Vector2(pos3.x, pos3.z)).distance_to(at)
+		if distance < best_distance:
+			best_distance = distance
+			best = String(site_id)
+	_select_site(best)
 
 func set_context(landscape: Node3D, player: Node3D) -> void:
 	_landscape = landscape
@@ -151,6 +215,8 @@ func _draw() -> void:
 	draw_rect(rect, COLORS["frame"], false, 3.0)
 	var to_map := _world_to_map_transform(rect)
 	_draw_resources(to_map, rect)
+	_draw_sites(to_map, rect, font)
+	_draw_fog(rect)
 	_draw_player(to_map, rect)
 	var north_pos := Vector2(rect.end.x - 30.0, rect.position.y + 32.0)
 	draw_string_outline(font, north_pos, "N", HORIZONTAL_ALIGNMENT_CENTER, -1, 28, 6, Color(0.08, 0.05, 0.03, 0.95))
@@ -172,7 +238,45 @@ func _draw_resources(to_map: Transform2D, rect: Rect2) -> void:
 			var position := to_map * Vector2((node as Node3D).global_position.x, (node as Node3D).global_position.z)
 			if not rect.has_point(position):
 				continue
+			var exploration := InteractionManager.get_exploration()
+			if exploration != null and not bool(exploration.call("is_revealed", (node as Node3D).global_position.x, (node as Node3D).global_position.z)):
+				continue
 			_draw_marker(group, position)
+
+## Cases du monde pas encore explorées : voile sombre, tracé par bandes horizontales.
+func _draw_fog(rect: Rect2) -> void:
+	var exploration := InteractionManager.get_exploration()
+	if exploration == null:
+		return
+	var grid := int(exploration.get("GRID"))
+	var cell := rect.size.x / float(grid)
+	var veil := Color(0.04, 0.03, 0.03, 0.86)
+	for cz in grid:
+		var run_start := -1
+		for cx in grid + 1:
+			var hidden := cx < grid and not bool(exploration.call("is_cell_revealed", cx, cz))
+			if hidden and run_start < 0:
+				run_start = cx
+			elif not hidden and run_start >= 0:
+				draw_rect(Rect2(rect.position + Vector2(float(run_start) * cell, float(cz) * cell), Vector2(float(cx - run_start) * cell + 0.5, cell + 0.5)), veil)
+				run_start = -1
+
+func _draw_sites(to_map: Transform2D, rect: Rect2, font: Font) -> void:
+	var exploration := InteractionManager.get_exploration()
+	if exploration == null:
+		return
+	for site_id in exploration.call("get_discovered_ids"):
+		var site: Dictionary = exploration.call("get_site", site_id)
+		var pos3: Vector3 = site["pos"]
+		var pos := to_map * Vector2(pos3.x, pos3.z)
+		if not rect.has_point(pos):
+			continue
+		_draw_marker("site", pos)
+		if String(site_id) == _selected_site:
+			draw_arc(pos, 16.0, 0.0, TAU, 24, Color(1, 1, 1, 0.95), 3.0)
+			var label := tr(String(site["name"]))
+			draw_string_outline(font, pos + Vector2(-60.0, -22.0), label, HORIZONTAL_ALIGNMENT_LEFT, 200, 20, 5, Color(0.08, 0.05, 0.03, 0.95))
+			draw_string(font, pos + Vector2(-60.0, -22.0), label, HORIZONTAL_ALIGNMENT_LEFT, 200, 20, COLORS["text"])
 
 ## Formes distinctes (pas seulement des couleurs) pour rester lisible en plein soleil.
 func _draw_marker(kind: String, pos: Vector2) -> void:
@@ -205,6 +309,14 @@ func _draw_marker(kind: String, pos: Vector2) -> void:
 		"berries":
 			draw_circle(pos, 5.0, outline)
 			draw_circle(pos, 3.5, Color(0.9, 0.15, 0.25))
+		"site":
+			# Étoile à quatre branches dorée.
+			var star := PackedVector2Array([pos + Vector2(0, -11), pos + Vector2(3, -3), pos + Vector2(11, 0), pos + Vector2(3, 3), pos + Vector2(0, 11), pos + Vector2(-3, 3), pos + Vector2(-11, 0), pos + Vector2(-3, -3)])
+			draw_colored_polygon(star, outline)
+			var core := PackedVector2Array()
+			for point in star:
+				core.append(pos + (point - pos) * 0.72)
+			draw_colored_polygon(core, Color(1.0, 0.82, 0.25))
 		"structures":
 			# Maison : carré surmonté d'un toit.
 			draw_colored_polygon(PackedVector2Array([pos + Vector2(-9, -1), pos + Vector2(0, -10), pos + Vector2(9, -1), pos + Vector2(9, 8), pos + Vector2(-9, 8)]), outline)
@@ -232,7 +344,7 @@ func _draw_legend(rect: Rect2, font: Font) -> void:
 		["player", "MAP_LEGEND_YOU"], ["stone", "MAP_LEGEND_STONE"], ["wood", "MAP_LEGEND_WOOD"],
 		["breakable", "MAP_LEGEND_ROCK"], ["animals", "MAP_LEGEND_ANIMAL"],
 		["campfire", "MAP_LEGEND_FIRE"], ["structures", "MAP_LEGEND_CAMP"],
-		["choppable", "MAP_LEGEND_TREE"], ["berries", "MAP_LEGEND_BERRY"], ["domestic", "MAP_LEGEND_DOMESTIC"],
+		["site", "MAP_LEGEND_SITE"], ["choppable", "MAP_LEGEND_TREE"], ["berries", "MAP_LEGEND_BERRY"], ["domestic", "MAP_LEGEND_DOMESTIC"],
 	]
 	if rect.position.x < 200.0:
 		# Écran étroit : titre et légende en ligne, sous la barre du haut.

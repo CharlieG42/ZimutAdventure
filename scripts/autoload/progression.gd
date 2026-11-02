@@ -22,6 +22,8 @@ const XP := {
 	"product": 6,
 	"tame": 35,
 	"cook": 10,
+	"discover": 25,
+	"treasure": 20,
 	"water": 3,
 	"build": 20,
 }

@@ -280,3 +280,23 @@ QUEST_CAMP_TITLE,A camp of your own
 QUEST_CAMP_DESC,"Craft a campfire (level 2) and place it from the bag: it burns wood, cooks your dishes and keeps prowlers away."
 QUEST_CHEST_TITLE,Tidying up
 QUEST_CHEST_DESC,"Craft a chest (level 3) and place it at camp: it stores your resources, except tools and arrows."
+MAP_LEGEND_SITE,Discovered site
+MAP_TRAVEL_TO,Travel: %s
+SITE_START,Starting signpost
+SITE_NAME_0,Old Ford Ruins
+SITE_NAME_1,Echo Cave
+SITE_NAME_2,Broken Columns
+SITE_NAME_3,Falcon Cave
+SITE_NAME_4,Forgotten Temple
+SITE_NAME_5,Red Cavern
+TOAST_DISCOVERED,Discovered: %s
+TOAST_TRAVEL_UNKNOWN,This place has not been discovered yet.
+TOAST_TRAVEL_LEVEL,Level 3 is required to travel fast.
+TOAST_TRAVEL_TIRED,Too hungry or thirsty to travel.
+ACTION_TREASURE_OPEN,Open the treasure
+TOAST_TREASURE_FOUND,Treasure: %s
+ITEM_ITEM_RELIC,ancient relic
+QUEST_EXPLORE_TITLE,Explorer
+QUEST_EXPLORE_DESC,"Discover 3 sites (ruins, caves) by walking up to them: the map reveals itself and fast travel opens (level 3)."
+QUEST_TREASURE_TITLE,Relic hunter
+QUEST_TREASURE_DESC,"Open the site chests and bring back 2 ancient relics."

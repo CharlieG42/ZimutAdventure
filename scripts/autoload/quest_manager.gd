@@ -184,6 +184,22 @@ const QUESTS := {
 		"requires": "quest_camp",
 		"reward": {"item_stone": 4, "item_wood": 4},
 	},
+	"quest_explore": {
+		"title": "QUEST_EXPLORE_TITLE",
+		"description": "QUEST_EXPLORE_DESC",
+		"goal_item": "stat_discovered",
+		"goal_count": 3,
+		"requires": "quest_camp",
+		"reward": {"item_cooked_meat": 2},
+	},
+	"quest_treasure": {
+		"title": "QUEST_TREASURE_TITLE",
+		"description": "QUEST_TREASURE_DESC",
+		"goal_item": "item_relic",
+		"goal_count": 2,
+		"requires": "quest_explore",
+		"reward": {"item_wood": 6, "item_stone": 6},
+	},
 	"quest_dog": {
 		"title": "QUEST_DOG_TITLE",
 		"description": "QUEST_DOG_DESC",

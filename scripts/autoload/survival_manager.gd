@@ -69,6 +69,12 @@ func _reemit() -> void:
 
 # --- Accesseurs -----------------------------------------------------------------
 
+## Dépense directe de faim et de soif (voyage rapide, efforts).
+func consume(hunger_cost: float, thirst_cost: float) -> void:
+	_hunger = maxf(0.0, _hunger - hunger_cost)
+	_thirst = maxf(0.0, _thirst - thirst_cost)
+	_reemit()
+
 func get_health() -> float:
 	return _health
 
