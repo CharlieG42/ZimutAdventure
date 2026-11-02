@@ -56,61 +56,63 @@ def fractal(p, seed, octaves=4):
         freq *= 2.1
     return total / norm
 
-def make_rock(seed=1, width=3.0):
+def make_rock(seed=1, width=3.0, levels=3):
+    """Rocher anguleux (intersection de plans de clivage + bruit léger), ombrage à facettes,
+    strates de grès colorées par face, ombre cuite (bas et faces tournées vers le sol plus sombres)."""
     rng = np.random.default_rng(seed)
-    v, f = icosphere(4)
-    # Forme de base : ellipsoïde écrasé, orientation aléatoire des proportions.
-    sx, sz = rng.uniform(1.0, 1.35), rng.uniform(0.8, 1.1)
-    base = v * np.array([sx, 0.85, sz])
-    n_large = fractal(v * 1.3 + seed * 3.1, seed, 3)
-    n_fine = fractal(v * 5.0 + seed * 7.7, seed + 99, 3)
-    ridge = 1 - np.abs(2 * fractal(v * 2.4 + seed * 5.3, seed + 41, 3) - 1)   # arêtes vives
-    disp = 1 + (n_large - 0.5) * 0.7 + (ridge - 0.5) * 0.45 + (n_fine - 0.5) * 0.12
-    pts = base * disp[:, None]
-    # Strates : légères marches horizontales qui creusent la roche (grès stratifié).
-    layer = np.sin(pts[:, 1] * 9.0 + n_large * 3.0)
-    pts[:, 0] *= 1 + 0.025 * layer
-    pts[:, 2] *= 1 + 0.025 * layer
-    # Terrasses : les strates dures forment de petits ressauts horizontaux.
-    k = 5.0
-    stepped = np.floor(pts[:, 1] * k) / k + 0.5 / k * np.clip((pts[:, 1] * k) % 1.0 * 3.0 - 1.0, 0, 1)
-    pts[:, 1] = pts[:, 1] * 0.55 + stepped * 0.45
-    # Base plate posée au sol.
-    floor = -0.34
-    pts[:, 1] = np.maximum(pts[:, 1], floor + (pts[:, 1] - floor) * 0.0 + 0.0)
+    v, f = icosphere(levels)
+    # Plans de clivage : le rocher est l'intersection de demi-espaces autour d'un ellipsoïde.
+    count = int(rng.integers(11, 16))
+    normals = rng.normal(size=(count, 3))
+    normals[:, 1] = np.abs(normals[:, 1]) * 0.9 - 0.15
+    normals /= np.linalg.norm(normals, axis=1)[:, None]
+    offsets = rng.uniform(0.72, 0.98, count)
+    dots = v @ normals.T
+    with np.errstate(divide="ignore"):
+        t = np.where(dots > 1e-6, offsets[None, :] / np.maximum(dots, 1e-6), np.inf)
+    radius = np.minimum(t.min(axis=1), 1.6)
+    radius *= 1 + (fractal(v * 3.0 + seed * 5.1, seed + 7, 3) - 0.5) * 0.10
+    sx, sz = rng.uniform(1.0, 1.4), rng.uniform(0.8, 1.1)
+    pts = v * radius[:, None] * np.array([sx, 0.78, sz])
+    # Base plate posée au sol, puis mise à l'échelle.
+    pts[:, 1] = np.maximum(pts[:, 1], -0.36)
     pts[:, 1] -= pts[:, 1].min()
     scale = width / (pts[:, 0].max() - pts[:, 0].min())
     pts *= scale
-    # Normales lissées pondérées par l'aire.
+    # Ombrage à facettes : un sommet par coin de triangle, normale de la face.
     tri = pts[f]
     fn = np.cross(tri[:, 1] - tri[:, 0], tri[:, 2] - tri[:, 0])
-    vn = np.zeros_like(pts)
-    for k in range(3):
-        np.add.at(vn, f[:, k], fn)
-    vn /= np.linalg.norm(vn, axis=1)[:, None] + 1e-12
-    # Orientation extérieure garantie : normale vers l'extérieur du centre.
+    area = np.linalg.norm(fn, axis=1)
+    fn /= area[:, None] + 1e-12
     centre = pts.mean(axis=0)
-    flip = np.einsum("ij,ij->i", vn, pts - centre) < 0
-    vn[flip] *= -1
-    # Couleurs : strates ocre/rouge + variations + ombre cuite (bas et creux plus sombres).
-    h = pts[:, 1] / pts[:, 1].max()
-    band = 0.5 + 0.5 * np.sin(pts[:, 1] * 7.5 / scale * 1.0 + n_large * 4.0)
-    ochre = np.array([0.80, 0.55, 0.34])
-    red = np.array([0.62, 0.30, 0.20])
-    col = ochre[None] * (1 - band[:, None] * 0.55) + red[None] * (band[:, None] * 0.55)
-    col *= (0.86 + 0.28 * n_fine)[:, None]
-    hollow = np.clip((1.0 - disp / disp.mean()) * 1.6, 0, 1)
-    ao = 0.55 + 0.45 * np.clip(h * 1.4, 0, 1)
-    ao *= 1 - 0.35 * hollow
-    col *= ao[:, None]
-    up = np.clip(vn[:, 1], 0, 1)
-    col = col * (1 - 0.12 * up[:, None]) + np.array([0.9, 0.78, 0.55]) * (0.10 * up[:, None])
-    # Triangles dans le sens anti-horaire vu de l'extérieur (convention glTF).
+    centroid = tri.mean(axis=1)
+    flip = np.einsum("ij,ij->i", fn, centroid - centre) < 0
     idx = f.copy()
-    c = np.cross(pts[idx[:, 1]] - pts[idx[:, 0]], pts[idx[:, 2]] - pts[idx[:, 0]])
-    out = np.einsum("ij,ij->i", c, pts[idx].mean(axis=1) - centre) < 0
-    idx[out] = idx[out][:, ::-1]
-    return pts.astype(np.float32), vn.astype(np.float32), np.clip(col, 0, 1).astype(np.float32), idx.astype(np.uint32)
+    idx[flip] = idx[flip][:, ::-1]
+    fn[flip] *= -1
+    keep = area > 1e-9
+    idx, fn, centroid = idx[keep], fn[keep], centroid[keep]
+    # Couleur par face : strates (bandes ocre / rouge), grain, ombre cuite.
+    hmax = pts[:, 1].max()
+    y = centroid[:, 1]
+    band = 0.5 + 0.5 * np.sin(y * (2.0 * np.pi / (hmax * 0.33)) + fractal(centroid * 0.35, seed + 3, 2) * 2.2)
+    thin = (np.sin(y * 31.0 / hmax * 2.0) > 0.88).astype(float)
+    ochre = np.array([0.84, 0.58, 0.34])
+    red = np.array([0.60, 0.26, 0.17])
+    col = ochre[None] * (1 - band[:, None] * 0.8) + red[None] * (band[:, None] * 0.8)
+    col *= (0.95 + 0.10 * fractal(centroid * 0.9 + seed, seed + 11, 2))[:, None]
+    ao = 0.52 + 0.48 * np.clip(y / hmax * 1.3, 0, 1)
+    ao *= 1 - 0.28 * np.clip(-fn[:, 1], 0, 1)
+    col *= ao[:, None]
+    # Dessus clair, poussiéreux.
+    up = np.clip(fn[:, 1], 0, 1) ** 2
+    col = col * (1 - 0.35 * up[:, None]) + np.array([0.92, 0.78, 0.55]) * (0.35 * up[:, None])
+    out_pts = pts[idx].reshape(-1, 3)
+    out_nrm = np.repeat(fn, 3, axis=0)
+    out_col = np.repeat(col, 3, axis=0)
+    out_idx = np.arange(len(out_pts), dtype=np.uint32).reshape(-1, 3)
+    return (out_pts.astype(np.float32), out_nrm.astype(np.float32),
+            np.clip(out_col, 0, 1).astype(np.float32), out_idx)
 
 def write_glb(path, pts, nrm, col, idx):
     col4 = np.concatenate([col, np.ones((len(col), 1), np.float32)], axis=1)

@@ -28,22 +28,23 @@ func _ready() -> void:
 	floor_mesh.material_override = sand
 	add_child(floor_mesh)
 	var cam := Camera3D.new()
-	cam.position = Vector3(0, 2.6, 9.5)
+	cam.position = Vector3(0.4, 2.8, 12.0)
 	cam.rotation_degrees = Vector3(-12, 0, 0)
 	cam.fov = 48
 	add_child(cam)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 5
 	var procedural := RockGenerator.generate(RockGenerator.RockType.BOULDER, rng)
-	_place(procedural, null, Vector3(-4.2, 0, 0), "AVANT\nprocédural d'origine")
+	_place(procedural, null, Vector3(-6.6, 0, 0), "AVANT\nprocédural")
 	var kenney := GlbPropLibrary.get_variant_meshes("boulder")
-	_place(kenney[2], null, Vector3(0, 0, 0), "Kenney (corrigé)")
-	var packed := load("res://assets/props/generated/rock_1.glb") as PackedScene
-	var node := packed.instantiate() as Node3D
-	node.position = Vector3(4.2, 0, 0)
-	_fix_vertex_colors(node)
-	add_child(node)
-	_label("APRÈS\ngénéré en Python", Vector3(4.2, 3.1, 0))
+	_place(kenney[2], null, Vector3(-3.4, 0, 0), "Kenney")
+	for i in 3:
+		var packed := load("res://assets/props/generated/rock_%d.glb" % (i + 1)) as PackedScene
+		var node := packed.instantiate() as Node3D
+		node.position = Vector3(0.4 + 3.4 * float(i), 0, 0)
+		_fix_vertex_colors(node)
+		add_child(node)
+		_label("APRÈS\nPython %d" % (i + 1) if i == 0 else "Python %d" % (i + 1), Vector3(0.4 + 3.4 * float(i), 3.1, 0))
 
 func _place(mesh: Mesh, material: Material, at: Vector3, text: String) -> void:
 	var mi := MeshInstance3D.new()
@@ -57,7 +58,7 @@ func _place(mesh: Mesh, material: Material, at: Vector3, text: String) -> void:
 func _label(text: String, at: Vector3) -> void:
 	var label := Label3D.new()
 	label.text = text
-	label.font_size = 56
+	label.font_size = 48
 	label.pixel_size = 0.008
 	label.position = at
 	label.modulate = Color(0.1, 0.07, 0.04)
