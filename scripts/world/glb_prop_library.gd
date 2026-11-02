@@ -34,7 +34,34 @@ const PROPS := {
 	"ruin": ["castle/ruin_a.glb", "castle/ruin_b.glb"],
 }
 
+## Les GLB Kenney « nature » portent des couleurs sRGB écrites comme du linéaire (rendu délavé
+## et bleuté à l'import) et des matériaux 100 % métalliques. On les corrige, et on adapte la
+## palette au canyon (herbe sèche, feuillage olive, écorce brune).
+const DESERT_COLORS := {
+	"grass": Color(0.62, 0.5, 0.3),
+	"dirt": Color(0.66, 0.38, 0.24),
+	"leafsDark": Color(0.28, 0.36, 0.16),
+	"leafsGreen": Color(0.36, 0.5, 0.26),
+	"woodBarkDark": Color(0.4, 0.27, 0.17),
+}
+
 static var _mesh_cache: Dictionary = {}
+
+## Matériau corrigé (copie) : couleur du désert ou couleur d'origine relue en sRGB, mat, non métallique.
+static func adapt_material(mat: Material) -> Material:
+	var std := mat as StandardMaterial3D
+	if std == null:
+		return mat
+	var fixed := std.duplicate() as StandardMaterial3D
+	fixed.metallic = 0.0
+	fixed.roughness = 0.92
+	if std.albedo_texture == null:
+		var key := String(std.resource_name)
+		if DESERT_COLORS.has(key):
+			fixed.albedo_color = DESERT_COLORS[key]
+		else:
+			fixed.albedo_color = std.albedo_color.srgb_to_linear()
+	return fixed
 
 static func get_paths(prop_id: String) -> Array:
 	return PROPS.get(prop_id, [])
@@ -135,7 +162,7 @@ static func _collect_into(node: Node3D, parent_xform: Transform3D, groups: Array
 			var mat: Material = mi.mesh.surface_get_material(si)
 			if mat == null:
 				mat = mi.material_override
-			g["material"] = mat
+			g["material"] = adapt_material(mat) if mat != null else null
 			groups.append(g)
 	for child in node.get_children():
 		if child is Node3D:
