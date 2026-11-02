@@ -67,6 +67,7 @@ func cast() -> void:
 	state = State.WAITING
 	_timer = _rng.randf_range(WAIT_MIN, WAIT_MAX) * _bite_speed()
 	_show_bobber(true)
+	_sound("splash")
 	_toast(tr("TOAST_FISH_CAST"))
 
 ## Coefficient de temps d'attente : < 1 = plus rapide.
@@ -93,6 +94,7 @@ func _process(delta: float) -> void:
 	if state == State.WAITING:
 		state = State.BITE
 		_timer = BITE_WINDOW
+		_sound("bite")
 		_toast(tr("TOAST_FISH_BITE"))
 	else:
 		_reset()
@@ -116,8 +118,14 @@ func catch_fish() -> String:
 	if progression != null:
 		progression.call("add_stat", "stat_fished", 1)
 		progression.call("add_xp_for", "fish")
+	_sound("splash")
 	caught.emit(fish_id)
 	return fish_id
+
+func _sound(event_name: String) -> void:
+	var sfx := InteractionManager.get_sfx()
+	if sfx != null and sfx.has_method("play_event"):
+		sfx.call("play_event", event_name)
 
 func _show_bobber(value: bool) -> void:
 	if _bobber != null:

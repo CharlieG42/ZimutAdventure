@@ -172,6 +172,9 @@ func _harvest(inventory: Node) -> void:
 		progression.call("add_stat", "stat_harvests", 1)
 		progression.call("add_xp_for", "farm")
 	inventory.call("add_item", String(CROP_TYPES[crop_seed]["yield"]), amount)
+	var sfx := InteractionManager.get_sfx()
+	if sfx != null and sfx.has_method("play_event"):
+		sfx.call("play_event", "harvest")
 	inventory.call("add_item", crop_seed, randi_range(1, 2))
 	if is_grain:
 		if progression != null:

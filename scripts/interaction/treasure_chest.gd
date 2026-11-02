@@ -54,6 +54,9 @@ func open_chest() -> void:
 	var exploration := InteractionManager.get_exploration()
 	if exploration != null and exploration.has_method("mark_looted"):
 		exploration.call("mark_looted", site_id)
+	var sfx := InteractionManager.get_sfx()
+	if sfx != null and sfx.has_method("play_event"):
+		sfx.call("play_event", "treasure")
 	_toast(tr("TOAST_TREASURE_FOUND") % ", ".join(names))
 	looted.emit(self)
 

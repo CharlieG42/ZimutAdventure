@@ -123,10 +123,23 @@ func interact_with(interactor: Node3D) -> void:
 		mount(interactor)
 	elif species == "dog":
 		following = not following
+		_voice()
 		_toast(tr("TOAST_DOG_FOLLOW") if following else tr("TOAST_DOG_STAY"))
 		state_changed.emit(self)
 	else:
+		_voice()
 		_collect_product()
+
+## Cri de l'animal (poule, vache, chien...).
+func _voice() -> void:
+	var sfx := InteractionManager.get_sfx()
+	if sfx == null or not sfx.has_method("play_event"):
+		return
+	match species:
+		"chicken": sfx.call("play_event", "cluck", -8.0, randf_range(0.9, 1.15))
+		"cow": sfx.call("play_event", "moo", -6.0)
+		"sheep", "goat": sfx.call("play_event", "moo", -8.0, 1.6)
+		"dog": sfx.call("play_event", "bark", -6.0)
 
 func _food_item() -> String:
 	var inventory := InteractionManager.get_inventory()

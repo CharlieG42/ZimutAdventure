@@ -65,6 +65,8 @@ var _autosave: bool = DisplayServer.get_name() != "headless"
 # Les tests headless doivent rester déterministes : pas d'effets de saison ni de météo.
 var _effects: bool = DisplayServer.get_name() != "headless"
 var _particles: CPUParticles3D
+## Qualité réduite (appareil lent) : moitié moins de gouttes et de flocons.
+var low_quality: bool = false
 var _particles_kind: String = ""
 var _elapsed_save: float = 0.0
 
@@ -265,6 +267,13 @@ func _build_particles() -> void:
 	_particles.visibility_aabb = AABB(Vector3(-25, -20, -25), Vector3(50, 40, 50))
 	add_child(_particles)
 
+func set_low_quality(value: bool) -> void:
+	if low_quality == value:
+		return
+	low_quality = value
+	_particles_kind = "-"
+	_refresh_particles()
+
 func _refresh_particles() -> void:
 	if _particles == null:
 		return
@@ -282,7 +291,7 @@ func _refresh_particles() -> void:
 		material.albedo_color = Color(0.8, 0.88, 1.0, 0.65)
 		streak.material = material
 		_particles.mesh = streak
-		_particles.amount = 1200
+		_particles.amount = 600 if low_quality else 1200
 		_particles.lifetime = 0.9
 		_particles.initial_velocity_min = 18.0
 		_particles.initial_velocity_max = 22.0
@@ -296,7 +305,7 @@ func _refresh_particles() -> void:
 		material.albedo_color = Color(1.0, 1.0, 1.0, 0.9)
 		flake.material = material
 		_particles.mesh = flake
-		_particles.amount = 650
+		_particles.amount = 320 if low_quality else 650
 		_particles.lifetime = 5.0
 		_particles.initial_velocity_min = 1.0
 		_particles.initial_velocity_max = 2.0

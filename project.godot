@@ -31,6 +31,8 @@ SurvivalManager="*res://scripts/autoload/survival_manager.gd"
 Progression="*res://scripts/autoload/progression.gd"
 Weather="*res://scripts/autoload/weather_manager.gd"
 Exploration="*res://scripts/autoload/exploration_manager.gd"
+Ambience="*res://scripts/autoload/ambience.gd"
+PerformanceGuard="*res://scripts/autoload/performance_guard.gd"
 
 [display]
 
