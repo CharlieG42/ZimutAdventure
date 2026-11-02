@@ -23,6 +23,8 @@ const INTERACT_MASK: int = 4
 var _camera: Camera3D
 var _eye: Node3D
 var _current: Node3D
+## Cible imposée (ex. « Descendre » quand le joueur est à cheval).
+var _forced: Node3D
 
 func set_camera(camera: Camera3D) -> void:
 	_camera = camera
@@ -30,6 +32,9 @@ func set_camera(camera: Camera3D) -> void:
 ## Origine du rayon d'interaction (les « yeux » du joueur). Par défaut : la caméra.
 func set_eye(eye: Node3D) -> void:
 	_eye = eye
+
+func set_forced_target(target: Node3D) -> void:
+	_forced = target
 
 func get_current_target() -> Node3D:
 	return _current
@@ -97,6 +102,8 @@ func _process(_delta: float) -> void:
 		focus_changed.emit(_current)
 
 func _find_target() -> Node3D:
+	if _forced != null and is_instance_valid(_forced) and (_forced as Interactable).can_interact():
+		return _forced
 	if _camera == null or not is_instance_valid(_camera) or not _camera.is_inside_tree():
 		return null
 	var space := _camera.get_world_3d().direct_space_state

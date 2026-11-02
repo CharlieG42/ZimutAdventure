@@ -48,12 +48,16 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.randomize()
-	_config = SPECIES.get(species, SPECIES["deer"])
+	_config = _species_config()
 	_center = global_position
 	_player = get_tree().get_first_node_in_group("player") as Node3D
 	_build_model()
 	_resize_collision()
 	_start_walk()
+
+## Paramètres de l'espèce (surchargé par les animaux domestiques).
+func _species_config() -> Dictionary:
+	return SPECIES.get(species, SPECIES["deer"])
 
 func _physics_process(delta: float) -> void:
 	_update_behavior(delta)
@@ -147,6 +151,11 @@ func take_arrow_hit(_from_position: Vector3) -> void:
 	if progression != null:
 		drops = int(progression.call("roll_loot", drops))
 		progression.call("add_stat", "stat_hunts", 1)
+		# Un chien apprivoisé rabat le gibier : une portion de viande en plus.
+		for companion in get_tree().get_nodes_in_group("tamed"):
+			if companion.get("species") == "dog":
+				drops += 1
+				break
 		progression.call("add_xp_for", "hunt")
 	inventory.add_item("item_raw_meat", drops)
 	var hud := get_tree().get_first_node_in_group("hud") as Node

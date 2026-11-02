@@ -340,10 +340,15 @@ const EDIBLE := {
 	"item_cooked_meat": 0.45,
 	"item_raw_meat": 0.15,
 	"item_berries": 0.08,
+	"item_vegetables": 0.2,
+	"item_milk": 0.12,
+	"item_egg": 0.1,
 }
 ## Aliments juteux : ils étanchent aussi un peu la soif.
 const THIRST_BONUS := {
 	"item_berries": 0.05,
+	"item_vegetables": 0.04,
+	"item_milk": 0.25,
 }
 
 ## Mange un aliment : restaure la faim (la viande crue restaure peu).

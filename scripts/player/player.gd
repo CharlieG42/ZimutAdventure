@@ -98,6 +98,12 @@ var _bob_phase: float = 0.0
 var _base_fov: float = 70.0
 var _tp_distance: float = 4.5
 var _safe_position: Vector3 = Vector3.ZERO
+## Monture actuelle (cheval apprivoisé) : le joueur est surélevé et va plus vite.
+var _mount: Node3D
+var _mount_lift: float = 0.0
+
+const MOUNT_LIFT := 0.75
+const MOUNT_SPEED_MULTIPLIER := 1.7
 var _safe_timer: float = 0.0
 
 # Animation procédurale du personnage (vue 3ème personne).
@@ -182,6 +188,21 @@ func try_interact() -> void:
 	if target != null and target is Interactable:
 		(target as Interactable).interact(self)
 
+## Monte un animal (cheval) : le joueur est surélevé, la monture suit ses déplacements.
+func mount(animal: Node3D) -> void:
+	_mount = animal
+	_mount_lift = MOUNT_LIFT
+	_apply_view_mode()
+
+func dismount() -> void:
+	_mount = null
+	_mount_lift = 0.0
+	InteractionManager.set_forced_target(null)
+	_apply_view_mode()
+
+func is_mounted() -> bool:
+	return _mount != null
+
 func _try_interact() -> void:
 	try_interact()
 
@@ -248,10 +269,10 @@ func _apply_view_mode() -> void:
 	var first := _view_mode == ViewMode.FIRST_PERSON
 	visuals.visible = not first
 	if first:
-		camera_pivot.position = Vector3(0.0, eye_height, 0.0)
+		camera_pivot.position = Vector3(0.0, eye_height + _mount_lift, 0.0)
 		camera.position = Vector3.ZERO
 	else:
-		camera_pivot.position = Vector3(0.0, third_person_height, 0.0)
+		camera_pivot.position = Vector3(0.0, third_person_height + _mount_lift, 0.0)
 		_tp_distance = third_person_distance
 		camera.position = Vector3(third_person_shoulder, 0.0, third_person_distance)
 	_pitch = clampf(_pitch, _pitch_lo(), _pitch_hi())
@@ -326,6 +347,8 @@ func _physics_process(delta: float) -> void:
 	_update_stamina(delta)
 
 	var top_speed := sprint_speed if _sprinting else walk_speed
+	if _mount != null:
+		top_speed *= MOUNT_SPEED_MULTIPLIER
 	var speed := 0.0
 	if moving:
 		speed = clampf(top_speed * wish_len, min_move_speed, top_speed)
@@ -415,7 +438,7 @@ func _update_head_bob(delta: float, horizontal_speed: float) -> void:
 	var strength := clampf(horizontal_speed / sprint_speed, 0.0, 1.0) if (head_bob and grounded) else 0.0
 	if strength > 0.0:
 		_bob_phase += delta * horizontal_speed * 2.1
-	var target_y := eye_height + sin(_bob_phase * 2.0) * 0.032 * strength + _land_dip
+	var target_y := eye_height + _mount_lift + sin(_bob_phase * 2.0) * 0.032 * strength + _land_dip
 	camera_pivot.position.y = lerpf(camera_pivot.position.y, target_y, 1.0 - exp(-22.0 * delta))
 
 func _cache_rest_pose() -> void:
@@ -462,4 +485,4 @@ func _update_character(delta: float, horizontal_speed: float) -> void:
 	_swing("LegR", Vector3(0.11, LEG_HIP_Y, 0.0), leg_r)
 	_swing("Torso/ArmL", Vector3(0.24, ARM_SHOULDER_Y, 0.0), arm_l)
 	_swing("Torso/ArmR", Vector3(-0.24, ARM_SHOULDER_Y, 0.0), arm_r)
-	visuals.position.y = absf(sin(_walk_phase)) * 0.04 * _gait
+	visuals.position.y = absf(sin(_walk_phase)) * 0.04 * _gait + _mount_lift

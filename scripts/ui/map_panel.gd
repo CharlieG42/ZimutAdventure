@@ -165,7 +165,7 @@ func _draw_resources(to_map: Transform2D, rect: Rect2) -> void:
 	var tree := get_tree()
 	if tree == null:
 		return
-	for group in ["breakable", "wood", "stone", "animals", "campfire", "structures", "choppable", "berries"]:
+	for group in ["breakable", "wood", "stone", "animals", "campfire", "structures", "choppable", "berries", "domestic"]:
 		for node in tree.get_nodes_in_group(group):
 			if not (node is Node3D) or not is_instance_valid(node):
 				continue
@@ -199,6 +199,9 @@ func _draw_marker(kind: String, pos: Vector2) -> void:
 		"choppable":
 			draw_colored_polygon(PackedVector2Array([pos + Vector2(0, -10), pos + Vector2(8, 7), pos + Vector2(-8, 7)]), outline)
 			draw_colored_polygon(PackedVector2Array([pos + Vector2(0, -7), pos + Vector2(5, 5), pos + Vector2(-5, 5)]), Color(0.3, 0.6, 0.25))
+		"domestic":
+			draw_rect(Rect2(pos - Vector2(5.5, 5.5), Vector2(11, 11)), outline)
+			draw_rect(Rect2(pos - Vector2(3.8, 3.8), Vector2(7.6, 7.6)), Color(0.95, 0.75, 0.55))
 		"berries":
 			draw_circle(pos, 5.0, outline)
 			draw_circle(pos, 3.5, Color(0.9, 0.15, 0.25))
@@ -229,7 +232,7 @@ func _draw_legend(rect: Rect2, font: Font) -> void:
 		["player", "MAP_LEGEND_YOU"], ["stone", "MAP_LEGEND_STONE"], ["wood", "MAP_LEGEND_WOOD"],
 		["breakable", "MAP_LEGEND_ROCK"], ["animals", "MAP_LEGEND_ANIMAL"],
 		["campfire", "MAP_LEGEND_FIRE"], ["structures", "MAP_LEGEND_CAMP"],
-		["choppable", "MAP_LEGEND_TREE"], ["berries", "MAP_LEGEND_BERRY"],
+		["choppable", "MAP_LEGEND_TREE"], ["berries", "MAP_LEGEND_BERRY"], ["domestic", "MAP_LEGEND_DOMESTIC"],
 	]
 	if rect.position.x < 200.0:
 		# Écran étroit : titre et légende en ligne, sous la barre du haut.

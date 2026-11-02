@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://zimutcanyonplay"]
+[gd_scene load_steps=20 format=3 uid="uid://zimutcanyonplay"]
 
 [ext_resource type="Script" path="res://scripts/world/landscape_manager.gd" id="1_landscape"]
 [ext_resource type="PackedScene" uid="uid://zimutplayer0001" path="res://scenes/player/player.tscn" id="2_player"]
@@ -17,6 +17,8 @@
 [ext_resource type="Script" path="res://scripts/world/structure_spawner.gd" id="14_structures"]
 [ext_resource type="PackedScene" path="res://scenes/interaction/choppable_tree.tscn" id="15_tree"]
 [ext_resource type="PackedScene" path="res://scenes/interaction/berry_bush.tscn" id="16_bush"]
+[ext_resource type="Script" path="res://scripts/world/livestock_spawner.gd" id="17_livestock"]
+[ext_resource type="PackedScene" path="res://scenes/world/domestic_animal.tscn" id="18_domestic"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.2, 0.43, 0.82, 1)
@@ -133,6 +135,10 @@ count = 30
 spawn_radius = 140.0
 seed_offset = 909
 min_distance_to_player = 6.0
+
+[node name="Livestock" type="Node3D" parent="."]
+script = ExtResource("17_livestock")
+animal_scene = ExtResource("18_domestic")
 
 [node name="Structures" type="Node3D" parent="."]
 script = ExtResource("14_structures")

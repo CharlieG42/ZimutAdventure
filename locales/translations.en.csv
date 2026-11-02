@@ -152,3 +152,58 @@ ITEM_TOOL_SICKLE,sickle
 ITEM_ITEM_BERRIES,wild berries
 MAP_LEGEND_TREE,Tree
 MAP_LEGEND_BERRY,Berries
+ACTION_PLANT,Sow a seed
+ACTION_NEED_HOE,Till (hoe required)
+ACTION_NEED_SEEDS,Sow (seeds required)
+ACTION_HARVEST,Harvest the vegetables
+TOAST_NEED_HOE,You need an equipped hoe to work the soil.
+TOAST_NEED_SEEDS,You need seeds (pick berries to find some).
+TOAST_PLANTED,Seed sown: the harvest will be ready in a few minutes.
+ACTION_TAME,Feed to tame
+ACTION_NEED_FOOD,Tame (food required)
+ACTION_MILK,Milk
+ACTION_SHEAR,Shear (sickle)
+ACTION_EGGS,Collect eggs
+ACTION_MOUNT,Mount
+ACTION_DISMOUNT,Dismount
+ACTION_DOG_STAY,Tell to stay
+ACTION_DOG_FOLLOW,Call the dog
+TOAST_DOG_FOLLOW,The dog follows you.
+TOAST_DOG_STAY,The dog stays here.
+TOAST_MOUNTED,Riding! Act to dismount.
+TOAST_TAME_LEVEL,%s: level %d required to tame.
+TOAST_NEED_FOOD,%s: needs food (%s).
+TOAST_TRUST,%s is getting used to you (%d/%d).
+TOAST_TAMED,%s tamed!
+TOAST_NEED_SICKLE_SHEAR,You need an equipped sickle to shear.
+ANIMAL_COW,The cow
+ANIMAL_SHEEP,The sheep
+ANIMAL_GOAT,The goat
+ANIMAL_CHICKEN,The chicken
+ANIMAL_HORSE,The horse
+ANIMAL_DOG,The dog
+HINT_TOOL_HOE,Hoe equipped: get close to a placed plot to sow your seeds.
+CRAFT_HOE,Hoe
+CRAFT_FARM_PLOT,Farm plot
+ITEM_TOOL_HOE,hoe
+ITEM_BUILDING_FARM_PLOT,farm plot
+ITEM_ITEM_SEEDS,seeds
+ITEM_ITEM_VEGETABLES,vegetables
+ITEM_ITEM_MILK,milk
+ITEM_ITEM_WOOL,wool
+ITEM_ITEM_EGG,egg
+MAP_LEGEND_DOMESTIC,Farm animals
+QUEST_HOE_TITLE,Working the land
+QUEST_HOE_DESC,Craft a hoe from the journal (level 3 required).
+QUEST_PLOT_TITLE,A vegetable patch
+QUEST_PLOT_DESC,"Craft a farm plot and place it from the bag (Bag tab, Place button)."
+QUEST_HARVEST_TITLE,First harvest
+QUEST_HARVEST_DESC,"Equip the hoe, sow seeds on the plot, wait for them to grow and harvest 4 vegetables."
+QUEST_LIVESTOCK_TITLE,Animal husbandry
+QUEST_LIVESTOCK_DESC,"Feed a chicken, sheep, cow or goat (vegetables, berries or seeds) until it is tamed."
+QUEST_DAIRY_TITLE,Farm produce
+QUEST_DAIRY_DESC,"Collect milk, wool (with the sickle) or eggs 3 times from your tamed animals."
+QUEST_DOG_TITLE,A faithful companion
+QUEST_DOG_DESC,Offer meat to a stray dog until it is tamed (level 3 required). It follows you and improves your hunting.
+QUEST_HORSE_TITLE,Rider
+QUEST_HORSE_DESC,"Tame a horse with vegetables or berries (level 5 required), then ride it."

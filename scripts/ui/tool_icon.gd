@@ -21,6 +21,11 @@ func _draw() -> void:
 			_line(c + Vector2(-18, 22) * u, c + Vector2(-4, 4) * u, WOOD, 6.0 * u)
 			draw_arc(c + Vector2(4, -4) * u, 20.0 * u, deg_to_rad(110.0), deg_to_rad(330.0), 20, DARK, 9.0 * u, true)
 			draw_arc(c + Vector2(4, -4) * u, 20.0 * u, deg_to_rad(110.0), deg_to_rad(330.0), 20, METAL, 5.0 * u, true)
+		"tool_hoe":
+			_line(c + Vector2(-14, 24) * u, c + Vector2(12, -20) * u, WOOD, 6.0 * u)
+			var blade := PackedVector2Array([c + Vector2(4, -22) * u, c + Vector2(26, -10) * u, c + Vector2(22, -2) * u, c + Vector2(8, -10) * u])
+			draw_colored_polygon(_grow(blade, c, 1.15), DARK)
+			draw_colored_polygon(blade, METAL)
 		"tool_hunting_bow":
 			draw_arc(c + Vector2(-8, 0) * u, 26.0 * u, deg_to_rad(-62.0), deg_to_rad(62.0), 20, DARK, 8.0 * u, true)
 			draw_arc(c + Vector2(-8, 0) * u, 26.0 * u, deg_to_rad(-62.0), deg_to_rad(62.0), 20, WOOD, 5.0 * u, true)
