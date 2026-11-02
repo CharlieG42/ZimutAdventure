@@ -31,8 +31,9 @@ func _spawn_all() -> void:
 		var animal := animal_scene.instantiate() as Node3D
 		# Un lièvre sur trois, le reste des cerfs (l'espèce se choisit avant _ready).
 		animal.set("species", "rabbit" if spawned % 3 == 2 else "deer")
-		add_child(animal)
+		# Position AVANT add_child : l'animal prend son point d'apparition comme territoire.
 		animal.position = Vector3(x, y + 1.0, z)
+		add_child(animal)
 		spawned += 1
 	print("AnimalSpawner: placed %d animals" % spawned)
 

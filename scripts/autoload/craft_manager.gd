@@ -18,6 +18,12 @@ const RECIPES := {
 		"ingredients": {"item_wood": 2, "item_stone": 1},
 		"level": 2,
 	},
+	"tool_hoe": {
+		"name": "CRAFT_HOE",
+		"category": "tools",
+		"ingredients": {"item_wood": 3, "item_stone": 2},
+		"level": 3,
+	},
 	"tool_hunting_bow": {
 		"name": "CRAFT_HUNTING_BOW",
 		"category": "weapons",
@@ -35,6 +41,12 @@ const RECIPES := {
 		"name": "CRAFT_CAMP_BED",
 		"category": "furniture",
 		"ingredients": {"item_wood": 4},
+		"level": 3,
+	},
+	"building_farm_plot": {
+		"name": "CRAFT_FARM_PLOT",
+		"category": "buildings",
+		"ingredients": {"item_wood": 5, "item_stone": 2},
 		"level": 3,
 	},
 	"building_shelter": {

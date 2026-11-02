@@ -152,3 +152,58 @@ ITEM_TOOL_SICKLE,serpette
 ITEM_ITEM_BERRIES,baies sauvages
 MAP_LEGEND_TREE,Arbre
 MAP_LEGEND_BERRY,Baies
+ACTION_PLANT,Semer une graine
+ACTION_NEED_HOE,Bêcher (houe requise)
+ACTION_NEED_SEEDS,Semer (graines requises)
+ACTION_HARVEST,Récolter les légumes
+TOAST_NEED_HOE,Il faut une houe équipée pour travailler la terre.
+TOAST_NEED_SEEDS,Il vous faut des graines (cueillez des baies pour en trouver).
+TOAST_PLANTED,Graine semée : la récolte sera prête dans quelques minutes.
+ACTION_TAME,Nourrir pour apprivoiser
+ACTION_NEED_FOOD,Apprivoiser (nourriture requise)
+ACTION_MILK,Traire
+ACTION_SHEAR,Tondre (serpette)
+ACTION_EGGS,Ramasser les œufs
+ACTION_MOUNT,Monter
+ACTION_DISMOUNT,Descendre
+ACTION_DOG_STAY,Ordonner de rester
+ACTION_DOG_FOLLOW,Appeler le chien
+TOAST_DOG_FOLLOW,Le chien vous suit.
+TOAST_DOG_STAY,Le chien reste ici.
+TOAST_MOUNTED,À cheval ! Agissez pour descendre.
+TOAST_TAME_LEVEL,%s : niveau %d requis pour l'apprivoiser.
+TOAST_NEED_FOOD,%s : il faut de la nourriture (%s).
+TOAST_TRUST,%s prend confiance (%d/%d).
+TOAST_TAMED,%s apprivoisé(e) !
+TOAST_NEED_SICKLE_SHEAR,Il faut une serpette équipée pour tondre.
+ANIMAL_COW,La vache
+ANIMAL_SHEEP,Le mouton
+ANIMAL_GOAT,La chèvre
+ANIMAL_CHICKEN,La poule
+ANIMAL_HORSE,Le cheval
+ANIMAL_DOG,Le chien
+HINT_TOOL_HOE,Houe équipée : approchez-vous d'une parcelle posée pour semer vos graines.
+CRAFT_HOE,Houe
+CRAFT_FARM_PLOT,Parcelle de culture
+ITEM_TOOL_HOE,houe
+ITEM_BUILDING_FARM_PLOT,parcelle de culture
+ITEM_ITEM_SEEDS,graines
+ITEM_ITEM_VEGETABLES,légumes
+ITEM_ITEM_MILK,lait
+ITEM_ITEM_WOOL,laine
+ITEM_ITEM_EGG,œuf
+MAP_LEGEND_DOMESTIC,Animaux de ferme
+QUEST_HOE_TITLE,La terre se travaille
+QUEST_HOE_DESC,Fabriquez une houe depuis le journal (niveau 3 requis).
+QUEST_PLOT_TITLE,Un potager
+QUEST_PLOT_DESC,"Fabriquez une parcelle de culture et posez-la depuis le sac (onglet Sac, bouton Poser)."
+QUEST_HARVEST_TITLE,Première récolte
+QUEST_HARVEST_DESC,"Équipez la houe, semez des graines sur la parcelle, attendez qu'elles poussent et récoltez 4 légumes."
+QUEST_LIVESTOCK_TITLE,L'élevage
+QUEST_LIVESTOCK_DESC,"Nourrissez une poule, un mouton, une vache ou une chèvre (légumes, baies ou graines) jusqu'à l'apprivoiser."
+QUEST_DAIRY_TITLE,Les produits de la ferme
+QUEST_DAIRY_DESC,"Récoltez 3 fois du lait, de la laine (à la serpette) ou des œufs auprès de vos bêtes apprivoisées."
+QUEST_DOG_TITLE,Un fidèle compagnon
+QUEST_DOG_DESC,Offrez de la viande à un chien errant jusqu'à l'apprivoiser (niveau 3 requis). Il vous suivra et améliorera votre chasse.
+QUEST_HORSE_TITLE,Cavalier
+QUEST_HORSE_DESC,"Apprivoisez un cheval avec des légumes ou des baies (niveau 5 requis), puis montez-le."

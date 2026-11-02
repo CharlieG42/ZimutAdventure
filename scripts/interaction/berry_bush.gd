@@ -84,6 +84,8 @@ func _on_interact(_interactor: Node3D) -> void:
 	var inventory := InteractionManager.get_inventory()
 	if inventory != null:
 		inventory.call("add_item", "item_berries", amount)
+		# Quelques graines au passage : de quoi commencer un potager.
+		inventory.call("add_item", "item_seeds", randi_range(1, 2))
 	var sfx := InteractionManager.get_sfx()
 	if sfx != null:
 		sfx.call("play", load("res://assets/audio/pickup/collect.wav"), -8.0, 1.3)

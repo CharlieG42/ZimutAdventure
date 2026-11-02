@@ -10,6 +10,7 @@ const MAX_STRUCTURES := 40
 const PLACEABLE := {
 	"furniture_camp_bed": "camp_bed",
 	"building_shelter": "shelter",
+	"building_farm_plot": "farm_plot",
 }
 
 var _landscape: Node3D
@@ -40,17 +41,22 @@ func place(item_id: String, origin: Vector3, yaw: float) -> String:
 		if absf(h - ground) > MAX_SLOPE:
 			return "TOAST_TOO_STEEP"
 	var position := Vector3(origin.x, ground, origin.z)
-	_spawn(PLACEABLE[item_id], position, yaw)
-	_records.append({"item": item_id, "pos": position, "yaw": yaw})
+	var node := _spawn(PLACEABLE[item_id], position, yaw)
+	_records.append({"item": item_id, "pos": position, "yaw": yaw, "node": node})
 	_save()
 	return ""
 
 func _spawn(kind: String, position: Vector3, yaw: float) -> Node3D:
-	var structure := PlacedStructure.create(kind)
+	var structure: Node3D = FarmPlot.create() if kind == "farm_plot" else PlacedStructure.create(kind)
 	structure.position = position
 	structure.rotation.y = yaw
 	add_child(structure)
+	if structure is FarmPlot:
+		(structure as FarmPlot).changed.connect(_on_plot_changed)
 	return structure
+
+func _on_plot_changed(_plot: Node) -> void:
+	_save()
 
 func _ground_height(x: float, z: float) -> float:
 	if _landscape != null and _landscape.has_method("terrain_height_at"):
@@ -68,14 +74,23 @@ func _load() -> void:
 			continue
 		var position: Vector3 = entry.get("pos", Vector3.ZERO)
 		var yaw := float(entry.get("yaw", 0.0))
-		_spawn(PLACEABLE[entry["item"]], position, yaw)
-		_records.append({"item": entry["item"], "pos": position, "yaw": yaw})
+		var node := _spawn(PLACEABLE[entry["item"]], position, yaw)
+		if node is FarmPlot:
+			(node as FarmPlot).apply_state(entry)
+		_records.append({"item": entry["item"], "pos": position, "yaw": yaw, "node": node})
 
 func _save() -> void:
 	if not _autosave:
 		return
+	var saved: Array = []
+	for record in _records:
+		var entry := {"item": record["item"], "pos": record["pos"], "yaw": record["yaw"]}
+		var node: Object = record.get("node")
+		if node != null and is_instance_valid(node) and node is FarmPlot:
+			entry.merge((node as FarmPlot).get_state())
+		saved.append(entry)
 	var config := ConfigFile.new()
-	config.set_value("structures", "list", _records)
+	config.set_value("structures", "list", saved)
 	config.save(SAVE_PATH)
 
 ## API de test : ne touche pas au disque.
