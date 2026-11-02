@@ -60,6 +60,20 @@ func _initialize() -> void:
 	weather.call("enable_effects_for_test", 0)
 	_check(float(weather.call("crop_factor")) > 1.0, "printemps : cultures plus rapides")
 
+	# --- Aspect des surfaces (neige, feuillage, humidité) -------------------------------------
+	weather.call("enable_effects_for_test", 18)
+	weather.call("snap_surfaces")
+	_check(float(weather.call("get_snow_amount")) >= 0.8, "hiver : sol enneigé")
+	weather.call("enable_effects_for_test", 12)
+	weather.call("snap_surfaces")
+	_check(float(weather.call("get_snow_amount")) == 0.0 and float(weather.call("get_foliage_tint_amount")) > 0.5, "automne : pas de neige, feuillage roussi")
+	weather.call("enable_effects_for_test", 6)
+	weather.call("snap_surfaces")
+	_check(float(weather.call("get_foliage_tint_amount")) == 0.0, "été : feuillage naturel")
+	_check(load("res://assets/landscapes/shaders/water_surface.gdshader") is Shader, "shader de l'eau chargé")
+
+	weather.call("enable_effects_for_test", 0)
+
 	# --- Jours qui passent --------------------------------------------------------------------------------
 	clock.set("day", 0)
 	clock.call("set_hour", 22.0)

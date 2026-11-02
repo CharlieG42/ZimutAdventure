@@ -38,6 +38,16 @@ const SEASON_TINT := {
 	"winter": Color(0.86, 0.93, 1.05),
 }
 ## Vitesse de pousse des cultures selon la saison.
+## Teinte du feuillage et intensité selon la saison : [couleur, force].
+const FOLIAGE := {
+	"spring": [Color(0.5, 0.85, 0.3), 0.18],
+	"summer": [Color(0.4, 0.6, 0.2), 0.0],
+	"autumn": [Color(0.88, 0.5, 0.14), 0.7],
+	"winter": [Color(0.55, 0.5, 0.42), 0.45],
+}
+## Neige au sol visée selon la saison (la neige qui tombe l'épaissit).
+const SNOW_GROUND := {"spring": 0.0, "summer": 0.0, "autumn": 0.0, "winter": 0.8}
+
 const CROP_FACTOR := {"spring": 1.15, "summer": 1.0, "autumn": 0.9, "winter": 0.5}
 const THIRST_FACTOR := {"spring": 1.0, "summer": 1.3, "autumn": 1.0, "winter": 0.85}
 const HUNGER_FACTOR := {"spring": 1.0, "summer": 1.0, "autumn": 1.0, "winter": 1.25}
@@ -45,6 +55,10 @@ const HUNGER_FACTOR := {"spring": 1.0, "summer": 1.0, "autumn": 1.0, "winter": 1
 var _day: int = 0
 var _weather: String = CLEAR
 var _season: String = "spring"
+var _snow: float = 0.0
+var _wet: float = 0.0
+var _tint: Color = Color(0.4, 0.6, 0.2)
+var _tint_amount: float = 0.0
 var _dim: float = 0.0
 var _fog: float = 0.0
 var _autosave: bool = DisplayServer.get_name() != "headless"
@@ -67,6 +81,8 @@ func _ready() -> void:
 	_fog = float(LOOK[_weather][1])
 	_build_particles()
 	_refresh_particles()
+	if _effects:
+		snap_surfaces()
 
 func _clock() -> Node:
 	return get_node_or_null("/root/DayNightCycle")
@@ -133,6 +149,9 @@ func hunger_factor() -> float:
 ## API de test : active les effets de saison et de météo malgré le mode headless.
 func enable_effects_for_test(day: int) -> void:
 	_effects = true
+	_snow = 0.0
+	_wet = 0.0
+	_tint_amount = 0.0
 	_autosave = false
 	_day = day
 	_season = season_for(day)
@@ -165,11 +184,46 @@ func _process(delta: float) -> void:
 	clock.set("weather_dim", _dim)
 	clock.set("weather_fog", _fog)
 	clock.set("season_tint", SEASON_TINT[_season])
+	_update_surfaces(delta)
 	_follow_player()
 	_elapsed_save += delta
 	if _elapsed_save > 10.0:
 		_elapsed_save = 0.0
 		_save()
+
+## Neige, humidité et teinte du feuillage rejoignent doucement leur cible (variables globales des shaders).
+func _update_surfaces(delta: float) -> void:
+	var snow_target: float = SNOW_GROUND[_season] + (0.2 if _weather == SNOW else 0.0)
+	var wet_target := 1.0 if _weather == RAIN else (0.35 if _weather == CLOUDY and _wet > 0.35 else 0.0)
+	var foliage: Array = FOLIAGE[_season]
+	_snow = move_toward(_snow, snow_target, 0.06 * delta)
+	_wet = move_toward(_wet, wet_target, 0.12 * delta)
+	_tint = _tint.lerp(foliage[0], clampf(0.5 * delta, 0.0, 1.0))
+	_tint_amount = move_toward(_tint_amount, float(foliage[1]), 0.05 * delta)
+	_push_surfaces()
+
+func _push_surfaces() -> void:
+	RenderingServer.global_shader_parameter_set("snow_amount", _snow)
+	RenderingServer.global_shader_parameter_set("wetness", _wet)
+	RenderingServer.global_shader_parameter_set("foliage_tint", _tint)
+	RenderingServer.global_shader_parameter_set("foliage_tint_amount", _tint_amount)
+
+## Apparence immédiate des surfaces pour la saison et le temps courants (chargement, tests, captures).
+func snap_surfaces() -> void:
+	_snow = float(SNOW_GROUND[_season]) + (0.2 if _weather == SNOW else 0.0)
+	_wet = 1.0 if _weather == RAIN else 0.0
+	_tint = FOLIAGE[_season][0]
+	_tint_amount = float(FOLIAGE[_season][1])
+	_push_surfaces()
+
+func get_snow_amount() -> float:
+	return _snow
+
+func get_wetness() -> float:
+	return _wet
+
+func get_foliage_tint_amount() -> float:
+	return _tint_amount
 
 func _on_day_changed(day: int) -> void:
 	_day = day
@@ -235,8 +289,8 @@ func _refresh_particles() -> void:
 		_particles.gravity = Vector3(0.0, -10.0, 0.0)
 	elif kind == SNOW:
 		var flake := SphereMesh.new()
-		flake.radius = 0.09
-		flake.height = 0.18
+		flake.radius = 0.07
+		flake.height = 0.14
 		flake.radial_segments = 4
 		flake.rings = 2
 		material.albedo_color = Color(1.0, 1.0, 1.0, 0.9)

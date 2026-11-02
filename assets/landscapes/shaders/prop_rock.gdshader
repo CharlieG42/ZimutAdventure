@@ -8,6 +8,9 @@ uniform float grain_scale : hint_range(0.1, 20.0) = 4.0;
 uniform float grain_strength : hint_range(0.0, 1.0) = 0.35;
 uniform float roughness_base : hint_range(0.0, 1.0) = 0.9;
 
+global uniform float snow_amount;
+global uniform float wetness;
+
 varying vec3 v_world_pos;
 varying vec3 v_normal;
 
@@ -70,6 +73,11 @@ void fragment() {
 
 	float ndotl = max(dot(n, vec3(0.4, 0.8, 0.3)), 0.0);
 	vec3 shaded = mix(albedo_dark.rgb * 0.6, col, ndotl * 0.5 + 0.5);
+
+	// Neige sur le dessus des rochers, pluie qui assombrit la pierre.
+	shaded *= 1.0 - 0.25 * wetness;
+	float snow_on = snow_amount * smoothstep(0.45, 0.8, up + (grain - 0.5) * 0.3);
+	shaded = mix(shaded, vec3(0.92, 0.95, 1.0), snow_on * 0.9);
 
 	ALBEDO = shaded;
 	ROUGHNESS = roughness_base;

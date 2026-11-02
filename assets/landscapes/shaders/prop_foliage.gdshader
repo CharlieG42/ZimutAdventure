@@ -9,6 +9,13 @@ uniform float light_boost : hint_range(0.0, 1.0) = 0.4;
 uniform float wind_strength : hint_range(0.0, 1.0) = 0.12;
 uniform float wind_speed : hint_range(0.0, 10.0) = 1.6;
 uniform float wind_scale : hint_range(0.01, 2.0) = 0.35;
+// 0 = insensible aux saisons (cactus), 1 = feuillage qui jaunit, roussit et se couvre de neige.
+uniform float season_response : hint_range(0.0, 1.0) = 0.0;
+
+global uniform float snow_amount;
+global uniform float wetness;
+global uniform vec4 foliage_tint : source_color;
+global uniform float foliage_tint_amount;
 
 varying vec3 v_world_pos;
 varying vec3 v_normal;
@@ -59,6 +66,14 @@ void fragment() {
 	float light_dir = max(dot(n, normalize(vec3(0.4, 0.8, 0.3))), 0.0);
 	col = mix(col, albedo_light.rgb, up * light_boost);
 	col *= 0.75 + light_dir * 0.25;
+
+	// Saison : le feuillage vire vers la teinte du moment (jaune/orangé en automne, pâle en hiver).
+	float tint_mix = clamp(foliage_tint_amount * season_response * (0.65 + variation * 0.7), 0.0, 1.0);
+	col = mix(col, foliage_tint.rgb * (0.55 + variation * 0.55), tint_mix);
+	// Neige sur les faces vers le haut.
+	float snow_on = snow_amount * (0.35 + 0.65 * season_response) * smoothstep(0.35, 0.85, up);
+	col = mix(col, vec3(0.93, 0.96, 1.0), snow_on * 0.85);
+	col *= 1.0 - 0.18 * wetness;
 
 	ALBEDO = col;
 	ROUGHNESS = 1.0;
