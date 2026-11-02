@@ -1,8 +1,9 @@
-[gd_scene load_steps=22 format=3 uid="uid://zimutcanyonplay"]
+[gd_scene load_steps=23 format=3 uid="uid://zimutcanyonplay"]
 
 [ext_resource type="Script" path="res://scripts/world/landscape_manager.gd" id="1_landscape"]
 [ext_resource type="Script" path="res://scripts/world/predator_spawner.gd" id="99_predators"]
 [ext_resource type="Script" path="res://scripts/world/site_spawner.gd" id="98_sites"]
+[ext_resource type="Script" path="res://scripts/world/fishing_spawner.gd" id="97_fishing"]
 [ext_resource type="PackedScene" uid="uid://zimutplayer0001" path="res://scenes/player/player.tscn" id="2_player"]
 [ext_resource type="Script" path="res://scripts/world/collectible_spawner.gd" id="3_spawner"]
 [ext_resource type="PackedScene" path="res://scenes/interaction/collectible_item.tscn" id="4_item"]
@@ -147,6 +148,9 @@ animal_scene = ExtResource("18_domestic")
 
 [node name="Sites" type="Node3D" parent="."]
 script = ExtResource("98_sites")
+
+[node name="Fishing" type="Node3D" parent="."]
+script = ExtResource("97_fishing")
 
 [node name="Structures" type="Node3D" parent="."]
 script = ExtResource("14_structures")

@@ -69,8 +69,8 @@ func _init() -> void:
 	var want_stone: int = maxi(0, 4 - int(inventory.call("count_of", "item_stone")))
 	if int(missing.get("item_wood", 0)) != want_wood or int(missing.get("item_stone", 0)) != want_stone:
 		errors.append("get_missing doit lister %d bois et %d pierres : %s" % [want_wood, want_stone, str(missing)])
-	if (craft.call("get_recipes_in_category", "tools") as Array).size() != 4:
-		errors.append("la catégorie outils doit contenir hache, serpette, houe et arrosoir")
+	if (craft.call("get_recipes_in_category", "tools") as Array).size() != 5:
+		errors.append("la catégorie outils doit contenir hache, serpette, houe, arrosoir et canne")
 
 	# --- Journal -----------------------------------------------------------------
 	var world := (load("res://scenes/world/canyon_playground.tscn") as PackedScene).instantiate()

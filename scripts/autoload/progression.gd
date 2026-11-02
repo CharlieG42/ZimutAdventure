@@ -22,6 +22,7 @@ const XP := {
 	"product": 6,
 	"tame": 35,
 	"cook": 10,
+	"fish": 12,
 	"discover": 25,
 	"treasure": 20,
 	"water": 3,

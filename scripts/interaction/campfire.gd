@@ -13,6 +13,8 @@ const COOK_RECIPES := [
 	{"in": {"item_milk": 1, "item_vegetables": 1}, "out": "item_soup", "toast": "TOAST_COOKED"},
 	{"in": {"item_wheat": 2}, "out": "item_bread", "toast": "TOAST_COOKED"},
 	{"in": {"item_egg": 1}, "out": "item_boiled_egg", "toast": "TOAST_COOKED"},
+	{"in": {"item_fish_big": 1}, "out": "item_grilled_fish_big", "toast": "TOAST_FISH_GRILLED"},
+	{"in": {"item_fish": 1}, "out": "item_grilled_fish", "toast": "TOAST_FISH_GRILLED"},
 	{"in": {"item_vegetables": 1}, "out": "item_roast_vegetables", "toast": "TOAST_COOKED"},
 ]
 
@@ -82,6 +84,8 @@ func _cook(interactor: Node3D) -> void:
 	var progression := InteractionManager.get_progression()
 	if progression != null:
 		progression.call("add_stat", "stat_cooked", 1)
+		if String(recipe["out"]).contains("fish"):
+			progression.call("add_stat", "stat_fish_cooked", 1)
 		progression.call("add_xp_for", "cook")
 	_notify(interactor, String(recipe["toast"]))
 

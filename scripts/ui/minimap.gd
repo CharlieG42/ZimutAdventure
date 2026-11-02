@@ -12,7 +12,7 @@ const VIEW_RADIUS := 55.0
 const REFRESH_PERIOD := 0.12
 const FRAME := Color(0.88, 0.64, 0.36, 1.0)
 const OUTLINE := Color(0.08, 0.05, 0.03, 0.9)
-const GROUPS := ["breakable", "wood", "stone", "animals", "campfire", "structures", "choppable", "berries", "domestic", "sites"]
+const GROUPS := ["breakable", "wood", "stone", "animals", "campfire", "structures", "choppable", "berries", "domestic", "sites", "fishing"]
 
 var _landscape: Node3D
 var _player: Node3D
@@ -148,6 +148,9 @@ func _draw_marker(kind: String, pos: Vector2) -> void:
 		"berries":
 			draw_circle(pos, 4.0, OUTLINE)
 			draw_circle(pos, 2.6, Color(0.9, 0.15, 0.25))
+		"fishing":
+			draw_circle(pos, 6.0, OUTLINE)
+			draw_circle(pos, 4.4, Color(0.3, 0.6, 0.95))
 		"sites":
 			var star := PackedVector2Array([pos + Vector2(0, -8), pos + Vector2(2, -2), pos + Vector2(8, 0), pos + Vector2(2, 2), pos + Vector2(0, 8), pos + Vector2(-2, 2), pos + Vector2(-8, 0), pos + Vector2(-2, -2)])
 			draw_colored_polygon(star, OUTLINE)

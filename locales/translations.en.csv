@@ -300,3 +300,25 @@ QUEST_EXPLORE_TITLE,Explorer
 QUEST_EXPLORE_DESC,"Discover 3 sites (ruins, caves) by walking up to them: the map reveals itself and fast travel opens (level 3)."
 QUEST_TREASURE_TITLE,Relic hunter
 QUEST_TREASURE_DESC,"Open the site chests and bring back 2 ancient relics."
+CRAFT_FISHING_ROD,Fishing rod
+ITEM_TOOL_FISHING_ROD,fishing rod
+ITEM_ITEM_FISH,trout
+ITEM_ITEM_FISH_BIG,big carp
+ITEM_ITEM_GRILLED_FISH,grilled trout
+ITEM_ITEM_GRILLED_FISH_BIG,grilled carp
+ACTION_FISH_NEED_ROD,Pond (rod needed)
+ACTION_FISH_CAST,Cast the line
+ACTION_FISH_REEL,Reel in
+ACTION_FISH_STRIKE,Strike!
+TOAST_FISH_NEED_ROD,You need a fishing rod (level 2).
+TOAST_FISH_CAST,The line is in the water… be patient.
+TOAST_FISH_TOO_EARLY,Nothing bites: you reel in.
+TOAST_FISH_BITE,A bite! Strike now!
+TOAST_FISH_ESCAPED,The fish got away.
+TOAST_FISH_CAUGHT,Caught: %s!
+TOAST_FISH_GRILLED,The fish grills beautifully.
+MAP_LEGEND_POND,Fishing pond
+QUEST_FISH_TITLE,By the water
+QUEST_FISH_DESC,"Craft a fishing rod (level 2), walk up to a pond, cast and strike as soon as it bites: catch 3 fish. Dawn, dusk and rain make them bite faster."
+QUEST_GRILL_TITLE,Grilled fish
+QUEST_GRILL_DESC,"Grill 2 fish on a campfire."
