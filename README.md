@@ -20,6 +20,7 @@ Moteur : **Godot 4** (GDScript) · Cibles : PC (Windows / macOS / Linux) + **And
 | Regarder | Souris | Glisser sur l'écran, ou stick droit |
 | Sauter | Espace | Bouton saut |
 | Interagir | E | Bouton interaction (s'allume face à un objet) |
+| Viser à l'arc | Clic droit maintenu | Visée automatique quand l'arc est équipé |
 | Sac / journal | C | Bouton Journal |
 | Vue 1re / 3e personne | V | Bouton 1P/3P |
 
@@ -37,11 +38,12 @@ La course consomme de l'endurance (barre discrète en bas) ; la boussole en haut
 - **Constructions** : le lit de camp et l'abri fabriqués se posent depuis le Sac (bouton Poser, devant le joueur, terrain plat uniquement). Le lit rétablit l'endurance, l'abri permet de dormir la nuit jusqu'à 7 h. Elles sont sauvegardées (`user://structures.cfg`) et apparaissent sur la carte, avec le feu de camp.
 - **Animaux inoffensifs** : 6 animaux (cerfs et lièvres) errent dans le canyon, broutent et fuient le joueur s'il s'approche trop.
 - **Faim et soif** : deux jauges (barres discrètes sous l'endurance) décroissent avec le temps — plus vite en courant. Vides, elles ralentissent la récupération d'endurance ; les deux vides bloquent la course. Buvez aux sources du canyon (E, avec remplissage), mangez la viande cuite depuis le Sac (bouton Manger). Sauvegarde automatique.
-- **Chasse et cuisson** : fabriquez l'arc de chasse et des flèches (x4 avec 1 bois + 1 pierre), tirez avec clic gauche / bouton tactile dédié (apparaît quand l'arc est possédé). Une proie touchée fuit puis lâche de la viande crue ; cuisez-la sur un feu de camp plein (« Cuire la viande »). Chaîne de quêtes : première chasse → repas chaud.
+- **Chasse et cuisson** : fabriquez l'arc de chasse et des flèches (x4 avec 1 bois + 1 pierre), visez avec le clic droit maintenu (zoom + tir tendu, moins de dispersion), tirez avec clic gauche / bouton tactile dédié (apparaît quand l'arc est possédé). Une proie touchée fuit puis lâche de la viande crue ; cuisez-la sur un feu de camp plein (« Cuire la viande »). Chaîne de quêtes : première chasse → repas chaud.
 
 Régénérer les images du HUD : `python3 tools/generate_ui_assets.py` puis `godot --headless --path . -s tools/make_hud_theme.gd`. Note : Godot 4.7 possède une classe native `VirtualJoystick`, notre stick s'appelle donc `TouchStick`.
 
 Régénérer les props GLB (Kenney CC0 + ruines composées) : `python3 tools/make_glb_props.py all --kenney-root <checkout du miroir github.com/shorepine/kenney>` — voir [assets/props/README.md](assets/props/README.md).
+Régénérer les cactus saguaro : `python3 tools/make_cactus_glb.py all` (stdlib pur, aucune dépendance).
 
 ## Structure du projet
 

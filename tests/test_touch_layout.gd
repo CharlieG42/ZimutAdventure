@@ -93,6 +93,29 @@ func _init() -> void:
 	if cam_received.is_empty() or cam_received[-1].x >= 0.0:
 		errors.append("camera joystick should emit -x on leftward drag, got %s" % (cam_received[-1] if not cam_received.is_empty() else "nothing"))
 
+	# --- Chevauchements à plusieurs tailles d'écran (fit explicite, testable) ---
+	for vp in [Vector2(360, 640), Vector2(1280, 720), Vector2(1280, 860), Vector2(800, 600)]:
+		hud._fit_to_viewport(vp)
+		await process_frame
+		var tracked: Array[Control] = [
+			joystick, camera_joystick, hud.get_node("Overlay/ActionPad"),
+			hud.get_node("Overlay/MiniMap"), hud.get_node("Overlay/Vitals"),
+			hud.get_node("Overlay/LevelBadge"), hud.get_node("Overlay/QuestTracker"),
+			hud.get_node("Overlay/Hotbar"),
+		]
+		var rects: Array = []
+		var names: Array = []
+		for c in tracked:
+			if c != null and c.visible:
+				rects.append(c.get_global_rect())
+				names.append(c.name)
+		for i in range(rects.size()):
+			for j in range(i + 1, rects.size()):
+				if (rects[i] as Rect2).intersects(rects[j] as Rect2):
+					errors.append("chevauchement %s/%s à %s : %s ∩ %s" % [names[i], names[j], str(vp), str(rects[i]), str(rects[j])])
+	hud._fit_to_viewport()
+	await process_frame
+
 	if errors.is_empty():
 		print("TEST_TOUCH_LAYOUT: PASS (look idx=%d, move joy idx=%d, cam joy idx=%d, sizes %s/%s)" % [look_idx, joy_idx, cam_idx, joystick.size, camera_joystick.size])
 		quit(0)

@@ -161,6 +161,8 @@ TOAST_NEED_SEEDS,Il vous faut des graines (cueillez des baies pour en trouver).
 TOAST_PLANTED,Graine semée : la récolte sera prête dans quelques minutes.
 ACTION_TAME,Nourrir pour apprivoiser
 ACTION_NEED_FOOD,Apprivoiser (nourriture requise)
+ACTION_TAME_WITH_FOOD,Nourrir avec %s pour apprivoiser
+ACTION_NEED_FOOD_LIST,Il lui faut : %s
 ACTION_MILK,Traire
 ACTION_SHEAR,Tondre (serpette)
 ACTION_EGGS,Ramasser les œufs

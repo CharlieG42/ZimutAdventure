@@ -20,18 +20,25 @@ func _build() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(Time.get_ticks_usec())
 	_bush = MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.62
-	sphere.height = 0.95
-	sphere.radial_segments = 10
-	sphere.rings = 6
-	var leaf := StandardMaterial3D.new()
-	leaf.albedo_color = Color(0.2, 0.38, 0.14)
-	leaf.roughness = 0.9
-	sphere.material = leaf
-	_bush.mesh = sphere
-	_bush.position = Vector3(0.0, 0.42, 0.0)
-	_bush.scale = Vector3(1.15, 0.8, 1.15)
+	# Buisson GLB (variantes Kenney) quand disponible, sphère procédurale sinon.
+	var variants := GlbPropLibrary.get_variant_meshes("shrub")
+	if not variants.is_empty():
+		_bush.mesh = variants[rng.randi() % variants.size()]
+		_bush.scale = Vector3.ONE * 1.8
+		_bush.position = Vector3(0.0, 0.0, 0.0)
+	else:
+		var sphere := SphereMesh.new()
+		sphere.radius = 0.62
+		sphere.height = 0.95
+		sphere.radial_segments = 10
+		sphere.rings = 6
+		var leaf := StandardMaterial3D.new()
+		leaf.albedo_color = Color(0.2, 0.38, 0.14)
+		leaf.roughness = 0.9
+		sphere.material = leaf
+		_bush.mesh = sphere
+		_bush.position = Vector3(0.0, 0.42, 0.0)
+		_bush.scale = Vector3(1.15, 0.8, 1.15)
 	_bush.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	add_child(_bush)
 	_berries = Node3D.new()
@@ -48,12 +55,19 @@ func _build() -> void:
 	red.emission_enabled = true
 	red.emission = Color(0.35, 0.0, 0.05)
 	berry_mesh.material = red
-	for i in 9:
+	for i in 12:
 		var berry := MeshInstance3D.new()
 		berry.mesh = berry_mesh
+		# Teinte légèrement variée par baie (rouge à orangé).
+		var mat := red.duplicate() as StandardMaterial3D
+		var t := rng.randf_range(0.0, 0.25)
+		mat.albedo_color = Color(0.78 + t * 0.5, 0.08 + t * 0.3, 0.16)
+		berry.material_override = mat
 		var angle := rng.randf_range(0.0, TAU)
-		var tilt := rng.randf_range(0.2, 1.2)
-		berry.position = Vector3(cos(angle) * sin(tilt) * 0.72, 0.42 + cos(tilt) * 0.42, sin(angle) * sin(tilt) * 0.72)
+		var tilt := rng.randf_range(0.2, 1.25)
+		var rr := rng.randf_range(0.62, 0.8)
+		berry.position = Vector3(cos(angle) * sin(tilt) * rr, 0.5 + cos(tilt) * 0.5, sin(angle) * sin(tilt) * rr)
+		berry.scale = Vector3.ONE * rng.randf_range(0.85, 1.2)
 		_berries.add_child(berry)
 	var area := CollisionShape3D.new()
 	var shape := SphereShape3D.new()

@@ -15,6 +15,11 @@ func can_interact() -> bool:
 func get_prompt() -> String:
 	return prompt_text
 
+## Arguments optionnels du prompt (ex. nourriture requise pour apprivoiser) :
+## si le texte traduit contient "%s", il est formaté avec ces arguments.
+func get_prompt_args() -> Array:
+	return []
+
 func interact(interactor: Node3D) -> bool:
 	if not can_interact():
 		return false

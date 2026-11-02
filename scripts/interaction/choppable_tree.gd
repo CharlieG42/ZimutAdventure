@@ -25,7 +25,13 @@ func _build() -> void:
 	_visual.name = "Visual"
 	add_child(_visual)
 	var tree_mesh := MeshInstance3D.new()
-	tree_mesh.mesh = VegetationGenerator.generate(VegetationGenerator.PlantType.PINE, rng)
+	# Pin GLB (variantes Kenney) quand disponible, maillage procédural sinon.
+	var variants := GlbPropLibrary.get_variant_meshes("pine")
+	if not variants.is_empty():
+		tree_mesh.mesh = variants[rng.randi() % variants.size()]
+		tree_mesh.scale = Vector3.ONE * 1.15
+	else:
+		tree_mesh.mesh = VegetationGenerator.generate(VegetationGenerator.PlantType.PINE, rng)
 	tree_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	_visual.add_child(tree_mesh)
 	# Zone d'interaction généreuse (aide à la visée) et tronc plein pour bloquer le joueur.

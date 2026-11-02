@@ -30,7 +30,13 @@ const PROPS := {
 		"nature/flower_purple_a.glb", "nature/flower_purple_b.glb", "nature/flower_purple_c.glb",
 		"nature/flower_yellow_a.glb", "nature/flower_yellow_b.glb", "nature/flower_yellow_c.glb",
 	],
-	"cactus": ["nature/cactus_short.glb", "nature/cactus_tall.glb"],
+	"cactus": [
+		"nature/cactus_short.glb", "nature/cactus_tall.glb",
+		# Saguaros générés en Python (tools/make_cactus_glb.py), couleurs dans les sommets.
+		"res://assets/props/generated/cactus_saguaro_a.glb",
+		"res://assets/props/generated/cactus_saguaro_b.glb",
+		"res://assets/props/generated/cactus_saguaro_c.glb",
+	],
 	# Rochers de grès générés en Python (tools/make_rock_glb.py) : couleurs dans les sommets.
 	"sandstone": [
 		"res://assets/props/generated/rock_1.glb", "res://assets/props/generated/rock_2.glb",

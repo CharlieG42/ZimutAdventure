@@ -56,6 +56,15 @@ enum ViewMode { FIRST_PERSON, THIRD_PERSON }
 @export var eye_height: float = 1.6
 @export var head_bob: bool = true
 @export var sprint_fov_boost: float = 6.0
+## Lissage exponentiel de la visée (yaw/pitch) : mouvements de caméra fluides.
+@export var look_smoothing: float = 18.0
+
+@export_group("Visée à l'arc")
+@export var aim_fov: float = 42.0
+@export var arrow_speed: float = 26.0
+@export var aim_arrow_speed: float = 30.0
+## Dispersion angulaire (radians) d'un tir sans visée.
+@export var hip_spread: float = 0.03
 
 @export_group("Caméra 3ème personne")
 @export var third_person_distance: float = 4.5
@@ -77,6 +86,11 @@ var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var stamina: float = 1.0
 
 var _pitch: float = -0.25
+var _pitch_smooth: float = -0.25
+## Visée à l'arc active (bouton droit maintenu, ou automatique au tactile).
+var _aiming: bool = false
+var _last_aiming: bool = false
+var _last_equipped_tool: String = ""
 var _joystick_vector: Vector2 = Vector2.ZERO
 var _is_touch: bool = false
 var _view_mode: int = ViewMode.FIRST_PERSON
@@ -133,6 +147,7 @@ func _ready() -> void:
 	floor_constant_speed = true
 	_base_fov = camera.fov
 	_tp_distance = third_person_distance
+	_pitch_smooth = _pitch
 	_safe_position = global_position
 	_visuals_base_yaw = visuals.rotation.y
 	_cache_rest_pose()
@@ -349,9 +364,14 @@ func try_shoot_arrow() -> void:
 	host.add_child(arrow)
 	var from := camera.global_position + camera.global_transform.basis.z * -0.4
 	var aim := -camera.global_transform.basis.z
+	# Sans visée, la flèche disperse un peu ; en visée, tir tendu et plus rapide.
+	var dir := aim
+	if not _aiming and hip_spread > 0.0:
+		dir = dir.rotated(Vector3.UP, randf_range(-hip_spread, hip_spread))
+		dir = dir.rotated(Vector3.RIGHT, randf_range(-hip_spread, hip_spread)).normalized()
 	arrow.global_position = from
-	arrow.look_at(from + aim, Vector3.UP)
-	arrow.linear_velocity = aim * 26.0
+	arrow.look_at(from + dir, Vector3.UP)
+	arrow.linear_velocity = dir * (aim_arrow_speed if _aiming else arrow_speed)
 	arrow.angular_velocity = Vector3.ZERO
 
 func _hud_toast(message: String) -> void:
@@ -371,9 +391,10 @@ static func shape_stick(raw: Vector2, deadzone: float, curve: float) -> Vector2:
 # --- Caméra ------------------------------------------------------------------
 
 func _rotate_look(delta: Vector2) -> void:
+	# Yaw immédiat (1:1 avec la souris), pitch lissé dans _process : la caméra
+	# monte/descend sans saccade, le cap reste fidèle au mouvement.
 	rotate_y(-delta.x)
 	_pitch = clampf(_pitch - delta.y, _pitch_lo(), _pitch_hi())
-	_update_camera()
 
 func _pitch_lo() -> float:
 	return pitch_min if _view_mode == ViewMode.FIRST_PERSON else third_person_pitch_min
@@ -398,7 +419,7 @@ func _update_camera() -> void:
 	# Même rotation dans les deux modes : le pivot s'incline, et en 3ème
 	# personne la caméra orbite autour de lui (la visée = l'axe de la caméra).
 	camera.rotation = Vector3.ZERO
-	camera_pivot.rotation.x = _pitch
+	camera_pivot.rotation.x = _pitch_smooth
 
 ## Rapproche la caméra 3ème personne quand le décor (falaise, rocher) la gêne.
 func _update_third_person_camera(delta: float) -> void:
@@ -426,6 +447,16 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	_melee_cooldown = maxf(0.0, _melee_cooldown - delta)
+	# Visée à l'arc : bouton droit (PC) ou visée automatique au tactile quand l'arc est équipé.
+	var inventory := InteractionManager.get_inventory()
+	var bow_equipped: bool = inventory != null and inventory.is_equipped("tool_hunting_bow")
+	_aiming = bow_equipped and (Input.is_action_pressed("aim") or _is_touch)
+	if _aiming != _last_aiming:
+		_last_aiming = _aiming
+		var hud := get_tree().get_first_node_in_group("hud") if get_tree() != null else null
+		if hud != null and hud.has_method("set_aiming"):
+			hud.call("set_aiming", _aiming)
+	_update_held_tool()
 	if Input.is_action_just_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
 	if Input.is_action_just_pressed("toggle_view"):
@@ -542,13 +573,33 @@ func _track_landing(on_floor: bool) -> void:
 # --- Rendu : bob de caméra, FOV, animation du personnage ------------------------
 
 func _process(delta: float) -> void:
+	# Lissage de la visée verticale : le pivot suit le pitch cible en douceur.
+	var k := 1.0 - exp(-look_smoothing * delta)
+	_pitch_smooth = lerpf(_pitch_smooth, _pitch, k)
+	_update_camera()
 	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
 	if _view_mode == ViewMode.FIRST_PERSON:
 		_update_head_bob(delta, horizontal_speed)
 	var fov_target := _base_fov + (sprint_fov_boost if _sprinting and horizontal_speed > walk_speed else 0.0)
+	if _aiming:
+		fov_target = aim_fov
 	camera.fov = lerpf(camera.fov, fov_target, 1.0 - exp(-8.0 * delta))
 	if _view_mode == ViewMode.THIRD_PERSON:
 		_update_character(delta, horizontal_speed)
+
+## Affiche l'outil équipé dans la main droite (arc ou hache), sinon rien.
+func _update_held_tool() -> void:
+	var inventory := InteractionManager.get_inventory()
+	var equipped := "" if inventory == null else String(inventory.call("get_equipped"))
+	if equipped == _last_equipped_tool:
+		return
+	_last_equipped_tool = equipped
+	var bow_node := visuals.get_node_or_null("Torso/ArmR/HeldBow") as Node3D
+	var axe_node := visuals.get_node_or_null("Torso/ArmR/HeldAxe") as Node3D
+	if bow_node != null:
+		bow_node.visible = equipped == "tool_hunting_bow"
+	if axe_node != null:
+		axe_node.visible = equipped == "tool_stone_axe"
 
 func _update_head_bob(delta: float, horizontal_speed: float) -> void:
 	_land_dip = move_toward(_land_dip, 0.0, delta * 0.6)

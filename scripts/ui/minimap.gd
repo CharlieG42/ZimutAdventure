@@ -6,6 +6,7 @@ extends Control
 
 signal pressed
 
+## Taille par défaut ; le HUD peut la réduire sur les petits écrans (anchors).
 const SIZE_PX := 170.0
 ## Rayon du monde affiché (mètres) : les repères proches restent lisibles.
 const VIEW_RADIUS := 55.0
@@ -21,8 +22,11 @@ var _elapsed: float = 0.0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	custom_minimum_size = Vector2(SIZE_PX, SIZE_PX)
-	size = Vector2(SIZE_PX, SIZE_PX)
+	custom_minimum_size = Vector2(110.0, 110.0)
+
+## Taille courante en pixels (le HUD ajuste les offsets selon l'écran).
+func _px() -> float:
+	return maxf(size.x, 1.0)
 
 func _gui_input(event: InputEvent) -> void:
 	var is_press: bool = false
@@ -53,8 +57,9 @@ func _terrain_size() -> float:
 
 ## Conversion monde (x, z) -> pixel dans le widget, joueur au centre.
 func world_to_local(world_x: float, world_z: float) -> Vector2:
-	var center := Vector2(SIZE_PX, SIZE_PX) * 0.5
-	var px_per_m := SIZE_PX * 0.5 / VIEW_RADIUS
+	var px := _px()
+	var center := Vector2(px, px) * 0.5
+	var px_per_m := px * 0.5 / VIEW_RADIUS
 	var origin := Vector2.ZERO
 	if _player != null and is_instance_valid(_player):
 		origin = Vector2(_player.global_position.x, _player.global_position.z)
@@ -66,8 +71,9 @@ func _ensure_texture() -> void:
 	_texture = MapPanel.build_terrain_texture(_landscape, 128)
 
 func _draw() -> void:
-	var center := Vector2(SIZE_PX, SIZE_PX) * 0.5
-	var radius := SIZE_PX * 0.5
+	var px := _px()
+	var center := Vector2(px, px) * 0.5
+	var radius := px * 0.5
 	draw_circle(center, radius + 4.0, OUTLINE)
 	_ensure_texture()
 	if _texture != null and _player != null and is_instance_valid(_player):
