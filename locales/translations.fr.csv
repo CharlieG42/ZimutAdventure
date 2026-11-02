@@ -235,3 +235,16 @@ QUEST_WOOL_BED_TITLE,Un bon lit douillet
 QUEST_WOOL_BED_DESC,"Tondez des moutons à la serpette et fabriquez un lit en laine (niveau 4) : il permet de dormir la nuit."
 QUEST_PEN_TITLE,Un enclos pour le bétail
 QUEST_PEN_DESC,"Fabriquez un enclos (niveau 4) et posez-le : le bétail apprivoisé alentour y emménage et produit plus vite."
+SEASON_SPRING,Printemps
+SEASON_SUMMER,Été
+SEASON_AUTUMN,Automne
+SEASON_WINTER,Hiver
+WEATHER_CLEAR,dégagé
+WEATHER_CLOUDY,nuageux
+WEATHER_RAIN,pluie
+WEATHER_SNOW,neige
+TOAST_SEASON,Nouvelle saison : %s
+TOAST_RAIN,Il se met à pleuvoir : vos cultures sont arrosées.
+TOAST_SNOW,La neige se met à tomber.
+QUEST_SEASONS_TITLE,Au fil des saisons
+QUEST_SEASONS_DESC,"Voyez passer deux saisons (6 jours de jeu chacune). Les cultures poussent plus lentement en hiver et la soif est plus vive en été ; la pluie arrose les parcelles."

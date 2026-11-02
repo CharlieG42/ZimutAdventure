@@ -118,6 +118,8 @@ const LEG_HIP_Y := 0.86
 const ARM_SHOULDER_Y := 0.375
 
 func _ready() -> void:
+	# Le groupe est la façon dont HUD, animaux, spawners et météo retrouvent le joueur.
+	add_to_group("player")
 	_is_touch = PlatformInfo.is_touch()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	floor_snap_length = 0.6

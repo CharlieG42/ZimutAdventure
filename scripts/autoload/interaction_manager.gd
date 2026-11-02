@@ -79,6 +79,14 @@ static func get_progression() -> Node:
 		return tree.root.get_node_or_null("Progression")
 	return null
 
+static func get_weather() -> Node:
+	if Engine.has_singleton("Weather"):
+		return Engine.get_singleton("Weather")
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree != null and tree.root != null:
+		return tree.root.get_node_or_null("Weather")
+	return null
+
 static func get_day_night() -> Node:
 	if Engine.has_singleton("DayNightCycle"):
 		return Engine.get_singleton("DayNightCycle")

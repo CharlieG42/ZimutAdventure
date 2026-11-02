@@ -47,9 +47,17 @@ func _ready() -> void:
 	_build()
 	_refresh_visuals()
 
-func _process(_delta: float) -> void:
-	if get_stage() == Stage.GROWING:
-		_refresh_visuals()
+func _process(delta: float) -> void:
+	if get_stage() != Stage.GROWING:
+		return
+	var weather := InteractionManager.get_weather()
+	if weather != null:
+		# Saison : la pousse accélère ou ralentit en décalant l'horloge de la parcelle.
+		_time_offset += (float(weather.call("crop_factor")) - 1.0) * delta
+		# La pluie arrose les cultures toute seule, une fois.
+		if not watered and bool(weather.call("is_raining")):
+			_water(false)
+	_refresh_visuals()
 
 # --- Temps et état -----------------------------------------------------------------------
 
@@ -142,15 +150,16 @@ func _on_interact(_interactor: Node3D) -> void:
 		_refresh_visuals()
 		changed.emit(self)
 
-func _water() -> void:
+func _water(by_player: bool = true) -> void:
 	watered = true
 	# L'eau avance la pousse : on recule la date de semis.
 	planted_at -= grow_seconds() * WATER_BONUS
-	var progression := InteractionManager.get_progression()
-	if progression != null:
-		progression.call("add_stat", "stat_watered", 1)
-		progression.call("add_xp_for", "water")
-	_toast(tr("TOAST_WATERED"))
+	if by_player:
+		var progression := InteractionManager.get_progression()
+		if progression != null:
+			progression.call("add_stat", "stat_watered", 1)
+			progression.call("add_xp_for", "water")
+		_toast(tr("TOAST_WATERED"))
 	_refresh_visuals()
 	changed.emit(self)
 
