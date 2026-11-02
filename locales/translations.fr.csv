@@ -280,3 +280,23 @@ QUEST_CAMP_TITLE,Un camp à soi
 QUEST_CAMP_DESC,"Fabriquez un feu de camp (niveau 2) et posez-le depuis le sac : il se nourrit de bois, cuit vos plats et tient les rôdeurs à distance."
 QUEST_CHEST_TITLE,Ranger ses affaires
 QUEST_CHEST_DESC,"Fabriquez un coffre (niveau 3) et posez-le au camp : il range vos ressources, outils et flèches exceptés."
+MAP_LEGEND_SITE,Site découvert
+MAP_TRAVEL_TO,Voyager : %s
+SITE_START,Panneau de départ
+SITE_NAME_0,Ruines du Vieux Gué
+SITE_NAME_1,Grotte des Échos
+SITE_NAME_2,Colonnes brisées
+SITE_NAME_3,Grotte du Faucon
+SITE_NAME_4,Temple oublié
+SITE_NAME_5,Caverne rouge
+TOAST_DISCOVERED,Découvert : %s
+TOAST_TRAVEL_UNKNOWN,Ce lieu n'est pas encore découvert.
+TOAST_TRAVEL_LEVEL,Il faut le niveau 3 pour voyager vite.
+TOAST_TRAVEL_TIRED,Trop faim ou soif pour voyager.
+ACTION_TREASURE_OPEN,Ouvrir le trésor
+TOAST_TREASURE_FOUND,Trésor : %s
+ITEM_ITEM_RELIC,relique ancienne
+QUEST_EXPLORE_TITLE,Explorateur
+QUEST_EXPLORE_DESC,"Découvrez 3 sites (ruines, grottes) en vous en approchant : la carte se dévoile et le voyage rapide s'ouvre (niveau 3)."
+QUEST_TREASURE_TITLE,Chasseur de reliques
+QUEST_TREASURE_DESC,"Ouvrez les coffres des sites et rapportez 2 reliques anciennes."
