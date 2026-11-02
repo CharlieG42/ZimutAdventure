@@ -33,6 +33,7 @@ static func _build_mesh(vertices: PackedVector3Array, normals: PackedVector3Arra
 	material.set_shader_parameter("albedo_light", color.lightened(0.35))
 	material.set_shader_parameter("variation_scale", 2.0)
 	material.set_shader_parameter("light_boost", 0.4)
+	material.set_shader_parameter("season_response", 1.0)
 	mesh.surface_set_material(0, material)
 	return mesh
 
@@ -103,6 +104,7 @@ static func _generate_pine(rng: RandomNumberGenerator) -> ArrayMesh:
 	fmat.set_shader_parameter("albedo_light", green.lightened(0.4))
 	fmat.set_shader_parameter("variation_scale", 2.5)
 	fmat.set_shader_parameter("light_boost", 0.45)
+	fmat.set_shader_parameter("season_response", 1.0)
 	mesh.surface_set_material(1, fmat)
 	return mesh
 
@@ -164,7 +166,7 @@ static func _generate_dry_grass(rng: RandomNumberGenerator) -> ArrayMesh:
 	return _build_mesh(vertices, normals, uvs, indices, color)
 
 ## Matériau « plante » : balancement du vent réglable (un cactus ne doit pas osciller).
-static func _plant_material(color: Color, light: Color, wind: float, boost: float) -> ShaderMaterial:
+static func _plant_material(color: Color, light: Color, wind: float, boost: float, season: float = 0.0) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
 	material.shader = load("res://assets/landscapes/shaders/prop_foliage.gdshader")
 	material.set_shader_parameter("albedo", color)
@@ -172,6 +174,7 @@ static func _plant_material(color: Color, light: Color, wind: float, boost: floa
 	material.set_shader_parameter("variation_scale", 3.0)
 	material.set_shader_parameter("light_boost", boost)
 	material.set_shader_parameter("wind_strength", wind)
+	material.set_shader_parameter("season_response", season)
 	return material
 
 ## Tige côtelée (cylindre à bout arrondi) d'un point à un autre, pour le cactus.
@@ -271,7 +274,7 @@ static func _generate_agave(rng: RandomNumberGenerator) -> ArrayMesh:
 	surfaces[Mesh.ARRAY_TEX_UV] = uvs
 	surfaces[Mesh.ARRAY_INDEX] = indices
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surfaces)
-	mesh.surface_set_material(0, _plant_material(color, color.lightened(0.35), 0.03, 0.5))
+	mesh.surface_set_material(0, _plant_material(color, color.lightened(0.35), 0.03, 0.5, 0.5))
 	return mesh
 
 ## Touffe de fleurs sauvages : quelques tiges fines surmontées d'une corolle colorée.
@@ -318,7 +321,7 @@ static func _generate_flowers(rng: RandomNumberGenerator) -> ArrayMesh:
 	s1[Mesh.ARRAY_TEX_UV] = stem_uv
 	s1[Mesh.ARRAY_INDEX] = stem_i
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, s1)
-	mesh.surface_set_material(0, _plant_material(Color(0.28, 0.4, 0.16), Color(0.4, 0.55, 0.22), 0.1, 0.3))
+	mesh.surface_set_material(0, _plant_material(Color(0.28, 0.4, 0.16), Color(0.4, 0.55, 0.22), 0.1, 0.3, 1.0))
 	var s2: Array = []
 	s2.resize(Mesh.ARRAY_MAX)
 	s2[Mesh.ARRAY_VERTEX] = bloom_v

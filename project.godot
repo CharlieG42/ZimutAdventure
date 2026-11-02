@@ -122,6 +122,25 @@ ui_cancel={
 locale/fallback="en"
 locale/translations=PackedStringArray("res://locales/translations.en.en.translation", "res://locales/translations.fr.fr.translation")
 
+[shader_globals]
+
+snow_amount={
+"type": "float",
+"value": 0.0
+}
+wetness={
+"type": "float",
+"value": 0.0
+}
+foliage_tint={
+"type": "color",
+"value": Color(1, 1, 1, 1)
+}
+foliage_tint_amount={
+"type": "float",
+"value": 0.0
+}
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

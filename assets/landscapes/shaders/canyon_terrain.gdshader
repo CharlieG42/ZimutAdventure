@@ -31,6 +31,10 @@ uniform float detail_fade_start = 35.0;
 uniform float detail_fade_end = 110.0;
 uniform float bump_strength : hint_range(0.0, 1.0) = 0.35;
 
+// Réglés par Weather : couverture de neige et sol détrempé (0 à 1).
+global uniform float snow_amount;
+global uniform float wetness;
+
 varying vec3 v_world_pos;
 varying float v_slope;
 varying float v_height;
@@ -148,8 +152,19 @@ void fragment() {
 	float sparkle = step(0.985, noise(w * 38.0)) * near * (1.0 - rock_factor);
 	albedo += vec3(0.5, 0.45, 0.35) * sparkle * 0.6;
 
+	// Pluie : le sol s'assombrit et devient brillant.
+	albedo *= 1.0 - 0.28 * wetness * (1.0 - rock_factor * 0.4);
+
+	// Neige : se dépose d'abord sur les replats, un peu moins sur les pentes raides ; bords irréguliers.
+	float snow_edge = noise(w * 0.8) * 0.5 + noise(w * 3.1) * 0.5;
+	float snow_cover = snow_amount * (1.0 - smoothstep(0.18, 0.7, v_slope)) ;
+	snow_cover = smoothstep(0.35, 0.6, snow_cover + (snow_edge - 0.5) * 0.45 * snow_amount);
+	vec3 snow_color = vec3(0.92, 0.95, 1.0) * (0.94 + micro * 0.06);
+	albedo = mix(albedo, snow_color, snow_cover);
+	sparkle *= 1.0 - snow_cover;
+
 	ALBEDO = albedo;
-	ROUGHNESS = 0.85 + micro * 0.1 - sparkle * 0.5;
+	ROUGHNESS = mix(0.85 + micro * 0.1 - sparkle * 0.5, 0.35, wetness * 0.6) * (1.0 - snow_cover * 0.1);
 	RIM = 0.15 * (1.0 - rock_factor);
 	RIM_TINT = 0.6;
 	METALLIC = 0.0;

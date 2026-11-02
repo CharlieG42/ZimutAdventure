@@ -121,6 +121,7 @@ func _ready() -> void:
 	# Le groupe est la façon dont HUD, animaux, spawners et météo retrouvent le joueur.
 	add_to_group("player")
 	_home_position = global_position
+	_build_dust()
 	var survival := InteractionManager.get_survival()
 	if survival != null and survival.has_signal("died"):
 		survival.connect("died", _on_died)
@@ -208,6 +209,55 @@ func dismount() -> void:
 
 func is_mounted() -> bool:
 	return _mount != null
+
+# --- Poussière de course ------------------------------------------------------------------
+
+var _dust: CPUParticles3D
+
+## Nuage de poussière (ou de poudreuse l'hiver) soulevé aux pieds quand on court ou qu'on galope.
+func _build_dust() -> void:
+	_dust = CPUParticles3D.new()
+	_dust.name = "Dust"
+	_dust.emitting = false
+	_dust.amount = 28
+	_dust.lifetime = 0.7
+	_dust.local_coords = false
+	_dust.direction = Vector3.UP
+	_dust.spread = 50.0
+	_dust.initial_velocity_min = 0.4
+	_dust.initial_velocity_max = 1.2
+	_dust.gravity = Vector3(0.0, 0.3, 0.0)
+	_dust.scale_amount_min = 0.5
+	_dust.scale_amount_max = 1.2
+	_dust.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	_dust.emission_sphere_radius = 0.25
+	var puff := SphereMesh.new()
+	puff.radius = 0.14
+	puff.height = 0.28
+	puff.radial_segments = 6
+	puff.rings = 3
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = Color(0.74, 0.6, 0.42, 0.4)
+	puff.material = material
+	_dust.mesh = puff
+	var fade := Curve.new()
+	fade.add_point(Vector2(0.0, 0.4))
+	fade.add_point(Vector2(0.4, 1.0))
+	fade.add_point(Vector2(1.0, 0.0))
+	_dust.scale_amount_curve = fade
+	add_child(_dust)
+
+func _update_dust() -> void:
+	if _dust == null:
+		return
+	var horizontal := Vector2(velocity.x, velocity.z).length()
+	_dust.emitting = is_on_floor() and horizontal > 5.2
+	_dust.position = Vector3(0.0, 0.05, 0.0)
+	var weather := InteractionManager.get_weather()
+	var snowy: bool = weather != null and float(weather.call("get_snow_amount")) > 0.4
+	(_dust.mesh.material as StandardMaterial3D).albedo_color = Color(0.95, 0.97, 1.0, 0.5) if snowy else Color(0.74, 0.6, 0.42, 0.4)
 
 ## Attaque : tir à l'arc si l'arc est équipé, sinon coup de hache sur un prédateur proche.
 func try_attack() -> void:
@@ -432,6 +482,7 @@ func _physics_process(delta: float) -> void:
 		if _safe_timer >= 0.5:
 			_safe_timer = 0.0
 			_safe_position = global_position
+	_update_dust()
 	if global_position.y < respawn_below_y:
 		global_position = _safe_position + Vector3(0.0, 1.0, 0.0)
 		velocity = Vector3.ZERO
