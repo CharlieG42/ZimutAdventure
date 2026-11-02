@@ -304,6 +304,10 @@ func try_melee() -> bool:
 func _swing_arm() -> void:
 	_attack_anim = ATTACK_ANIM_TIME
 
+## Le lit ou l'abri où l'on se repose devient le nouveau point de réveil.
+func set_home(point: Vector3) -> void:
+	_home_position = point
+
 ## Terrassé : on se réveille au camp de départ, à moitié rétabli.
 func _on_died() -> void:
 	if _mount != null:

@@ -9,6 +9,9 @@ const MAX_STRUCTURES := 40
 ## id d'objet de l'inventaire -> type de construction.
 const PLACEABLE := {
 	"furniture_camp_bed": "camp_bed",
+	"building_campfire": "campfire",
+	"furniture_chest": "chest",
+	"building_palisade": "palisade",
 	"building_shelter": "shelter",
 	"building_farm_plot": "farm_plot",
 	"building_pen": "pen",
@@ -66,13 +69,19 @@ func _spawn(kind: String, position: Vector3, yaw: float) -> Node3D:
 			structure = FarmPlot.create()
 		"pen":
 			structure = Pen.create()
+		"chest":
+			structure = StorageChest.create()
+		"palisade":
+			structure = Palisade.create()
+		"campfire":
+			structure = (load("res://scenes/interaction/campfire.tscn") as PackedScene).instantiate()
 		_:
 			structure = PlacedStructure.create(kind)
 	structure.position = position
 	structure.rotation.y = yaw
 	add_child(structure)
-	if structure is FarmPlot:
-		(structure as FarmPlot).changed.connect(_on_plot_changed)
+	if structure.has_signal("changed"):
+		structure.connect("changed", _on_plot_changed)
 	return structure
 
 func _on_plot_changed(_plot: Node) -> void:
@@ -95,8 +104,8 @@ func _load() -> void:
 		var position: Vector3 = entry.get("pos", Vector3.ZERO)
 		var yaw := float(entry.get("yaw", 0.0))
 		var node := _spawn(PLACEABLE[entry["item"]], position, yaw)
-		if node is FarmPlot:
-			(node as FarmPlot).apply_state(entry)
+		if node.has_method("apply_state"):
+			node.call("apply_state", entry)
 		_records.append({"item": entry["item"], "pos": position, "yaw": yaw, "node": node})
 
 func _save() -> void:
@@ -106,8 +115,8 @@ func _save() -> void:
 	for record in _records:
 		var entry := {"item": record["item"], "pos": record["pos"], "yaw": record["yaw"]}
 		var node: Object = record.get("node")
-		if node != null and is_instance_valid(node) and node is FarmPlot:
-			entry.merge((node as FarmPlot).get_state())
+		if node != null and is_instance_valid(node) and node.has_method("get_state"):
+			entry.merge(node.call("get_state"))
 		saved.append(entry)
 	var config := ConfigFile.new()
 	config.set_value("structures", "list", saved)

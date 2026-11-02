@@ -96,9 +96,9 @@ TOAST_PLACED,Posé : %s
 TOAST_TOO_STEEP,Terrain trop pentu pour construire ici.
 TOAST_CANNOT_PLACE,Impossible de poser ça ici.
 TOAST_TOO_MANY,Trop de constructions dans le canyon.
-TOAST_BED_REST,Quelle bonne sieste ! Endurance rétablie.
+TOAST_BED_REST,Quelle bonne sieste ! Endurance rétablie. Point de réveil enregistré.
 TOAST_NOT_TIRED,Vous n'avez pas sommeil : attendez la nuit.
-TOAST_SLEPT,Vous dormez jusqu'à l'aube. Endurance rétablie.
+TOAST_SLEPT,Vous dormez jusqu'à l'aube. Endurance rétablie. Point de réveil enregistré.
 QUEST_REWARD,Récompense : %s
 MAP_LEGEND_FIRE,Feu de camp
 MAP_LEGEND_CAMP,Campement
@@ -263,3 +263,20 @@ QUEST_PREDATOR_TITLE,Le rôdeur de la nuit
 QUEST_PREDATOR_DESC,"Des coyotes (dès le niveau 2) et des loups (dès le niveau 4) rôdent la nuit. Équipez l'arc ou la hache (bouton d'attaque) et abattez-en un ; un feu de camp bien nourri les tient à distance."
 QUEST_CLOAK_TITLE,Une cape de fourrure
 QUEST_CLOAK_DESC,"Fabriquez une cape avec 3 peaux et 1 laine (niveau 3) : elle réduit de 35 % les dégâts reçus."
+CRAFT_CAMPFIRE,Feu de camp
+CRAFT_CHEST,Coffre
+CRAFT_PALISADE,Palissade
+ITEM_BUILDING_CAMPFIRE,feu de camp
+ITEM_FURNITURE_CHEST,coffre
+ITEM_BUILDING_PALISADE,palissade
+ACTION_CHEST_STORE,Déposer dans le coffre
+ACTION_CHEST_TAKE,Reprendre le contenu
+ACTION_CHEST_EMPTY,Coffre vide
+TOAST_CHEST_STORED,%d objets rangés dans le coffre.
+TOAST_CHEST_TAKEN,%d objets repris.
+TOAST_CHEST_EMPTY,Le coffre est vide.
+TOAST_WAKE_POINT,Point de réveil enregistré ici.
+QUEST_CAMP_TITLE,Un camp à soi
+QUEST_CAMP_DESC,"Fabriquez un feu de camp (niveau 2) et posez-le depuis le sac : il se nourrit de bois, cuit vos plats et tient les rôdeurs à distance."
+QUEST_CHEST_TITLE,Ranger ses affaires
+QUEST_CHEST_DESC,"Fabriquez un coffre (niveau 3) et posez-le au camp : il range vos ressources, outils et flèches exceptés."

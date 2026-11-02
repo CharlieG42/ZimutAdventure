@@ -52,7 +52,13 @@ func _on_interact(interactor: Node3D) -> void:
 	else:
 		_rest(interactor)
 
+## Se reposer ou dormir ici fixe le point de réveil après une défaite.
+func _set_wake_point(interactor: Node3D) -> void:
+	if interactor != null and interactor.has_method("set_home"):
+		interactor.call("set_home", global_position + global_transform.basis.z * 1.6)
+
 func _rest(interactor: Node3D) -> void:
+	_set_wake_point(interactor)
 	if interactor != null and interactor.has_method("restore_stamina"):
 		interactor.restore_stamina()
 	var survival := InteractionManager.get_survival()
@@ -67,6 +73,7 @@ func _sleep(interactor: Node3D) -> void:
 	if clock == null or not is_night:
 		_toast("TOAST_NOT_TIRED")
 		return
+	_set_wake_point(interactor)
 	clock.call("set_hour", WAKE_HOUR)
 	if interactor != null and interactor.has_method("restore_stamina"):
 		interactor.restore_stamina()

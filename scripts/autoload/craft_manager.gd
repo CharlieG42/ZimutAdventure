@@ -67,6 +67,24 @@ const RECIPES := {
 		"ingredients": {"item_wood": 12, "item_stone": 2},
 		"level": 4,
 	},
+	"building_campfire": {
+		"name": "CRAFT_CAMPFIRE",
+		"category": "buildings",
+		"ingredients": {"item_wood": 5, "item_stone": 3},
+		"level": 2,
+	},
+	"furniture_chest": {
+		"name": "CRAFT_CHEST",
+		"category": "furniture",
+		"ingredients": {"item_wood": 6, "item_stone": 1},
+		"level": 3,
+	},
+	"building_palisade": {
+		"name": "CRAFT_PALISADE",
+		"category": "buildings",
+		"ingredients": {"item_wood": 6},
+		"level": 4,
+	},
 	"building_farm_plot": {
 		"name": "CRAFT_FARM_PLOT",
 		"category": "buildings",
