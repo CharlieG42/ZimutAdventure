@@ -34,8 +34,10 @@ func _init() -> void:
 		errors.append("at 23h sun energy should be ~0, got %.2f" % sun.light_energy)
 	if cycle.get_phase() != "night":
 		errors.append("at 23h phase should be night, got %s" % cycle.get_phase())
-	if env.ambient_light_energy > 0.15:
-		errors.append("at night ambient energy should be low, got %.2f" % env.ambient_light_energy)
+	# La nuit reste lisible (lueur lunaire) mais nettement plus sombre que le jour.
+	var night_light := env.ambient_light_energy * env.ambient_light_color.get_luminance()
+	if night_light > 0.4 or night_light < 0.1:
+		errors.append("at night ambient light should be dim but visible, got %.2f" % night_light)
 
 	cycle.set_hour(18.0)
 	if cycle.get_phase() != "dusk":

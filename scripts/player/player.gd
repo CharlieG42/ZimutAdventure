@@ -120,6 +120,10 @@ const ARM_SHOULDER_Y := 0.375
 func _ready() -> void:
 	# Le groupe est la façon dont HUD, animaux, spawners et météo retrouvent le joueur.
 	add_to_group("player")
+	_home_position = global_position
+	var survival := InteractionManager.get_survival()
+	if survival != null and survival.has_signal("died"):
+		survival.connect("died", _on_died)
 	_is_touch = PlatformInfo.is_touch()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	floor_snap_length = 0.6
@@ -204,6 +208,62 @@ func dismount() -> void:
 
 func is_mounted() -> bool:
 	return _mount != null
+
+## Attaque : tir à l'arc si l'arc est équipé, sinon coup de hache sur un prédateur proche.
+func try_attack() -> void:
+	var inventory := InteractionManager.get_inventory()
+	if inventory == null:
+		return
+	if inventory.is_equipped("tool_hunting_bow"):
+		try_shoot_arrow()
+	elif inventory.is_equipped("tool_stone_axe"):
+		try_melee()
+
+const ATTACK_ANIM_TIME := 0.28
+const MELEE_RANGE := 2.6
+var _attack_anim: float = 0.0
+const MELEE_COOLDOWN := 0.6
+var _melee_cooldown: float = 0.0
+var _home_position: Vector3
+
+## Coup de hache : touche le prédateur le mieux placé devant le joueur.
+func try_melee() -> bool:
+	if _melee_cooldown > 0.0:
+		return false
+	_melee_cooldown = MELEE_COOLDOWN
+	_swing_arm()
+	var forward := -global_transform.basis.z
+	forward.y = 0.0
+	forward = forward.normalized()
+	var best: Node3D = null
+	var best_distance := MELEE_RANGE
+	for target in get_tree().get_nodes_in_group("predators"):
+		if not is_instance_valid(target) or not target.has_method("hit"):
+			continue
+		var offset: Vector3 = target.global_position - global_position
+		offset.y = 0.0
+		var distance := offset.length()
+		if distance < best_distance and (distance < 0.8 or forward.dot(offset / maxf(distance, 0.001)) > 0.3):
+			best = target
+			best_distance = distance
+	if best != null:
+		best.call("hit", 2, global_position)
+		return true
+	return false
+
+func _swing_arm() -> void:
+	_attack_anim = ATTACK_ANIM_TIME
+
+## Terrassé : on se réveille au camp de départ, à moitié rétabli.
+func _on_died() -> void:
+	if _mount != null:
+		dismount()
+	global_position = _home_position + Vector3(0.0, 1.0, 0.0)
+	velocity = Vector3.ZERO
+	var survival := InteractionManager.get_survival()
+	if survival != null:
+		survival.call("revive")
+	_hud_toast(tr("TOAST_DIED"))
 
 func _try_interact() -> void:
 	try_interact()
@@ -306,11 +366,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not _is_touch:
 		_rotate_look(event.relative * Vector2(mouse_sensitivity, mouse_sensitivity))
 	elif event.is_action_pressed("attack"):
-		try_shoot_arrow()
+		try_attack()
 
 # --- Physique ----------------------------------------------------------------
 
 func _physics_process(delta: float) -> void:
+	_melee_cooldown = maxf(0.0, _melee_cooldown - delta)
 	if Input.is_action_just_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
 	if Input.is_action_just_pressed("toggle_view"):
@@ -483,6 +544,10 @@ func _update_character(delta: float, horizontal_speed: float) -> void:
 	var leg_r := lerpf(-stride, -0.25, _air_blend)
 	var arm_l := lerpf(stride * 0.8, -0.9, _air_blend)
 	var arm_r := lerpf(-stride * 0.8, -0.9, _air_blend)
+	# Coup porté : le bras droit se lève puis s'abat.
+	if _attack_anim > 0.0:
+		_attack_anim = maxf(0.0, _attack_anim - delta)
+		arm_r = -2.4 * sin((1.0 - _attack_anim / ATTACK_ANIM_TIME) * PI)
 	_swing("LegL", Vector3(-0.11, LEG_HIP_Y, 0.0), leg_l)
 	_swing("LegR", Vector3(0.11, LEG_HIP_Y, 0.0), leg_r)
 	_swing("Torso/ArmL", Vector3(0.24, ARM_SHOULDER_Y, 0.0), arm_l)

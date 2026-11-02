@@ -152,6 +152,22 @@ const QUESTS := {
 		"requires": "quest_harvest",
 		"reward": {"item_wheat": 3, "item_cooked_meat": 2},
 	},
+	"quest_predator": {
+		"title": "QUEST_PREDATOR_TITLE",
+		"description": "QUEST_PREDATOR_DESC",
+		"goal_item": "stat_predators",
+		"goal_count": 1,
+		"requires": "quest_first_hunt",
+		"reward": {"arrow": 6, "item_cooked_meat": 2},
+	},
+	"quest_cloak": {
+		"title": "QUEST_CLOAK_TITLE",
+		"description": "QUEST_CLOAK_DESC",
+		"goal_item": "armor_fur_cloak",
+		"goal_count": 1,
+		"requires": "quest_predator",
+		"reward": {"item_soup": 2},
+	},
 	"quest_dog": {
 		"title": "QUEST_DOG_TITLE",
 		"description": "QUEST_DOG_DESC",

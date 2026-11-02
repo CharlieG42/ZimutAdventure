@@ -83,8 +83,8 @@ func _apply() -> void:
 			sky_mat.sky_energy_multiplier = lerp(0.3, 1.0, day_factor) * (1.0 - 0.35 * weather_dim)
 			sky_mat.ground_energy_multiplier = lerp(0.2, 1.0, day_factor)
 		if environment.background_mode == Environment.BG_SKY:
-			environment.ambient_light_color = Color(0.10, 0.12, 0.20).lerp(Color(0.75, 0.65, 0.55), day_factor)
-			environment.ambient_light_energy = lerp(0.08, 0.6, day_factor) * (1.0 - 0.2 * weather_dim)
+			environment.ambient_light_color = Color(0.38, 0.48, 0.75).lerp(Color(0.75, 0.65, 0.55), day_factor)
+			environment.ambient_light_energy = lerp(0.6, 0.6, day_factor) * (1.0 - 0.2 * weather_dim)
 			var nf := 1.0 - day_factor
 			environment.fog_light_color = (Color(0.08, 0.09, 0.14).lerp(Color(0.86, 0.66, 0.5), day_factor) * season_tint).clamp()
 			environment.fog_light_color = environment.fog_light_color.lerp(Color(0.62, 0.66, 0.72) * lerp(0.25, 1.0, day_factor), weather_fog * 0.6)

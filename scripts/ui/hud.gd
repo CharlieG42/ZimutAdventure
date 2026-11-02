@@ -43,6 +43,8 @@ var _survival: Node
 var _camera_joystick_vector: Vector2 = Vector2.ZERO
 var _base_offsets: Dictionary = {}
 var _last_clock_minute: int = -1
+var _last_health: float = 1.0
+var _damage_flash: ColorRect
 var _last_heading: int = -1
 var _focused_interactable: Interactable = null
 var _stamina_exhausted: bool = false
@@ -77,6 +79,8 @@ func _ready() -> void:
 	_survival = get_tree().root.get_node_or_null("SurvivalManager") if get_tree() != null else null
 	if _survival != null:
 		_survival.connect("needs_changed", _on_needs_changed)
+		_survival.connect("health_changed", _on_health_changed)
+		_on_health_changed(float(_survival.call("get_health")))
 		_on_needs_changed(float(_survival.call("get_hunger")), float(_survival.call("get_thirst")))
 	if _day_night != null:
 		_day_night.connect("time_changed", _on_time_changed)
@@ -306,13 +310,13 @@ func _on_item_removed(_item_id: String, _amount: int) -> void:
 func _refresh_attack_button() -> void:
 	if not PlatformInfo.is_touch() or _inventory == null:
 		return
-	var ready_to_shoot: bool = _inventory.is_equipped("tool_hunting_bow")
+	var ready_to_shoot: bool = _inventory.is_equipped("tool_hunting_bow") or _inventory.is_equipped("tool_stone_axe")
 	if attack_button.visible != ready_to_shoot:
 		attack_button.visible = ready_to_shoot
 
 func _on_attack_pressed() -> void:
-	if _player != null and _player.has_method("try_shoot_arrow"):
-		_player.call("try_shoot_arrow")
+	if _player != null and _player.has_method("try_attack"):
+		_player.call("try_attack")
 
 # --- Endurance ------------------------------------------------------------------
 
@@ -320,6 +324,24 @@ func _on_attack_pressed() -> void:
 func _on_needs_changed(hunger: float, thirst: float) -> void:
 	vitals.call("set_value", "hunger", hunger)
 	vitals.call("set_value", "thirst", thirst)
+
+func _on_health_changed(value: float) -> void:
+	vitals.call("set_value", "health", value)
+	# Un coup reçu fait flasher l'écran en rouge.
+	if value < _last_health - 0.001:
+		_flash_damage()
+	_last_health = value
+
+func _flash_damage() -> void:
+	if _damage_flash == null:
+		_damage_flash = ColorRect.new()
+		_damage_flash.color = Color(0.8, 0.05, 0.05, 0.0)
+		_damage_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_damage_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+		$Overlay.add_child(_damage_flash)
+	_damage_flash.color.a = 0.38
+	var tween := create_tween()
+	tween.tween_property(_damage_flash, "color:a", 0.0, 0.45)
 
 func _on_stamina_changed(value: float, exhausted: bool) -> void:
 	vitals.call("set_value", "energy", value)

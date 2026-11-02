@@ -248,3 +248,18 @@ TOAST_RAIN,Il se met à pleuvoir : vos cultures sont arrosées.
 TOAST_SNOW,La neige se met à tomber.
 QUEST_SEASONS_TITLE,Au fil des saisons
 QUEST_SEASONS_DESC,"Voyez passer deux saisons (6 jours de jeu chacune). Les cultures poussent plus lentement en hiver et la soif est plus vive en été ; la pluie arrose les parcelles."
+VITAL_HEALTH,Santé
+ANIMAL_WOLF,Le loup
+ANIMAL_COYOTE,Le coyote
+ITEM_ITEM_PELT,peau de bête
+ITEM_ARMOR_FUR_CLOAK,cape de fourrure
+CRAFT_FUR_CLOAK,Cape de fourrure
+TOAST_PREDATOR_NEAR,%s vous a repéré ! Utilisez l'arc ou la hache (ou approchez-vous d'un feu).
+TOAST_PREDATOR_KILLED,%s est abattu. Vous récoltez des peaux et de la viande.
+TOAST_BITTEN,Vous êtes mordu !
+TOAST_RAIDED,%s a été effrayée par un rôdeur : sa production prend du retard. Un enclos la protégerait.
+TOAST_DIED,Vous vous êtes évanoui : vous reprenez connaissance au camp de départ.
+QUEST_PREDATOR_TITLE,Le rôdeur de la nuit
+QUEST_PREDATOR_DESC,"Des coyotes (dès le niveau 2) et des loups (dès le niveau 4) rôdent la nuit. Équipez l'arc ou la hache (bouton d'attaque) et abattez-en un ; un feu de camp bien nourri les tient à distance."
+QUEST_CLOAK_TITLE,Une cape de fourrure
+QUEST_CLOAK_DESC,"Fabriquez une cape avec 3 peaux et 1 laine (niveau 3) : elle réduit de 35 % les dégâts reçus."

@@ -82,6 +82,10 @@ func _cook(interactor: Node3D) -> void:
 		progression.call("add_xp_for", "cook")
 	_notify(interactor, String(recipe["toast"]))
 
+## Un feu bien nourri tient les prédateurs à distance et éclaire le camp.
+func is_lit() -> bool:
+	return _stage >= 2
+
 func _rest(interactor: Node3D) -> void:
 	if interactor is CharacterBody3D and interactor.has_method("restore_stamina"):
 		interactor.restore_stamina()
