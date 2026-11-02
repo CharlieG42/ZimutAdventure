@@ -11,6 +11,8 @@ const PLACEABLE := {
 	"furniture_camp_bed": "camp_bed",
 	"building_shelter": "shelter",
 	"building_farm_plot": "farm_plot",
+	"building_pen": "pen",
+	"furniture_wool_bed": "wool_bed",
 }
 
 var _landscape: Node3D
@@ -40,14 +42,32 @@ func place(item_id: String, origin: Vector3, yaw: float) -> String:
 		var h := _ground_height(origin.x + offset.x, origin.z + offset.y)
 		if absf(h - ground) > MAX_SLOPE:
 			return "TOAST_TOO_STEEP"
+	if PLACEABLE[item_id] == "pen":
+		for offset in [Vector2(4.5, 4.5), Vector2(-4.5, 4.5), Vector2(4.5, -4.5), Vector2(-4.5, -4.5)]:
+			if absf(_ground_height(origin.x + offset.x, origin.z + offset.y) - ground) > MAX_SLOPE * 1.6:
+				return "TOAST_TOO_STEEP"
 	var position := Vector3(origin.x, ground, origin.z)
 	var node := _spawn(PLACEABLE[item_id], position, yaw)
 	_records.append({"item": item_id, "pos": position, "yaw": yaw, "node": node})
 	_save()
+	var progression := InteractionManager.get_progression()
+	if progression != null:
+		progression.call("add_xp_for", "build")
+		if PLACEABLE[item_id] == "pen":
+			progression.call("add_stat", "stat_pens", 1)
+	if node is Pen:
+		(node as Pen).gather_nearby()
 	return ""
 
 func _spawn(kind: String, position: Vector3, yaw: float) -> Node3D:
-	var structure: Node3D = FarmPlot.create() if kind == "farm_plot" else PlacedStructure.create(kind)
+	var structure: Node3D
+	match kind:
+		"farm_plot":
+			structure = FarmPlot.create()
+		"pen":
+			structure = Pen.create()
+		_:
+			structure = PlacedStructure.create(kind)
 	structure.position = position
 	structure.rotation.y = yaw
 	add_child(structure)

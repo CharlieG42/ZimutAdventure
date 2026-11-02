@@ -26,6 +26,14 @@ func _draw() -> void:
 			var blade := PackedVector2Array([c + Vector2(4, -22) * u, c + Vector2(26, -10) * u, c + Vector2(22, -2) * u, c + Vector2(8, -10) * u])
 			draw_colored_polygon(_grow(blade, c, 1.15), DARK)
 			draw_colored_polygon(blade, METAL)
+		"tool_watering_can":
+			var water := Color(0.45, 0.7, 0.95)
+			draw_colored_polygon(_grow(PackedVector2Array([c + Vector2(-16, -6) * u, c + Vector2(10, -6) * u, c + Vector2(8, 20) * u, c + Vector2(-14, 20) * u]), c, 1.1), DARK)
+			draw_colored_polygon(PackedVector2Array([c + Vector2(-16, -6) * u, c + Vector2(10, -6) * u, c + Vector2(8, 20) * u, c + Vector2(-14, 20) * u]), METAL)
+			_line(c + Vector2(10, 2) * u, c + Vector2(26, -14) * u, METAL, 5.0 * u)
+			draw_arc(c + Vector2(-16, 6) * u, 10.0 * u, deg_to_rad(90.0), deg_to_rad(270.0), 12, DARK, 5.0 * u, true)
+			draw_circle(c + Vector2(28, -6) * u, 2.5 * u, water)
+			draw_circle(c + Vector2(24, 2) * u, 2.5 * u, water)
 		"tool_hunting_bow":
 			draw_arc(c + Vector2(-8, 0) * u, 26.0 * u, deg_to_rad(-62.0), deg_to_rad(62.0), 20, DARK, 8.0 * u, true)
 			draw_arc(c + Vector2(-8, 0) * u, 26.0 * u, deg_to_rad(-62.0), deg_to_rad(62.0), 20, WOOD, 5.0 * u, true)

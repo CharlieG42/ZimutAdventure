@@ -106,7 +106,7 @@ CRAFT_ARROWS,Arrows (x4)
 ITEM_ARROW,arrow
 ITEM_ITEM_RAW_MEAT,raw meat
 ITEM_ITEM_COOKED_MEAT,cooked meat
-ACTION_COOK,Cook meat
+ACTION_COOK,Cook
 TOAST_NEED_MEAT,No raw meat to cook!
 TOAST_MEAT_COOKED,The meat smells good...
 TOAST_HUNT_SUCCESS,Prey down! You gather %s.
@@ -207,3 +207,31 @@ QUEST_DOG_TITLE,A faithful companion
 QUEST_DOG_DESC,Offer meat to a stray dog until it is tamed (level 3 required). It follows you and improves your hunting.
 QUEST_HORSE_TITLE,Rider
 QUEST_HORSE_DESC,"Tame a horse with vegetables or berries (level 5 required), then ride it."
+CRAFT_WATERING_CAN,Watering can
+CRAFT_WOOL_BED,Wool bed
+CRAFT_PEN,Pen
+ITEM_TOOL_WATERING_CAN,watering can
+ITEM_FURNITURE_WOOL_BED,wool bed
+ITEM_BUILDING_PEN,pen
+ITEM_ITEM_GRAIN_SEEDS,grain seeds
+ITEM_ITEM_WHEAT,wheat
+ITEM_ITEM_BREAD,bread
+ITEM_ITEM_SOUP,farm soup
+ITEM_ITEM_BOILED_EGG,boiled egg
+ITEM_ITEM_ROAST_VEGETABLES,roast vegetables
+HINT_TOOL_WATERING_CAN,Watering can equipped: water a growing crop to speed it up.
+ACTION_WATER,Water
+TOAST_WATERED,The soil drinks it in: growth speeds up.
+TOAST_FOUND_GRAIN,You found some grain seeds!
+TOAST_COOKED,A hot and tasty dish.
+TOAST_PENNED,The animal joins the pen.
+QUEST_COOK_TITLE,Campfire cooking
+QUEST_COOK_DESC,"Prepare 3 dishes at the campfire: meat, eggs, vegetables, bread (2 wheat) or soup (milk and vegetables)."
+QUEST_WATER_TITLE,A splash of water
+QUEST_WATER_DESC,"Craft a watering can (level 4), equip it and water 2 growing crops."
+QUEST_GRAIN_TITLE,Wheat in the making
+QUEST_GRAIN_DESC,"Sow grain seeds (sometimes found when harvesting vegetables) and harvest wheat."
+QUEST_WOOL_BED_TITLE,A cosy bed
+QUEST_WOOL_BED_DESC,"Shear sheep with the sickle and craft a wool bed (level 4): it lets you sleep at night."
+QUEST_PEN_TITLE,A pen for the livestock
+QUEST_PEN_DESC,"Craft a pen (level 4) and place it: tamed livestock nearby moves in and produces faster."

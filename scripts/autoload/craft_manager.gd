@@ -24,6 +24,12 @@ const RECIPES := {
 		"ingredients": {"item_wood": 3, "item_stone": 2},
 		"level": 3,
 	},
+	"tool_watering_can": {
+		"name": "CRAFT_WATERING_CAN",
+		"category": "tools",
+		"ingredients": {"item_wood": 2, "item_stone": 3},
+		"level": 4,
+	},
 	"tool_hunting_bow": {
 		"name": "CRAFT_HUNTING_BOW",
 		"category": "weapons",
@@ -42,6 +48,18 @@ const RECIPES := {
 		"category": "furniture",
 		"ingredients": {"item_wood": 4},
 		"level": 3,
+	},
+	"furniture_wool_bed": {
+		"name": "CRAFT_WOOL_BED",
+		"category": "furniture",
+		"ingredients": {"item_wood": 3, "item_wool": 4},
+		"level": 4,
+	},
+	"building_pen": {
+		"name": "CRAFT_PEN",
+		"category": "buildings",
+		"ingredients": {"item_wood": 12, "item_stone": 2},
+		"level": 4,
 	},
 	"building_farm_plot": {
 		"name": "CRAFT_FARM_PLOT",

@@ -106,7 +106,7 @@ CRAFT_ARROWS,Flèches (x4)
 ITEM_ARROW,flèche
 ITEM_ITEM_RAW_MEAT,viande crue
 ITEM_ITEM_COOKED_MEAT,viande cuite
-ACTION_COOK,Cuire la viande
+ACTION_COOK,Cuisiner
 TOAST_NEED_MEAT,Pas de viande crue à cuire !
 TOAST_MEAT_COOKED,La viande embaume...
 TOAST_HUNT_SUCCESS,Proie abattue ! Vous récoltez %s.
@@ -207,3 +207,31 @@ QUEST_DOG_TITLE,Un fidèle compagnon
 QUEST_DOG_DESC,Offrez de la viande à un chien errant jusqu'à l'apprivoiser (niveau 3 requis). Il vous suivra et améliorera votre chasse.
 QUEST_HORSE_TITLE,Cavalier
 QUEST_HORSE_DESC,"Apprivoisez un cheval avec des légumes ou des baies (niveau 5 requis), puis montez-le."
+CRAFT_WATERING_CAN,Arrosoir
+CRAFT_WOOL_BED,Lit en laine
+CRAFT_PEN,Enclos
+ITEM_TOOL_WATERING_CAN,arrosoir
+ITEM_FURNITURE_WOOL_BED,lit en laine
+ITEM_BUILDING_PEN,enclos
+ITEM_ITEM_GRAIN_SEEDS,graines de céréales
+ITEM_ITEM_WHEAT,blé
+ITEM_ITEM_BREAD,pain
+ITEM_ITEM_SOUP,soupe fermière
+ITEM_ITEM_BOILED_EGG,œuf cuit
+ITEM_ITEM_ROAST_VEGETABLES,légumes rôtis
+HINT_TOOL_WATERING_CAN,Arrosoir équipé : arrosez une culture qui pousse pour accélérer sa croissance.
+ACTION_WATER,Arroser
+TOAST_WATERED,La terre boit l'eau : la pousse s'accélère.
+TOAST_FOUND_GRAIN,Vous avez trouvé des graines de céréales !
+TOAST_COOKED,Un plat chaud et appétissant.
+TOAST_PENNED,La bête rejoint l'enclos.
+QUEST_COOK_TITLE,Cuisine au feu de camp
+QUEST_COOK_DESC,"Préparez 3 plats au feu de camp : viande, œufs, légumes, pain (2 blés) ou soupe (lait et légumes)."
+QUEST_WATER_TITLE,Un coup d'arrosoir
+QUEST_WATER_DESC,"Fabriquez un arrosoir (niveau 4), équipez-le et arrosez 2 cultures en train de pousser."
+QUEST_GRAIN_TITLE,Du blé en herbe
+QUEST_GRAIN_DESC,"Semez des graines de céréales (parfois trouvées en récoltant des légumes) et récoltez du blé."
+QUEST_WOOL_BED_TITLE,Un bon lit douillet
+QUEST_WOOL_BED_DESC,"Tondez des moutons à la serpette et fabriquez un lit en laine (niveau 4) : il permet de dormir la nuit."
+QUEST_PEN_TITLE,Un enclos pour le bétail
+QUEST_PEN_DESC,"Fabriquez un enclos (niveau 4) et posez-le : le bétail apprivoisé alentour y emménage et produit plus vite."

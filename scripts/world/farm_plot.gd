@@ -8,6 +8,16 @@ signal changed(plot)
 
 const TOOL_ID := "tool_hoe"
 const GROW_SECONDS := 180.0
+const WATER_TOOL_ID := "tool_watering_can"
+## Un arrosage fait gagner cette part de la durée de pousse.
+const WATER_BONUS := 0.35
+## Cultures : graines -> {récolte, durée de pousse (s), couleur du fruit}.
+const CROP_TYPES := {
+	"item_seeds": {"yield": "item_vegetables", "seconds": 180.0, "fruit": Color(0.95, 0.55, 0.12)},
+	"item_grain_seeds": {"yield": "item_wheat", "seconds": 120.0, "fruit": Color(0.9, 0.78, 0.25)},
+}
+## Chance de trouver des graines de céréales en récoltant des légumes.
+const GRAIN_SEED_CHANCE := 0.3
 const VEGETABLES_MIN := 2
 const VEGETABLES_MAX := 4
 const CROPS := 6
@@ -16,6 +26,8 @@ const SIZE := 2.4
 enum Stage { EMPTY, GROWING, RIPE }
 
 var planted_at: float = -1.0
+var crop_seed: String = "item_seeds"
+var watered: bool = false
 var _time_offset: float = 0.0
 var _crops: Node3D
 var _soil: MeshInstance3D
@@ -52,32 +64,57 @@ func advance_time(seconds: float) -> void:
 func get_stage() -> int:
 	if planted_at < 0.0:
 		return Stage.EMPTY
-	return Stage.RIPE if _now() - planted_at >= GROW_SECONDS else Stage.GROWING
+	return Stage.RIPE if _now() - planted_at >= grow_seconds() else Stage.GROWING
+
+func grow_seconds() -> float:
+	return float(CROP_TYPES[crop_seed]["seconds"])
 
 func get_growth() -> float:
 	if planted_at < 0.0:
 		return 0.0
-	return clampf((_now() - planted_at) / GROW_SECONDS, 0.0, 1.0)
+	return clampf((_now() - planted_at) / grow_seconds(), 0.0, 1.0)
 
 func get_state() -> Dictionary:
-	return {"planted_at": planted_at}
+	return {"planted_at": planted_at, "crop": crop_seed, "watered": watered}
 
 func apply_state(state: Dictionary) -> void:
 	planted_at = float(state.get("planted_at", -1.0))
+	crop_seed = String(state.get("crop", "item_seeds"))
+	if not CROP_TYPES.has(crop_seed):
+		crop_seed = "item_seeds"
+	watered = bool(state.get("watered", false))
 	_refresh_visuals()
 
 # --- Interaction ----------------------------------------------------------------------------
 
 func can_interact() -> bool:
-	return enabled and get_stage() != Stage.GROWING
+	if not enabled:
+		return false
+	if get_stage() == Stage.GROWING:
+		return _can_water()
+	return true
+
+## Une plante qui pousse peut être arrosée une fois, arrosoir équipé.
+func _can_water() -> bool:
+	var inventory := InteractionManager.get_inventory()
+	return not watered and inventory != null and inventory.is_equipped(WATER_TOOL_ID)
+
+## Graines à semer : les céréales d'abord (plus rares), sinon les graines de légumes.
+func _seed_in_bag(inventory: Node) -> String:
+	for seed_id in ["item_grain_seeds", "item_seeds"]:
+		if inventory.has_item(seed_id, 1):
+			return seed_id
+	return ""
 
 func get_prompt() -> String:
 	if get_stage() == Stage.RIPE:
 		return "ACTION_HARVEST"
+	if get_stage() == Stage.GROWING:
+		return "ACTION_WATER"
 	var inventory := InteractionManager.get_inventory()
 	if inventory == null or not inventory.is_equipped(TOOL_ID):
 		return "ACTION_NEED_HOE"
-	if not inventory.has_item("item_seeds", 1):
+	if _seed_in_bag(inventory) == "":
 		return "ACTION_NEED_SEEDS"
 	return "ACTION_PLANT"
 
@@ -88,27 +125,53 @@ func _on_interact(_interactor: Node3D) -> void:
 	if get_stage() == Stage.RIPE:
 		_harvest(inventory)
 		return
+	if get_stage() == Stage.GROWING:
+		_water()
+		return
+	var seed_id := _seed_in_bag(inventory)
 	if not inventory.is_equipped(TOOL_ID):
 		_toast(tr("TOAST_NEED_HOE"))
-	elif not inventory.has_item("item_seeds", 1):
+	elif seed_id == "":
 		_toast(tr("TOAST_NEED_SEEDS"))
 	else:
-		inventory.call("remove_item", "item_seeds", 1)
+		inventory.call("remove_item", seed_id, 1)
+		crop_seed = seed_id
+		watered = false
 		planted_at = _now()
 		_toast(tr("TOAST_PLANTED"))
 		_refresh_visuals()
 		changed.emit(self)
 
+func _water() -> void:
+	watered = true
+	# L'eau avance la pousse : on recule la date de semis.
+	planted_at -= grow_seconds() * WATER_BONUS
+	var progression := InteractionManager.get_progression()
+	if progression != null:
+		progression.call("add_stat", "stat_watered", 1)
+		progression.call("add_xp_for", "water")
+	_toast(tr("TOAST_WATERED"))
+	_refresh_visuals()
+	changed.emit(self)
+
 func _harvest(inventory: Node) -> void:
-	var amount := randi_range(VEGETABLES_MIN, VEGETABLES_MAX)
+	var is_grain := crop_seed == "item_grain_seeds"
+	var amount := randi_range(VEGETABLES_MIN, VEGETABLES_MAX) + (1 if is_grain else 0)
 	var progression := InteractionManager.get_progression()
 	if progression != null:
 		amount = int(progression.call("roll_loot", amount))
 		progression.call("add_stat", "stat_harvests", 1)
 		progression.call("add_xp_for", "farm")
-	inventory.call("add_item", "item_vegetables", amount)
-	inventory.call("add_item", "item_seeds", randi_range(1, 2))
+	inventory.call("add_item", String(CROP_TYPES[crop_seed]["yield"]), amount)
+	inventory.call("add_item", crop_seed, randi_range(1, 2))
+	if is_grain:
+		if progression != null:
+			progression.call("add_stat", "stat_grain", 1)
+	elif randf() < GRAIN_SEED_CHANCE:
+		inventory.call("add_item", "item_grain_seeds", 1)
+		_toast(tr("TOAST_FOUND_GRAIN"))
 	planted_at = -1.0
+	watered = false
 	_refresh_visuals()
 	changed.emit(self)
 
@@ -203,8 +266,10 @@ func _refresh_visuals() -> void:
 	var stage := get_stage()
 	var growth := get_growth()
 	_crops.visible = stage != Stage.EMPTY
+	var fruit_color: Color = CROP_TYPES[crop_seed]["fruit"]
 	for plant in _crops.get_children():
 		plant.scale = Vector3.ONE * lerpf(0.25, 1.0, growth)
 		var fruit := plant.get_node_or_null("Fruit") as Node3D
 		if fruit != null:
 			fruit.visible = stage == Stage.RIPE
+			((fruit as MeshInstance3D).mesh as SphereMesh).material.set("albedo_color", fruit_color)
