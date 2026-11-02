@@ -168,6 +168,22 @@ const QUESTS := {
 		"requires": "quest_predator",
 		"reward": {"item_soup": 2},
 	},
+	"quest_camp": {
+		"title": "QUEST_CAMP_TITLE",
+		"description": "QUEST_CAMP_DESC",
+		"goal_item": "building_campfire",
+		"goal_count": 1,
+		"requires": "quest_shelter",
+		"reward": {"item_wood": 6},
+	},
+	"quest_chest": {
+		"title": "QUEST_CHEST_TITLE",
+		"description": "QUEST_CHEST_DESC",
+		"goal_item": "furniture_chest",
+		"goal_count": 1,
+		"requires": "quest_camp",
+		"reward": {"item_stone": 4, "item_wood": 4},
+	},
 	"quest_dog": {
 		"title": "QUEST_DOG_TITLE",
 		"description": "QUEST_DOG_DESC",

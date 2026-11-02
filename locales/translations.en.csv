@@ -96,9 +96,9 @@ TOAST_PLACED,Placed: %s
 TOAST_TOO_STEEP,Ground too steep to build here.
 TOAST_CANNOT_PLACE,You can't place that here.
 TOAST_TOO_MANY,Too many structures in the canyon.
-TOAST_BED_REST,What a nap! Stamina restored.
+TOAST_BED_REST,What a nap! Stamina restored. Wake-up point saved.
 TOAST_NOT_TIRED,You're not sleepy: wait for night.
-TOAST_SLEPT,You sleep until dawn. Stamina restored.
+TOAST_SLEPT,You sleep until dawn. Stamina restored. Wake-up point saved.
 QUEST_REWARD,Reward: %s
 MAP_LEGEND_FIRE,Campfire
 MAP_LEGEND_CAMP,Camp
@@ -263,3 +263,20 @@ QUEST_PREDATOR_TITLE,The night prowler
 QUEST_PREDATOR_DESC,"Coyotes (from level 2) and wolves (from level 4) prowl at night. Equip the bow or the axe (attack button) and take one down; a well-fed campfire keeps them away."
 QUEST_CLOAK_TITLE,A fur cloak
 QUEST_CLOAK_DESC,"Craft a cloak from 3 pelts and 1 wool (level 3): it reduces damage taken by 35%."
+CRAFT_CAMPFIRE,Campfire
+CRAFT_CHEST,Chest
+CRAFT_PALISADE,Palisade
+ITEM_BUILDING_CAMPFIRE,campfire
+ITEM_FURNITURE_CHEST,chest
+ITEM_BUILDING_PALISADE,palisade
+ACTION_CHEST_STORE,Store in chest
+ACTION_CHEST_TAKE,Take contents
+ACTION_CHEST_EMPTY,Empty chest
+TOAST_CHEST_STORED,%d items stored in the chest.
+TOAST_CHEST_TAKEN,%d items taken back.
+TOAST_CHEST_EMPTY,The chest is empty.
+TOAST_WAKE_POINT,Wake-up point saved here.
+QUEST_CAMP_TITLE,A camp of your own
+QUEST_CAMP_DESC,"Craft a campfire (level 2) and place it from the bag: it burns wood, cooks your dishes and keeps prowlers away."
+QUEST_CHEST_TITLE,Tidying up
+QUEST_CHEST_DESC,"Craft a chest (level 3) and place it at camp: it stores your resources, except tools and arrows."

@@ -16,6 +16,8 @@ const COOK_RECIPES := [
 	{"in": {"item_vegetables": 1}, "out": "item_roast_vegetables", "toast": "TOAST_COOKED"},
 ]
 
+signal changed(fire)
+
 var _stage: int = 0
 var _light: OmniLight3D
 var _mesh: MeshInstance3D
@@ -61,6 +63,7 @@ func _on_interact(interactor: Node3D) -> void:
 	inventory.remove_item(wood_item_id, wood_per_stage)
 	_stage = mini(_stage + 1, STAGES)
 	_refresh()
+	changed.emit(self)
 	var sfx := InteractionManager.get_sfx()
 	if sfx != null:
 		sfx.play(load("res://assets/audio/pickup/collect.wav"), -4.0, 0.8)
@@ -81,6 +84,13 @@ func _cook(interactor: Node3D) -> void:
 		progression.call("add_stat", "stat_cooked", 1)
 		progression.call("add_xp_for", "cook")
 	_notify(interactor, String(recipe["toast"]))
+
+func get_state() -> Dictionary:
+	return {"stage": _stage}
+
+func apply_state(state: Dictionary) -> void:
+	_stage = clampi(int(state.get("stage", 0)), 0, STAGES)
+	_refresh()
 
 ## Un feu bien nourri tient les prédateurs à distance et éclaire le camp.
 func is_lit() -> bool:
