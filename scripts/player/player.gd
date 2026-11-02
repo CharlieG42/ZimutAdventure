@@ -231,13 +231,15 @@ func _build_dust() -> void:
 	_dust.scale_amount_max = 1.2
 	_dust.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
 	_dust.emission_sphere_radius = 0.25
-	var puff := SphereMesh.new()
-	puff.radius = 0.14
-	puff.height = 0.28
-	puff.radial_segments = 6
-	puff.rings = 3
+	var puff := QuadMesh.new()
+	puff.size = Vector2(0.3, 0.3)
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	# Nuage de poussière texturé (Kenney CC0) ; repli sur la couleur unie si absent.
+	var dust_tex := VfxParticles.tex("circle_02")
+	if dust_tex != null:
+		material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		material.albedo_texture = dust_tex
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.albedo_color = Color(0.74, 0.6, 0.42, 0.4)
 	puff.material = material

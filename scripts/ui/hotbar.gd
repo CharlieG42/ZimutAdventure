@@ -41,8 +41,15 @@ func refresh() -> void:
 		slot.theme_type_variation = &"RoundButton"
 		slot.tooltip_text = tr("ITEM_" + String(tool_id).to_upper())
 		slot.pressed.connect(_on_slot_pressed.bind(String(tool_id)))
-		var icon := ToolIcon.new()
-		icon.tool_id = tool_id
+		# Icône PNG générée quand disponible, sinon glyphe dessiné en code (ToolIcon).
+		var icon := ItemIcon.new()
+		icon.set_item(tool_id)
+		if icon.texture == null:
+			var fallback := ToolIcon.new()
+			fallback.tool_id = tool_id
+			fallback.set_anchors_preset(Control.PRESET_FULL_RECT)
+			fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			slot.add_child(fallback)
 		icon.set_anchors_preset(Control.PRESET_FULL_RECT)
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		slot.add_child(icon)

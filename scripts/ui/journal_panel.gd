@@ -311,12 +311,17 @@ func _refresh_inventory() -> void:
 		var label := Label.new()
 		label.text = "%s  ×%d" % [tr("ITEM_" + String(item_id).to_upper()), int(all[item_id])]
 		label.add_theme_font_size_override("font_size", 22)
+		label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var placeable: bool = spawner != null and bool(spawner.call("is_placeable", String(item_id)))
 		var edible: bool = survival != null and EDIBLE.has(String(item_id))
 		if not placeable and not edible:
-			_inventory_list.add_child(label)
+			var plain := HBoxContainer.new()
+			plain.add_child(_item_icon(String(item_id)))
+			plain.add_child(label)
+			_inventory_list.add_child(plain)
 			continue
 		var row := HBoxContainer.new()
+		row.add_child(_item_icon(String(item_id)))
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(label)
 		if edible:
@@ -334,6 +339,19 @@ func _refresh_inventory() -> void:
 			button.pressed.connect(_on_place_pressed.bind(String(item_id)))
 			row.add_child(button)
 		_inventory_list.add_child(row)
+
+## Icône PNG de l'item (48 px) ; repli sur un point coloré si la texture manque.
+func _item_icon(item_id: String) -> Control:
+	var icon := ItemIcon.new()
+	icon.set_item(item_id)
+	icon.custom_minimum_size = Vector2(48, 48)
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	if icon.texture == null:
+		var dot := ColorRect.new()
+		dot.color = Color(0.88, 0.64, 0.36, 0.9)
+		dot.custom_minimum_size = Vector2(48, 48)
+		return dot
+	return icon
 
 ## Aliments consommables depuis le Sac : id -> valeur nutritive (faim restaurée).
 const EDIBLE := {
