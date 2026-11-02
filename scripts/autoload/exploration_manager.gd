@@ -103,6 +103,9 @@ func discover(site_id: String, silent: bool = false) -> bool:
 		if progression != null:
 			progression.call("add_stat", "stat_discovered", 1)
 			progression.call("add_xp_for", "discover")
+		var sfx := InteractionManager.get_sfx()
+		if sfx != null and sfx.has_method("play_event"):
+			sfx.call("play_event", "chime")
 		_toast(tr("TOAST_DISCOVERED") % tr(String(_sites[site_id]["name"])))
 	_dirty = true
 	site_discovered.emit(site_id)
