@@ -208,7 +208,7 @@ func _place_props() -> void:
 	var rocks := [
 		[RockGenerator.RockType.HOODOO, hoodoo_count, true, false, 0.7, ""],
 		[RockGenerator.RockType.BUTTE, butte_count, true, false, 0.85, ""],
-		[RockGenerator.RockType.BOULDER, boulder_count, false, true, 0.85, "boulder"],
+		[RockGenerator.RockType.BOULDER, boulder_count, false, true, 0.85, "sandstone"],
 	]
 	for rock in rocks:
 		var meshes := _rock_meshes(rock[0] as RockGenerator.RockType, rock[5] as String)
