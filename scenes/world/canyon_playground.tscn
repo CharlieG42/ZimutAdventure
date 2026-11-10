@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3 uid="uid://zimutcanyonplay"]
+[gd_scene load_steps=26 format=3 uid="uid://zimutcanyonplay"]
 
 [ext_resource type="Script" path="res://scripts/world/landscape_manager.gd" id="1_landscape"]
 [ext_resource type="Script" path="res://scripts/world/predator_spawner.gd" id="99_predators"]
@@ -24,6 +24,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/domestic_animal.tscn" id="18_domestic"]
 [ext_resource type="Texture2D" path="res://assets/vfx/sky/cloud_cover.png" id="19_clouds"]
 [ext_resource type="Script" path="res://scripts/vfx/sun_flare.gd" id="20_flare"]
+[ext_resource type="Script" path="res://scripts/vfx/footprints.gd" id="21_footprints"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.2, 0.43, 0.82, 1)
@@ -80,6 +81,9 @@ environment = SubResource("Environment_sky")
 [node name="SunFlare" type="Sprite3D" parent="."]
 visible = false
 script = ExtResource("20_flare")
+
+[node name="Footprints" type="Node3D" parent="."]
+script = ExtResource("21_footprints")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 60, 0)
