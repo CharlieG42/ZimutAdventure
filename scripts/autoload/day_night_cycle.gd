@@ -31,6 +31,8 @@ func _ready() -> void:
 
 func bind_world(sun_light: DirectionalLight3D, env: Environment) -> void:
 	sun = sun_light
+	if sun != null:
+		sun.add_to_group("sun")  # lu par le flare solaire (scripts/vfx/sun_flare.gd)
 	environment = env
 	_base_sun_rotation = sun.rotation
 	_apply()

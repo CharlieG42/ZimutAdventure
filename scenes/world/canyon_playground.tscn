@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://zimutcanyonplay"]
+[gd_scene load_steps=25 format=3 uid="uid://zimutcanyonplay"]
 
 [ext_resource type="Script" path="res://scripts/world/landscape_manager.gd" id="1_landscape"]
 [ext_resource type="Script" path="res://scripts/world/predator_spawner.gd" id="99_predators"]
@@ -22,6 +22,8 @@
 [ext_resource type="PackedScene" path="res://scenes/interaction/berry_bush.tscn" id="16_bush"]
 [ext_resource type="Script" path="res://scripts/world/livestock_spawner.gd" id="17_livestock"]
 [ext_resource type="PackedScene" path="res://scenes/world/domestic_animal.tscn" id="18_domestic"]
+[ext_resource type="Texture2D" path="res://assets/vfx/sky/cloud_cover.png" id="19_clouds"]
+[ext_resource type="Script" path="res://scripts/vfx/sun_flare.gd" id="20_flare"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.2, 0.43, 0.82, 1)
@@ -33,6 +35,7 @@ ground_horizon_color = Color(0.9, 0.66, 0.46, 1)
 ground_curve = 0.06
 sun_angle_max = 38.0
 sun_curve = 0.12
+sky_cover = ExtResource("19_clouds")
 
 [sub_resource type="Sky" id="Sky_sky"]
 sky_material = SubResource("ProceduralSkyMaterial_sky")
@@ -73,6 +76,10 @@ fog_height_density = 0.15
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_sky")
+
+[node name="SunFlare" type="Sprite3D" parent="."]
+visible = false
+script = ExtResource("20_flare")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 60, 0)

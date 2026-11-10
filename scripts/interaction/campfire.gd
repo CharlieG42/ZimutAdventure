@@ -23,6 +23,7 @@ signal changed(fire)
 var _stage: int = 0
 var _light: OmniLight3D
 var _mesh: MeshInstance3D
+var _flicker_t: float = 0.0
 
 func _ready() -> void:
 	add_to_group("campfire")
@@ -113,6 +114,19 @@ func _notify(interactor: Node3D, key: String) -> void:
 		var hud := tree.get_first_node_in_group("hud") as Node
 		if hud != null and hud.has_method("show_toast"):
 			hud.show_toast(tr(key))
+
+## Flicker du feu : somme de sinus (léger, pas de dépendance) sur la lumière et les VFX.
+func _process(delta: float) -> void:
+	if _stage <= 0:
+		return
+	_flicker_t += delta
+	var n := sin(_flicker_t * 11.3) * 0.5 + sin(_flicker_t * 23.7 + 1.7) * 0.3 + sin(_flicker_t * 5.1 + 0.4) * 0.2
+	if _light != null:
+		_light.light_energy = fire_light_energy * _stage / float(STAGES) * (1.0 + 0.16 * n)
+	var ratio := clampf(maxf(0.4, _stage / float(STAGES)) * (1.0 + 0.22 * n), 0.0, 1.0)
+	for p in get_children():
+		if p is GPUParticles3D:
+			p.amount_ratio = ratio
 
 func _refresh() -> void:
 	var lit := _stage > 0
