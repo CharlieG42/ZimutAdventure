@@ -31,6 +31,12 @@ func _ready() -> void:
 	_generate_terrain()
 	_place_props()
 
+func _process(_delta: float) -> void:
+	# Position du joueur exposée aux shaders (pliure de l'herbe au passage, vent).
+	var player := get_tree().get_first_node_in_group("player") if get_tree() != null else null
+	if player != null:
+		RenderingServer.global_shader_parameter_set("player_pos", player.global_position)
+
 func regenerate(new_seed: int = -1) -> void:
 	if new_seed >= 0:
 		seed_value = new_seed
@@ -250,11 +256,21 @@ func _rock_meshes(type: RockGenerator.RockType, glb_key: String) -> Array:
 	return [RockGenerator.generate(type, rng)]
 
 func _plant_meshes(type: VegetationGenerator.PlantType, glb_key: String) -> Array:
+	var out: Array = []
 	if use_glb_props and not glb_key.is_empty():
 		var variants := GlbPropLibrary.get_variant_meshes(glb_key)
 		if not variants.is_empty():
-			return variants
-	return [VegetationGenerator.generate(type, rng)]
+			out = variants
+	else:
+		out = [VegetationGenerator.generate(type, rng)]
+	# Vent sur la végétation basse : copie du maillage + matériaux shader (l'original
+	# en cache reste intact pour les autres usages, ex. buisson de baies).
+	if VfxWind.is_windy(glb_key):
+		var windy: Array = []
+		for m in out:
+			windy.append(VfxWind.apply_to_mesh(m, glb_key, 0.06))
+		return windy
+	return out
 
 ## Répartit `total` instances sur `n` variantes en gardant la somme exacte.
 static func _split_counts(total: int, n: int) -> Array:
