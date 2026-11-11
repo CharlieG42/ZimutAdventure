@@ -57,7 +57,16 @@ var _panels_open: bool = false
 ## Le joueur vise à l'arc : le réticule s'affiche même sans objet visé.
 var _aiming: bool = false
 
+## Qualité réduite (PerformanceGuard) : niveau 1 coupe le grain, niveau 2 aussi la vignette.
+func set_fx_level(level: int) -> void:
+	if fx_grain != null:
+		fx_grain.visible = level < 1
+	var vignette := get_node_or_null("FxLayer/Vignette") as CanvasItem
+	if vignette != null:
+		vignette.visible = level < 2
+
 func _ready() -> void:
+	add_to_group("fx_quality")
 	var is_touch := PlatformInfo.is_touch()
 	action_pad.visible = is_touch
 	journal_button.visible = is_touch

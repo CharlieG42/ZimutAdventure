@@ -53,7 +53,7 @@ func _init() -> void:
 	if get_nodes_in_group("sun").is_empty():
 		errors.append("aucun nœud dans le groupe 'sun'")
 
-	# --- HUD : vignette (multiply) + grain animé ---
+	# --- HUD : vignette (alpha) + grain animé ---
 	var hud := world.get_node("HUD") as CanvasLayer
 	var fx := hud.get_node_or_null("FxLayer") as CanvasLayer
 	if fx == null:
@@ -64,10 +64,10 @@ func _init() -> void:
 		if vig == null or vig.texture == null:
 			errors.append("Vignette manquante ou sans texture")
 		else:
+			# Mélange normal (alpha) : le mode MUL de Godot ignore l'alpha et noircit tout l'écran.
 			var mat := vig.material as CanvasItemMaterial
-			var mul_mode: int = ClassDB.class_get_integer_constant("CanvasItemMaterial", "BLEND_MODE_MUL")
-			if mat == null or mat.blend_mode != mul_mode:
-				errors.append("Vignette devrait être en blend MULT=%d (got %s)" % [mul_mode, str(mat.blend_mode if mat != null else -1)])
+			if mat != null and mat.blend_mode != CanvasItemMaterial.BLEND_MODE_MIX:
+				errors.append("Vignette : blend MIX attendu (MUL ignore l'alpha et assombrit l'écran, got %d)" % mat.blend_mode)
 		if gr == null or gr.texture == null:
 			errors.append("Grain manquant ou sans texture")
 		else:

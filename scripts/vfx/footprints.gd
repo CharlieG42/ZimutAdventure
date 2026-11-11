@@ -17,10 +17,12 @@ var _last_pos := Vector3.ZERO
 var _alternate := false
 var _marks: Array = []  # [{node: MeshInstance3D, mat: StandardMaterial3D, age: float}]
 var _player: Node3D
+var _max_marks: int = MAX_MARKS
 var _landscape: Node3D
 
 func _ready() -> void:
 	add_to_group("footprints")
+	add_to_group("fx_quality")
 	_tex = load(TEX)
 	_landscape = get_parent().get_node_or_null("Landscape") if get_parent() != null else null
 
@@ -41,7 +43,12 @@ func _process(delta: float) -> void:
 	age_marks(delta)
 
 ## Pose une empreinte si le joueur a assez bougé au sol. Testable directement.
+func set_fx_level(level: int) -> void:
+	_max_marks = MAX_MARKS if level < 1 else (MAX_MARKS / 2 if level < 2 else 0)
+
 func try_spawn(pos: Vector3, heading: float, grounded: bool, speed: float) -> void:
+	if _max_marks <= 0:
+		return
 	if not grounded or speed < 0.5:
 		_last_pos = pos
 		return
@@ -73,7 +80,7 @@ func try_spawn(pos: Vector3, heading: float, grounded: bool, speed: float) -> vo
 	m.rotation = Vector3(-PI * 0.5, heading, 0.0)
 	add_child(m)
 	_marks.append({"node": m, "mat": mat, "age": 0.0})
-	if _marks.size() > MAX_MARKS:
+	while _marks.size() > maxi(_max_marks, 1):
 		var old: Dictionary = _marks.pop_front()
 		(old["node"] as Node).queue_free()
 

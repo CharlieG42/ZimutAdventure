@@ -46,6 +46,7 @@ static func should_degrade(average_fps: float, current_level: int) -> bool:
 
 func set_level(new_level: int) -> void:
 	level = clampi(new_level, 0, MAX_LEVEL)
+	get_tree().call_group("fx_quality", "set_fx_level", level)
 	var weather := InteractionManager.get_weather()
 	if weather != null and weather.has_method("set_low_quality"):
 		weather.call("set_low_quality", level >= 1)

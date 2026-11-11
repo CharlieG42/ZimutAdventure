@@ -15,8 +15,19 @@ func _ready() -> void:
 	modulate = Color(1.0, 0.9, 0.7, 0.8)
 	visible = false
 	add_to_group("sun_flare")
+	add_to_group("fx_quality")
+
+var _disabled: bool = false
+
+## Qualité réduite : le flare disparaît dès le niveau 2.
+func set_fx_level(level: int) -> void:
+	_disabled = level >= 2
+	if _disabled:
+		visible = false
 
 func _process(_delta: float) -> void:
+	if _disabled:
+		return
 	var cam := get_viewport().get_camera_3d() if get_viewport() != null else null
 	var sun := get_tree().get_first_node_in_group("sun") as DirectionalLight3D if get_tree() != null else null
 	if cam == null or sun == null:
