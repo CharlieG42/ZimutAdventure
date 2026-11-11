@@ -43,6 +43,17 @@ func _initialize() -> void:
 	guard.call("set_level", 1)
 	_check(bool(root.get_node("Weather").get("low_quality")), "niveau 1 : précipitations allégées")
 	guard.call("set_level", 0)
+	var hud_scene := (load("res://scenes/ui/hud.tscn") as PackedScene).instantiate()
+	root.add_child(hud_scene)
+	await process_frame
+	guard.call("set_level", 1)
+	_check(not (hud_scene.get_node("FxLayer/Grain") as CanvasItem).visible, "niveau 1 : grain coupé")
+	_check((hud_scene.get_node("FxLayer/Vignette") as CanvasItem).visible, "niveau 1 : vignette conservée")
+	guard.call("set_level", 2)
+	_check(not (hud_scene.get_node("FxLayer/Vignette") as CanvasItem).visible, "niveau 2 : vignette coupée")
+	guard.call("set_level", 0)
+	_check((hud_scene.get_node("FxLayer/Grain") as CanvasItem).visible, "retour : grain rétabli")
+	hud_scene.queue_free()
 	_check(not bool(root.get_node("Weather").get("low_quality")), "retour qualité normale")
 	_check(String(guard.call("report")).contains("FPS"), "rapport de mesure")
 

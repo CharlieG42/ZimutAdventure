@@ -53,6 +53,8 @@ func _init() -> void:
 		f.close()
 	if "global uniform vec3 player_pos" not in shader_txt:
 		errors.append("wind_sway.gdshader ne déclare pas 'global uniform vec3 player_pos'")
+	if not ProjectSettings.has_setting("shader_globals/player_pos"):
+		errors.append("player_pos n'est pas déclaré dans [shader_globals] de project.godot")
 	# Le landscape pose l'uniforme chaque frame (contrat source ; en headless le dummy
 	# renderer ne compile pas les shaders, donc pas de roundtrip RenderingServer).
 	var lm_txt := ""
