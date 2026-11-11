@@ -26,6 +26,12 @@ var _prop_collision: StaticBody3D
 ## headless ne relit pas les MultiMesh).
 var prop_placements: Array[Transform3D] = []
 
+## Découpage du décor en blocs et portées d'affichage (mètres).
+const CHUNK_SIZE := 64.0
+const RANGE_NEAR := 75.0      # herbes, fleurs
+const RANGE_SHRUB := 130.0    # buissons, agaves
+const RANGE_MEDIUM := 230.0   # arbres, cactus, blocs de grès
+
 func _ready() -> void:
 	rng.seed = seed_value
 	_generate_terrain()
@@ -223,8 +229,11 @@ func _place_props() -> void:
 		# Collision calquée sur le maillage réellement généré (tailles aléatoires).
 			var box := mesh.get_aabb()
 			var radius := maxf(box.size.x, box.size.z) * 0.5 * (rock[4] as float)
-			_props_root.add_child(_place_multimesh(mesh, entry[1] as int, rock[2] as bool,
-					radius, box.size.y, rock[3] as bool, box.position.y + box.size.y * 0.5))
+			# Les grands reliefs restent visibles de partout ; les blocs disparaissent au loin.
+			var far := 0.0 if (rock[2] as bool) else RANGE_MEDIUM
+			for chunk in _place_multimesh(mesh, entry[1] as int, rock[2] as bool,
+					radius, box.size.y, rock[3] as bool, box.position.y + box.size.y * 0.5, far, true):
+				_props_root.add_child(chunk)
 
 	var plants := [
 		[VegetationGenerator.PlantType.PINE, pine_count, 0.45, 4.0, "pine"],
@@ -245,7 +254,11 @@ func _place_props() -> void:
 				# Le cylindre de collision épouse le tronc : rayon borné, hauteur du maillage.
 				cr = minf(cr, maxf(box.size.x, box.size.z) * 0.5)
 				ch = box.size.y
-			_props_root.add_child(_place_multimesh(mesh, entry[1] as int, false, cr, ch, false))
+			var tall := cr > 0.0
+			var small := VfxWind.is_windy(plant[4] as String) and (plant[4] as String) != "shrub"
+			var far := RANGE_MEDIUM if tall else (RANGE_NEAR if small else RANGE_SHRUB)
+			for chunk in _place_multimesh(mesh, entry[1] as int, false, cr, ch, false, -1.0, far, tall):
+				_props_root.add_child(chunk)
 
 ## Maillages d'un type de rocher : variantes GLB si disponibles, sinon procédural.
 func _rock_meshes(type: RockGenerator.RockType, glb_key: String) -> Array:
@@ -281,18 +294,14 @@ static func _split_counts(total: int, n: int) -> Array:
 		out.append([i, base + (1 if i < rem else 0)])
 	return out
 
+## Place `count` instances et les regroupe par bloc de CHUNK_SIZE mètres : un MultiMesh par
+## bloc, pour que le moteur n'affiche que les blocs dans le champ et à portée (`range_end`,
+## 0 = toujours visible). Retourne la liste des MultiMeshInstance3D.
 func _place_multimesh(mesh: Mesh, count: int, is_large_rock: bool,
 		collider_radius: float = 0.0, collider_height: float = 0.0,
-		collider_sphere: bool = false, collider_center_y: float = -1.0) -> MultiMeshInstance3D:
-	var multimesh := MultiMesh.new()
-	multimesh.transform_format = MultiMesh.TRANSFORM_3D
-	multimesh.mesh = mesh
-	multimesh.instance_count = count
-
-	var instance := MultiMeshInstance3D.new()
-	instance.multimesh = multimesh
-	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-
+		collider_sphere: bool = false, collider_center_y: float = -1.0,
+		range_end: float = 0.0, casts_shadow: bool = true) -> Array:
+	var buckets: Dictionary = {}
 	for i in range(count):
 		var pos := _random_ground_position(is_large_rock)
 		var scale_v := rng.randf_range(0.7, 1.4)
@@ -301,13 +310,43 @@ func _place_multimesh(mesh: Mesh, count: int, is_large_rock: bool,
 		# correspondait plus à ses collisions). On construit donc base + origine séparément.
 		var basis := Basis(Vector3.UP, rng.randf_range(0.0, TAU)).scaled(Vector3.ONE * scale_v)
 		var transform := Transform3D(basis, pos)
-		multimesh.set_instance_transform(i, transform)
+		var cell := Vector2i(int(floor(pos.x / CHUNK_SIZE)), int(floor(pos.z / CHUNK_SIZE)))
+		if not buckets.has(cell):
+			buckets[cell] = []
+		(buckets[cell] as Array).append(transform)
 		prop_placements.append(transform)
 		if _prop_collision != null and collider_radius > 0.0:
 			_add_prop_shape(pos, scale_v, collider_radius, collider_height, collider_sphere,
 					collider_center_y if collider_center_y > -1.0 else collider_height * 0.5)
 
-	return instance
+	var instances: Array = []
+	for cell in buckets:
+		var transforms: Array = buckets[cell]
+		var multimesh := MultiMesh.new()
+		multimesh.transform_format = MultiMesh.TRANSFORM_3D
+		multimesh.mesh = mesh
+		multimesh.instance_count = transforms.size()
+		# Le nœud est posé au centre du bloc (les portées se mesurent depuis lui) ; les
+		# instances sont exprimées par rapport à ce centre.
+		var centre := Vector3.ZERO
+		for t in transforms:
+			centre += (t as Transform3D).origin
+		centre /= float(transforms.size())
+		for i in transforms.size():
+			var local: Transform3D = transforms[i]
+			local.origin -= centre
+			multimesh.set_instance_transform(i, local)
+		var instance := MultiMeshInstance3D.new()
+		instance.multimesh = multimesh
+		instance.position = centre
+		instance.cast_shadow = (GeometryInstance3D.SHADOW_CASTING_SETTING_ON if casts_shadow
+				else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)
+		if range_end > 0.0:
+			# La distance se mesure depuis le centre du bloc : on ajoute sa demi-diagonale.
+			instance.visibility_range_end = range_end + CHUNK_SIZE * 0.71
+			instance.visibility_range_end_margin = 10.0
+		instances.append(instance)
+	return instances
 
 func _add_prop_shape(pos: Vector3, scale_v: float, radius: float, height: float, sphere: bool, center_y: float) -> void:
 	var col := CollisionShape3D.new()
