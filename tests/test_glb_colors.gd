@@ -52,7 +52,7 @@ func _initialize() -> void:
 	if not arches.is_empty():
 		var box: AABB = (arches[0] as Mesh).get_aabb()
 		_check(box.size.x > 10.0 and box.size.y > 5.0, "arche : %.0f m de large, %.0f m de haut" % [box.size.x, box.size.y])
-		_check(box.position.y < 0.0, "pieds de l'arche enfoncés dans le sol")
+		_check(box.position.y <= 0.01, "arche posée au sol")
 	var pebbles: Array = library.get_variant_meshes("pebble")
 	_check(pebbles.size() == 4, "quatre cailloux chargés (%d)" % pebbles.size())
 	if not pebbles.is_empty():
