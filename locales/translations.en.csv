@@ -301,7 +301,7 @@ ITEM_ITEM_RELIC,ancient relic
 QUEST_EXPLORE_TITLE,Explorer
 QUEST_EXPLORE_DESC,"Discover 3 sites (ruins, caves) by walking up to them: the map reveals itself and fast travel opens (level 3)."
 QUEST_TREASURE_TITLE,Relic hunter
-QUEST_TREASURE_DESC,"Open the site chests and bring back 2 ancient relics."
+QUEST_TREASURE_DESC,"Open 2 treasure chests in ruins and caves: each holds an ancient relic."
 CRAFT_FISHING_ROD,Fishing rod
 ITEM_TOOL_FISHING_ROD,fishing rod
 ITEM_ITEM_FISH,trout
@@ -324,3 +324,21 @@ QUEST_FISH_TITLE,By the water
 QUEST_FISH_DESC,"Craft a fishing rod (level 2), walk up to a pond, cast and strike as soon as it bites: catch 3 fish. Dawn, dusk and rain make them bite faster."
 QUEST_GRILL_TITLE,Grilled fish
 QUEST_GRILL_DESC,"Grill 2 fish on a campfire."
+QUEST_ALTAR_TITLE,The relic altar
+QUEST_ALTAR_DESC,"Offer a relic at the altar near the starting signpost: each offering grants a permanent blessing."
+ACTION_ALTAR_OFFER,Offer a relic
+ACTION_ALTAR_FULL,Altar fulfilled
+TOAST_ALTAR_NEED_RELIC,You need an ancient relic (chests in ruins and caves).
+TOAST_ALTAR_FULL,The altar is fulfilled: all three blessings are yours.
+TOAST_BLESSING,Blessing received: %s
+BLESSING_ENDURANCE,"Endurance (slower hunger and thirst)"
+BLESSING_PATHS,"Ancient paths (free fast travel)"
+BLESSING_FORTUNE,"Fortune (more loot)"
+JOURNAL_SETTINGS,Settings
+SETTING_MUSIC,Music
+SETTING_VOLUME,Master volume
+SETTING_QUALITY,Graphics quality
+SETTING_QUALITY_AUTO,Automatic
+SETTING_QUALITY_HIGH,High
+SETTING_QUALITY_LOW,Low (smoother)
+SETTING_FPS,Show frames per second

@@ -195,10 +195,18 @@ const QUESTS := {
 	"quest_treasure": {
 		"title": "QUEST_TREASURE_TITLE",
 		"description": "QUEST_TREASURE_DESC",
-		"goal_item": "item_relic",
+		"goal_item": "stat_treasures",
 		"goal_count": 2,
 		"requires": "quest_explore",
 		"reward": {"item_wood": 6, "item_stone": 6},
+	},
+	"quest_altar": {
+		"title": "QUEST_ALTAR_TITLE",
+		"description": "QUEST_ALTAR_DESC",
+		"goal_item": "stat_blessings",
+		"goal_count": 1,
+		"requires": "quest_treasure",
+		"reward": {"item_cooked_meat": 2},
 	},
 	"quest_fish": {
 		"title": "QUEST_FISH_TITLE",

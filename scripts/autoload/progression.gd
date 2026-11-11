@@ -93,7 +93,9 @@ func stamina_regen_multiplier() -> float:
 
 ## Chance (0..1) d'obtenir une unité de plus en récoltant (coupe, cueillette, rochers).
 func bonus_loot_chance() -> float:
-	return clampf(BONUS_LOOT_PER_LEVEL * float(level - 1), 0.0, 0.8)
+	var exploration := InteractionManager.get_exploration()
+	var blessed := float(exploration.call("loot_bonus")) if exploration != null else 0.0
+	return clampf(BONUS_LOOT_PER_LEVEL * float(level - 1) + blessed, 0.0, 0.9)
 
 ## Quantité finale d'une récolte : `base` plus, éventuellement, 1 unité de bonus.
 func roll_loot(base: int) -> int:

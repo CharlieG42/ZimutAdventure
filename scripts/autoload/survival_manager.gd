@@ -54,8 +54,10 @@ func _process(delta: float) -> void:
 	var weather := InteractionManager.get_weather()
 	var hunger_weather := float(weather.call("hunger_factor")) if weather != null else 1.0
 	var thirst_weather := float(weather.call("thirst_factor")) if weather != null else 1.0
-	_hunger = maxf(0.0, _hunger - hunger_drain * rate * hunger_weather * delta)
-	_thirst = maxf(0.0, _thirst - thirst_drain * rate * thirst_weather * delta)
+	var exploration := InteractionManager.get_exploration()
+	var blessed := float(exploration.call("drain_factor")) if exploration != null else 1.0
+	_hunger = maxf(0.0, _hunger - hunger_drain * rate * hunger_weather * blessed * delta)
+	_thirst = maxf(0.0, _thirst - thirst_drain * rate * thirst_weather * blessed * delta)
 	_reemit()
 	if _health < 1.0 and _health > 0.0 and _hunger > 0.25 and _thirst > 0.25:
 		heal(HEALTH_REGEN * delta)

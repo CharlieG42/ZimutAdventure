@@ -12,12 +12,15 @@ const TAP_WINDOW := 3.0
 
 var enabled: bool = DisplayServer.get_name() != "headless"
 var level: int = 0
+## "auto" : s'adapte aux FPS ; "high" : qualité maximale fixe ; "low" : qualité réduite fixe.
+var mode: String = "auto"
 var _accum: float = 0.0
 var _frames: int = 0
 var _label: Label
 var _layer: CanvasLayer
 var _taps: Array = []
 var _log_timer: float = 0.0
+var _shadowless: Array = []
 
 func _ready() -> void:
 	set_process(enabled)
@@ -37,12 +40,23 @@ func _process(delta: float) -> void:
 	if _log_timer >= 30.0 and _label != null and _label.visible:
 		_log_timer = 0.0
 		_write_log(average)
-	if average < LOW_FPS and level < MAX_LEVEL:
+	if mode == "auto" and average < LOW_FPS and level < MAX_LEVEL:
 		set_level(level + 1)
 
 ## Décision de baisse de qualité (testable) : vrai si la moyenne justifie un cran de moins.
 static func should_degrade(average_fps: float, current_level: int) -> bool:
 	return average_fps < LOW_FPS and current_level < MAX_LEVEL
+
+func set_mode(new_mode: String) -> void:
+	mode = new_mode
+	if mode == "high":
+		set_level(0)
+	elif mode == "low":
+		set_level(MAX_LEVEL)
+
+func set_overlay_visible(value: bool) -> void:
+	if (_label != null and _label.visible) != value:
+		toggle_overlay()
 
 func set_level(new_level: int) -> void:
 	level = clampi(new_level, 0, MAX_LEVEL)
@@ -52,9 +66,15 @@ func set_level(new_level: int) -> void:
 		weather.call("set_low_quality", level >= 1)
 	if level >= 2:
 		for light in get_tree().root.find_children("*", "DirectionalLight3D", true, false):
-			(light as DirectionalLight3D).shadow_enabled = false
+			if (light as DirectionalLight3D).shadow_enabled:
+				(light as DirectionalLight3D).shadow_enabled = false
+				_shadowless.append(light)
 		get_viewport().scaling_3d_scale = 0.8
 	else:
+		for light in _shadowless:
+			if is_instance_valid(light):
+				(light as DirectionalLight3D).shadow_enabled = true
+		_shadowless.clear()
 		get_viewport().scaling_3d_scale = 1.0
 	print("PerformanceGuard: qualité niveau %d" % level)
 
