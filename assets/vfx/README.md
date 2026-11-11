@@ -9,3 +9,12 @@ poussière de course ; éclats de roche) avec repli procédural (disque/cône) s
 texture est absente.
 
 Régénération : copier les PNG du pack (aucun traitement requis).
+
+## Ciel et overlays 2D (générés, pas de source externe)
+
+- `sky/cloud_cover.png` : couverture nuageuse tileable (bruit fractal Pillow) branchée sur
+  `ProceduralSkyMaterial.sky_cover` du ciel du canyon (assombri la nuit via `sky_cover_modulate`).
+- `overlays/vignette.png` : vignette radiale posée en multiply sur le HUD (`FxLayer`).
+- `overlays/grain.png` : grain film subtil animé (décalage du tile toutes les ~90 ms).
+
+Régénération : `python3 tools/generate_atmosphere_assets.py` (Pillow).

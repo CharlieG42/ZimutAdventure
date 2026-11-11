@@ -33,6 +33,9 @@ const BASE_MARGIN := 16
 @onready var quest_tracker: Label = $Overlay/QuestTracker
 @onready var camera_joystick: Control = $CameraJoystick
 @onready var touch_look: Control = $TouchLook
+@onready var fx_grain: TextureRect = $FxLayer/Grain
+
+var _grain_timer: float = 0.0
 
 var _player: CharacterBody3D
 var _toast_tween: Tween
@@ -176,6 +179,11 @@ func _process(delta: float) -> void:
 		if rounded != _last_heading:
 			_last_heading = rounded
 			compass_label.text = "%s %03d°" % [tr(CompassStrip.cardinal_key(heading)), rounded]
+	# Grain film animé : petit décalage aléatoire du tile toutes les ~90 ms.
+	_grain_timer += delta
+	if _grain_timer >= 0.09 and fx_grain != null:
+		_grain_timer = 0.0
+		fx_grain.position = Vector2(randf_range(-4.0, 4.0), randf_range(-4.0, 4.0))
 
 func _unhandled_input(event: InputEvent) -> void:
 	# Clic sur la mini-carte : en jeu la souris est capturée, le clic n'atteint donc
