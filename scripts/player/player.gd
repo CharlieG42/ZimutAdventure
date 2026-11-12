@@ -127,6 +127,16 @@ var _walk_phase: float = 0.0
 var _gait: float = 0.0
 var _air_blend: float = 0.0
 var _rest: Dictionary = {}
+## Personnage animé (Mixamo) ; null = on garde l'ancien corps en pièces rigides.
+var _hero: Node3D
+var _held_bow: Node3D
+var _held_axe: Node3D
+
+# Placement de l'arc et de la hache dans la main du personnage rigué.
+# L'os de la main pointe vers les doigts (vers le bas, bras ballant) : demi-tour autour
+# de X pour que le haut de l'outil pointe vers le haut.
+var held_bow_offset := Transform3D(Basis(Vector3.RIGHT, PI), Vector3.ZERO)
+var held_axe_offset := Transform3D(Basis(Vector3.RIGHT, PI), Vector3.ZERO)
 
 const LEG_HIP_Y := 0.86
 const ARM_SHOULDER_Y := 0.375
@@ -151,6 +161,7 @@ func _ready() -> void:
 	_safe_position = global_position
 	_visuals_base_yaw = visuals.rotation.y
 	_cache_rest_pose()
+	_setup_hero()
 	InteractionManager.set_camera(camera)
 	InteractionManager.set_eye(camera_pivot)
 	_apply_view_mode()
@@ -596,8 +607,8 @@ func _update_held_tool() -> void:
 	if equipped == _last_equipped_tool:
 		return
 	_last_equipped_tool = equipped
-	var bow_node := visuals.get_node_or_null("Torso/ArmR/HeldBow") as Node3D
-	var axe_node := visuals.get_node_or_null("Torso/ArmR/HeldAxe") as Node3D
+	var bow_node := _held_bow
+	var axe_node := _held_axe
 	if bow_node != null:
 		bow_node.visible = equipped == "tool_hunting_bow"
 	if axe_node != null:
@@ -611,6 +622,43 @@ func _update_head_bob(delta: float, horizontal_speed: float) -> void:
 		_bob_phase += delta * horizontal_speed * 2.1
 	var target_y := eye_height + _mount_lift + sin(_bob_phase * 2.0) * 0.032 * strength + _land_dip
 	camera_pivot.position.y = lerpf(camera_pivot.position.y, target_y, 1.0 - exp(-22.0 * delta))
+
+## Remplace le corps en boîtes par le personnage rigué s'il est disponible.
+## Les anciennes pièces restent dans la scène (invisibles) : l'arc et la hache
+## y sont accrochés et sont replacés dans la main du modèle à chaque image.
+func _setup_hero() -> void:
+	_held_bow = visuals.get_node_or_null("Torso/ArmR/HeldBow") as Node3D
+	_held_axe = visuals.get_node_or_null("Torso/ArmR/HeldAxe") as Node3D
+	var hero := Node3D.new()
+	hero.name = "Hero"
+	hero.set_script(load("res://scripts/player/hero_model.gd"))
+	if not hero.call("load_model"):
+		hero.free()
+		return
+	_hide_rigid_body(visuals)
+	visuals.add_child(hero)
+	_hero = hero
+
+func _hide_rigid_body(node: Node) -> void:
+	if node == _held_bow or node == _held_axe:
+		return
+	if node is MeshInstance3D:
+		var mesh_node := node as MeshInstance3D
+		# Calque 0 : plus rendu par aucune caméra, mais le nœud (et ses enfants) reste actif.
+		mesh_node.layers = 0
+		mesh_node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for child in node.get_children():
+		_hide_rigid_body(child)
+
+func _update_hero(delta: float, horizontal_speed: float, moving: bool) -> void:
+	_hero.call("update_motion", horizontal_speed, moving, is_on_floor())
+	var hand: Transform3D = _hero.call("hand_transform")
+	if _held_bow != null:
+		_held_bow.global_transform = hand * held_bow_offset
+	if _held_axe != null:
+		_held_axe.global_transform = hand * held_axe_offset
+	if _attack_anim > 0.0:
+		_attack_anim = maxf(0.0, _attack_anim - delta)
 
 func _cache_rest_pose() -> void:
 	for part in ["LegL", "LegR", "Torso/ArmL", "Torso/ArmR"]:
@@ -635,6 +683,14 @@ func _update_character(delta: float, horizontal_speed: float) -> void:
 	else:
 		_facing_yaw = lerp_angle(_facing_yaw, 0.0, 1.0 - exp(-3.0 * delta))
 	var lean := clampf(horizontal_speed / sprint_speed, 0.0, 1.0) * (0.14 if _sprinting else 0.05)
+	if _hero != null:
+		# Pas d'animation de coup : le buste plonge vers l'avant le temps du geste.
+		if _attack_anim > 0.0:
+			lean += 0.45 * sin((1.0 - _attack_anim / ATTACK_ANIM_TIME) * PI)
+		visuals.rotation = Vector3(lean, _visuals_base_yaw + _facing_yaw, 0.0)
+		visuals.position.y = _mount_lift
+		_update_hero(delta, horizontal_speed, moving)
+		return
 	visuals.rotation = Vector3(lean, _visuals_base_yaw + _facing_yaw, 0.0)
 
 	var airborne := not is_on_floor()
