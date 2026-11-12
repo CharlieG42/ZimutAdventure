@@ -59,6 +59,12 @@ func _ready() -> void:
 	_build_model()
 	_resize_collision()
 	_start_walk()
+	# Après que les sous-classes ont ajouté leurs détails : fusion des petits maillages.
+	_bake_model.call_deferred()
+
+func _bake_model() -> void:
+	if _model != null and is_instance_valid(_model):
+		MeshBaker.bake(_model)
 
 ## Paramètres de l'espèce (surchargé par les animaux domestiques).
 func _species_config() -> Dictionary:
@@ -383,4 +389,5 @@ func _add_mesh(parent: Node3D, mesh: Mesh, material: Material, position: Vector3
 	instance.rotation_degrees = rotation_deg
 	instance.scale = mesh_scale
 	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	instance.set_meta(MeshBaker.MARK, true)
 	parent.add_child(instance)
