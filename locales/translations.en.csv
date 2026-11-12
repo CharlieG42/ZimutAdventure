@@ -109,7 +109,7 @@ ITEM_ITEM_COOKED_MEAT,cooked meat
 ACTION_COOK,Cook
 TOAST_NEED_MEAT,No raw meat to cook!
 TOAST_MEAT_COOKED,The meat smells good...
-TOAST_HUNT_SUCCESS,Prey down! You gather %s.
+TOAST_HUNT_SUCCESS,Hit! You gather: %s.
 QUEST_FIRST_HUNT_TITLE,First hunt
 QUEST_FIRST_HUNT_DESC,Shoot a deer with your bow to gather raw meat.
 QUEST_COOKED_MEAL_TITLE,A hot meal
@@ -140,7 +140,7 @@ LEVEL_TITLE,Level %d
 LEVEL_MAX,Max level
 HINT_TOOL_STONE_AXE,Axe equipped: get close to a tree and act to chop it.
 HINT_TOOL_SICKLE,Sickle equipped: get close to a berry bush to pick the berries.
-HINT_TOOL_HUNTING_BOW,Bow equipped: aim at an animal and press Shoot (left click).
+HINT_TOOL_HUNTING_BOW,"Bow equipped: hold Shoot to draw, release to fire. Game near the crosshair is locked on."
 QUEST_LUMBERJACK_TITLE,Lumberjack
 QUEST_LUMBERJACK_DESC,Equip the axe (tool bar) and fell 3 trees: get close and act several times.
 QUEST_SICKLE_TITLE,A sickle for foraging
@@ -161,7 +161,7 @@ TOAST_NEED_SEEDS,You need seeds (pick berries to find some).
 TOAST_PLANTED,Seed sown: the harvest will be ready in a few minutes.
 ACTION_TAME,Feed to tame
 ACTION_NEED_FOOD,Tame (food required)
-ACTION_TAME_WITH_FOOD,Feed %s to tame
+ACTION_TAME_WITH_FOOD,Give %s (trust %d/%d)
 ACTION_NEED_FOOD_LIST,Needs: %s
 ACTION_MILK,Milk
 ACTION_SHEAR,Shear (sickle)
@@ -232,11 +232,11 @@ QUEST_COOK_DESC,"Prepare 3 dishes at the campfire: meat, eggs, vegetables, bread
 QUEST_WATER_TITLE,A splash of water
 QUEST_WATER_DESC,"Craft a watering can (level 4), equip it and water 2 growing crops."
 QUEST_GRAIN_TITLE,Wheat in the making
-QUEST_GRAIN_DESC,"Sow grain seeds (sometimes found when harvesting vegetables) and harvest wheat."
+QUEST_GRAIN_DESC,Sow grain seeds (sometimes found when harvesting vegetables) and harvest wheat.
 QUEST_WOOL_BED_TITLE,A cosy bed
-QUEST_WOOL_BED_DESC,"Shear sheep with the sickle and craft a wool bed (level 4): it lets you sleep at night."
+QUEST_WOOL_BED_DESC,Shear sheep with the sickle and craft a wool bed (level 4): it lets you sleep at night.
 QUEST_PEN_TITLE,A pen for the livestock
-QUEST_PEN_DESC,"Craft a pen (level 4) and place it: tamed livestock nearby moves in and produces faster."
+QUEST_PEN_DESC,Craft a pen (level 4) and place it: tamed livestock nearby moves in and produces faster.
 SEASON_SPRING,Spring
 SEASON_SUMMER,Summer
 SEASON_AUTUMN,Autumn
@@ -249,7 +249,7 @@ TOAST_SEASON,New season: %s
 TOAST_RAIN,It starts to rain: your crops are watered.
 TOAST_SNOW,Snow begins to fall.
 QUEST_SEASONS_TITLE,Through the seasons
-QUEST_SEASONS_DESC,"Watch two seasons go by (6 game days each). Crops grow slower in winter and thirst is sharper in summer; rain waters your plots."
+QUEST_SEASONS_DESC,Watch two seasons go by (6 game days each). Crops grow slower in winter and thirst is sharper in summer; rain waters your plots.
 VITAL_HEALTH,Health
 ANIMAL_WOLF,The wolf
 ANIMAL_COYOTE,The coyote
@@ -262,9 +262,9 @@ TOAST_BITTEN,You are bitten!
 TOAST_RAIDED,%s was frightened by a prowler: its production is delayed. A pen would protect it.
 TOAST_DIED,You passed out: you come to at the starting camp.
 QUEST_PREDATOR_TITLE,The night prowler
-QUEST_PREDATOR_DESC,"Coyotes (from level 2) and wolves (from level 4) prowl at night. Equip the bow or the axe (attack button) and take one down; a well-fed campfire keeps them away."
+QUEST_PREDATOR_DESC,Coyotes (from level 2) and wolves (from level 4) prowl at night. Equip the bow or the axe (attack button) and take one down; a well-fed campfire keeps them away.
 QUEST_CLOAK_TITLE,A fur cloak
-QUEST_CLOAK_DESC,"Craft a cloak from 3 pelts and 1 wool (level 3): it reduces damage taken by 35%."
+QUEST_CLOAK_DESC,Craft a cloak from 3 pelts and 1 wool (level 3): it reduces damage taken by 35%.
 CRAFT_CAMPFIRE,Campfire
 CRAFT_CHEST,Chest
 CRAFT_PALISADE,Palisade
@@ -301,7 +301,7 @@ ITEM_ITEM_RELIC,ancient relic
 QUEST_EXPLORE_TITLE,Explorer
 QUEST_EXPLORE_DESC,"Discover 3 sites (ruins, caves) by walking up to them: the map reveals itself and fast travel opens (level 3)."
 QUEST_TREASURE_TITLE,Relic hunter
-QUEST_TREASURE_DESC,"Open 2 treasure chests in ruins and caves: each holds an ancient relic."
+QUEST_TREASURE_DESC,Open 2 treasure chests in ruins and caves: each holds an ancient relic.
 CRAFT_FISHING_ROD,Fishing rod
 ITEM_TOOL_FISHING_ROD,fishing rod
 ITEM_ITEM_FISH,trout
@@ -314,7 +314,7 @@ ACTION_FISH_REEL,Reel in
 ACTION_FISH_STRIKE,Strike!
 TOAST_FISH_NEED_ROD,You need a fishing rod (level 2).
 TOAST_FISH_CAST,The line is in the water… be patient.
-TOAST_FISH_TOO_EARLY,Nothing bites: you reel in.
+TOAST_FISH_TOO_EARLY,You reel the line in.
 TOAST_FISH_BITE,A bite! Strike now!
 TOAST_FISH_ESCAPED,The fish got away.
 TOAST_FISH_CAUGHT,Caught: %s!
@@ -323,17 +323,17 @@ MAP_LEGEND_POND,Fishing pond
 QUEST_FISH_TITLE,By the water
 QUEST_FISH_DESC,"Craft a fishing rod (level 2), walk up to a pond, cast and strike as soon as it bites: catch 3 fish. Dawn, dusk and rain make them bite faster."
 QUEST_GRILL_TITLE,Grilled fish
-QUEST_GRILL_DESC,"Grill 2 fish on a campfire."
+QUEST_GRILL_DESC,Grill 2 fish on a campfire.
 QUEST_ALTAR_TITLE,The relic altar
-QUEST_ALTAR_DESC,"Offer a relic at the altar near the starting signpost: each offering grants a permanent blessing."
+QUEST_ALTAR_DESC,Offer a relic at the altar near the starting signpost: each offering grants a permanent blessing.
 ACTION_ALTAR_OFFER,Offer a relic
 ACTION_ALTAR_FULL,Altar fulfilled
 TOAST_ALTAR_NEED_RELIC,You need an ancient relic (chests in ruins and caves).
 TOAST_ALTAR_FULL,The altar is fulfilled: all three blessings are yours.
 TOAST_BLESSING,Blessing received: %s
-BLESSING_ENDURANCE,"Endurance (slower hunger and thirst)"
-BLESSING_PATHS,"Ancient paths (free fast travel)"
-BLESSING_FORTUNE,"Fortune (more loot)"
+BLESSING_ENDURANCE,Endurance (slower hunger and thirst)
+BLESSING_PATHS,Ancient paths (free fast travel)
+BLESSING_FORTUNE,Fortune (more loot)
 JOURNAL_SETTINGS,Settings
 SETTING_MUSIC,Music
 SETTING_VOLUME,Master volume
@@ -342,3 +342,19 @@ SETTING_QUALITY_AUTO,Automatic
 SETTING_QUALITY_HIGH,High
 SETTING_QUALITY_LOW,Low (smoother)
 SETTING_FPS,Show frames per second
+HUD_ARROWS,Arrows: %d
+ANIMAL_DEER,The deer
+ANIMAL_RABBIT,The hare
+ACTION_TAME_LEVEL,Level %d required to tame
+ACTION_PET,Pet
+TOAST_PRODUCT_WAIT,%s: %s in %s.
+HINT_TAMED_COW,She gives milk: come back to milk her.
+HINT_TAMED_GOAT,She gives milk: come back to milk her.
+HINT_TAMED_SHEEP,"It gives wool, sheared with the sickle."
+HINT_TAMED_CHICKEN,She lays eggs for you to collect.
+HINT_TAMED_HORSE,Ride it to travel faster.
+HINT_TAMED_DOG,It follows you and helps with hunting.
+ACTION_FISH_PULL,Pull! (press repeatedly)
+HUD_FISH_REEL,Reel the fish in!
+TOAST_FISH_BIG,Great catch!
+TOAST_FISH_LEFT,You walked away: the line is lost.

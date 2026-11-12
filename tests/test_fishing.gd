@@ -32,6 +32,8 @@ func _initialize() -> void:
 	var ponds := world.get_tree().get_nodes_in_group("fishing")
 	_check(ponds.size() == 3, "trois étangs (%d)" % ponds.size())
 	var pond: Node = ponds[0]
+	# Le pêcheur se tient au bord de l'étang (s'en éloigner fait perdre la ligne).
+	player.global_position = (pond as Node3D).global_position + Vector3(5.0, 1.0, 0.0)
 	_check(String(pond.call("get_prompt")) == "ACTION_FISH_NEED_ROD", "sans canne : invite à en fabriquer une")
 	pond.call("interact", player)
 	_check(int(pond.get("state")) == 0, "sans canne, pas de lancer")
@@ -49,6 +51,12 @@ func _initialize() -> void:
 	_check(int(pond.get("state")) == 2, "la touche arrive")
 	_check(String(pond.call("get_prompt")) == "ACTION_FISH_STRIKE", "invite à ferrer")
 	pond.call("interact", player)
+	_check(int(pond.get("state")) == 3, "ferré : il faut remonter le poisson")
+	_check(String(pond.call("get_prompt")) == "ACTION_FISH_PULL", "invite à tirer")
+	_check(int(inventory.call("count_of", "item_fish")) + int(inventory.call("count_of", "item_fish_big")) == 0, "pas encore sorti de l'eau")
+	for i in 6:
+		if int(pond.get("state")) == 3:
+			pond.call("interact", player)
 	var fish := int(inventory.call("count_of", "item_fish")) + int(inventory.call("count_of", "item_fish_big"))
 	_check(fish == 1, "poisson pris")
 	_check(int(progression.call("get_stat", "stat_fished")) == 1, "stat_fished incrémentée")
@@ -60,6 +68,22 @@ func _initialize() -> void:
 	pond.set("_timer", 0.01)
 	await create_timer(0.3).timeout
 	_check(int(pond.get("state")) == 0, "touche manquée : le poisson s'échappe")
+	# Ferré mais on cesse de tirer : il se décroche.
+	pond.call("cast")
+	pond.set("_timer", 0.01)
+	await create_timer(0.3).timeout
+	pond.call("interact", player)
+	_check(int(pond.get("state")) == 3, "ferré une seconde fois")
+	var before_escape := int(inventory.call("count_of", "item_fish")) + int(inventory.call("count_of", "item_fish_big"))
+	pond.set("_timer", 0.01)
+	await create_timer(0.3).timeout
+	_check(int(pond.get("state")) == 0, "sans traction, le poisson se décroche")
+	_check(int(inventory.call("count_of", "item_fish")) + int(inventory.call("count_of", "item_fish_big")) == before_escape, "rien de gagné s'il se décroche")
+	# S'éloigner de l'étang fait perdre la ligne.
+	pond.call("cast", player)
+	player.global_position = (pond as Node3D).global_position + Vector3(30.0, 2.0, 0.0)
+	await create_timer(0.3).timeout
+	_check(int(pond.get("state")) == 0, "s'éloigner relève la ligne")
 
 	# Cuisson.
 	var fire := world.get_node("Campfire")

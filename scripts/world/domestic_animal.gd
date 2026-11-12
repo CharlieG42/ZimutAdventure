@@ -53,6 +53,14 @@ const PRODUCTS := {
 
 ## En enclos : l'animal reste dans la clôture et produit plus vite.
 const PEN_PRODUCTION_FACTOR := 0.6
+## L'animal mange ce qu'on lui tend : court délai avant le repas suivant.
+const EAT_SECONDS := 1.3
+## Un animal sauvage ne fuit que si l'on arrive en courant (distance en mètres).
+const SPOOK_DISTANCE := 4.0
+const SPOOK_DISTANCE_SHY := 6.0
+## Distance à laquelle il s'arrête et regarde le joueur qui lui apporte à manger.
+const CURIOUS_DISTANCE := 4.5
+const PIPS_VISIBLE_DISTANCE := 8.0
 
 var tamed: bool = false
 var penned: bool = false
@@ -67,6 +75,12 @@ var _interaction: Area3D
 var _indicator: MeshInstance3D
 var _time_offset: float = 0.0
 var _indicator_time: float = 0.0
+var _eat_left: float = 0.0
+var _curious: bool = false
+var _pips: Array[MeshInstance3D] = []
+var _pip_root: Node3D
+var _pip_full: StandardMaterial3D
+var _pip_empty: StandardMaterial3D
 
 func _species_config() -> Dictionary:
 	return DOMESTIC.get(species, DOMESTIC["cow"])
@@ -78,7 +92,12 @@ func _ready() -> void:
 	_interaction = AnimalInteraction.create(self)
 	add_child(_interaction)
 	_build_indicator()
+	_build_pips()
 	_refresh_tamed_state()
+
+## Les animaux domestiques ne sont jamais des cibles pour l'arc.
+func is_huntable() -> bool:
+	return false
 
 # --- Temps ------------------------------------------------------------------------
 
@@ -95,24 +114,29 @@ func is_product_ready() -> bool:
 
 # --- Interaction --------------------------------------------------------------------
 
+## Toujours disponible, sauf pendant que l'animal mange ce qu'on vient de lui donner.
 func can_interact_now() -> bool:
-	if mounted or not tamed:
-		return true
-	if species == "horse" or species == "dog":
-		return true
-	return is_product_ready()
+	return mounted or _eat_left <= 0.0
+
+func _level_locked() -> bool:
+	var progression := InteractionManager.get_progression()
+	return progression != null and not bool(progression.call("meets_level", int(TAME_LEVEL.get(species, 1))))
 
 func get_prompt_key() -> String:
 	if mounted:
 		return "ACTION_DISMOUNT"
 	if not tamed:
+		if _level_locked():
+			return "ACTION_TAME_LEVEL"
 		return "ACTION_TAME_WITH_FOOD" if _food_item() != "" else "ACTION_NEED_FOOD_LIST"
 	match species:
 		"horse":
 			return "ACTION_MOUNT"
 		"dog":
 			return "ACTION_DOG_STAY" if following else "ACTION_DOG_FOLLOW"
-	return String(PRODUCTS[species]["prompt"]) if PRODUCTS.has(species) else "ACTION_INTERACT"
+	if PRODUCTS.has(species):
+		return String(PRODUCTS[species]["prompt"]) if is_product_ready() else "ACTION_PET"
+	return "ACTION_INTERACT"
 
 func interact_with(interactor: Node3D) -> void:
 	if mounted:
@@ -126,9 +150,29 @@ func interact_with(interactor: Node3D) -> void:
 		_voice()
 		_toast(tr("TOAST_DOG_FOLLOW") if following else tr("TOAST_DOG_STAY"))
 		state_changed.emit(self)
-	else:
+	elif is_product_ready():
 		_voice()
 		_collect_product()
+	else:
+		_pet()
+
+## Caresse : l'animal répond, et l'on apprend dans combien de temps il produira.
+func _pet() -> void:
+	_voice()
+	if is_on_floor():
+		velocity.y = 2.2
+	if not PRODUCTS.has(species):
+		return
+	var product: Dictionary = PRODUCTS[species]
+	var remaining := maxf(0.0, ready_at - _now())
+	_toast(tr("TOAST_PRODUCT_WAIT") % [tr("ANIMAL_" + species.to_upper()), tr("ITEM_" + String(product["item"]).to_upper()), format_wait(remaining)])
+
+## « 45 s » ou « 2 min 10 ».
+static func format_wait(seconds: float) -> String:
+	var total := int(ceilf(seconds))
+	if total < 60:
+		return "%d s" % total
+	return "%d min %02d" % [total / 60, total % 60]
 
 ## Cri de l'animal (poule, vache, chien...).
 func _voice() -> void:
@@ -146,10 +190,13 @@ func _voice() -> void:
 func get_prompt_args() -> Array:
 	if mounted or tamed:
 		return []
+	if _level_locked():
+		return [int(TAME_LEVEL.get(species, 1))]
 	var inventory := InteractionManager.get_inventory()
 	for item_id in FOOD.get(species, []):
 		if inventory != null and inventory.has_item(item_id, 1):
-			return [tr("ITEM_" + String(item_id).to_upper())]
+			# Nourriture disponible et progression de la confiance (repas donnés / requis).
+			return [tr("ITEM_" + String(item_id).to_upper()), trust, int(TRUST_NEEDED.get(species, 3))]
 	var names: PackedStringArray = []
 	for item_id in FOOD.get(species, []):
 		names.append(tr("ITEM_" + String(item_id).to_upper()))
@@ -179,7 +226,15 @@ func _feed() -> void:
 		return
 	InteractionManager.get_inventory().call("remove_item", food, 1)
 	trust += 1
+	# L'animal baisse la tête et mange : un court instant avant le repas suivant.
+	_eat_left = EAT_SECONDS
+	_mode = Mode.GRAZE
+	_mode_left = EAT_SECONDS
+	_voice()
+	if PlatformInfo.is_touch():
+		Input.vibrate_handheld(25)
 	var needed: int = TRUST_NEEDED.get(species, 3)
+	_update_pips()
 	if trust >= needed:
 		tame()
 	else:
@@ -203,7 +258,12 @@ func tame() -> void:
 		elif species == "horse":
 			progression.call("add_stat", "stat_horse", 1)
 		progression.call("add_xp_for", "tame")
-	_toast(tr("TOAST_TAMED") % tr("ANIMAL_" + species.to_upper()))
+	# Annonce avec ce que l'animal apporte désormais (lait, monture, aide à la chasse...).
+	_toast(tr("TOAST_TAMED") % tr("ANIMAL_" + species.to_upper()) + " " + tr("HINT_TAMED_" + species.to_upper()), 4.0)
+	var sfx := InteractionManager.get_sfx()
+	if sfx != null and sfx.has_method("play_event"):
+		sfx.call("play_event", "chime")
+	_update_pips()
 	state_changed.emit(self)
 
 func _collect_product() -> void:
@@ -307,25 +367,42 @@ func _physics_process(delta: float) -> void:
 		_fleeing = flat.length() > 6.5
 		_animate(delta)
 		return
+	_eat_left = maxf(0.0, _eat_left - delta)
+	_face_pips_to_camera()
 	super._physics_process(delta)
 	_indicator_time += delta
 	if _indicator_time > 0.5:
 		_indicator_time = 0.0
 		_update_indicator()
+		_update_curiosity()
 
 # --- Comportement ---------------------------------------------------------------------
 
-## Un animal sauvage de ferme se laisse approcher ; cheval et chien restent un peu plus craintifs.
+## Un animal pas encore apprivoisé se laisse approcher au pas : il ne détale que si
+## l'on arrive en courant (cheval et chien sont un peu plus craintifs).
 func _scare_direction() -> Vector3:
-	if tamed or _player == null or not is_instance_valid(_player):
+	if tamed or _eat_left > 0.0 or _player == null or not is_instance_valid(_player):
+		return Vector3.ZERO
+	if not _player.has_method("is_sprinting") or not bool(_player.call("is_sprinting")):
 		return Vector3.ZERO
 	var away := global_position - _player.global_position
 	away.y = 0.0
-	var limit := 2.2 if (species == "horse" or species == "dog") else 1.0
+	var limit := SPOOK_DISTANCE_SHY if (species == "horse" or species == "dog") else SPOOK_DISTANCE
 	var distance := away.length()
 	if distance >= limit or distance < 0.001:
 		return Vector3.ZERO
 	return away / distance
+
+## Le joueur approche avec de quoi le nourrir : l'animal s'arrête et le regarde.
+func _update_curiosity() -> void:
+	_curious = false
+	var near := false
+	if not tamed and _player != null and is_instance_valid(_player) and _player.is_inside_tree() and is_inside_tree():
+		var distance := _player.global_position.distance_to(global_position)
+		near = distance <= PIPS_VISIBLE_DISTANCE
+		_curious = distance <= CURIOUS_DISTANCE and _food_item() != "" and not _level_locked()
+	for pip in _pips:
+		pip.visible = near and not tamed
 
 func _update_behavior(delta: float) -> void:
 	if (_player == null or not is_instance_valid(_player)) and is_inside_tree():
@@ -333,7 +410,22 @@ func _update_behavior(delta: float) -> void:
 	if species == "dog" and tamed and following and _player != null and is_instance_valid(_player):
 		_follow_player(delta)
 		return
+	if not tamed and (_curious or _eat_left > 0.0) and _scare_direction() == Vector3.ZERO and _player != null and is_instance_valid(_player):
+		_wait_for_player(delta)
+		return
 	super._update_behavior(delta)
+
+## Immobile, tourné vers le joueur (tête baissée pendant qu'il mange).
+func _wait_for_player(delta: float) -> void:
+	velocity.x = move_toward(velocity.x, 0.0, 30.0 * delta)
+	velocity.z = move_toward(velocity.z, 0.0, 30.0 * delta)
+	_fleeing = false
+	_mode = Mode.GRAZE if _eat_left > 0.0 else Mode.WALK
+	_mode_left = maxf(_mode_left, 0.5)
+	var to_player := _player.global_position - global_position
+	to_player.y = 0.0
+	if to_player.length_squared() > 0.01:
+		_face_direction(to_player.normalized(), delta)
 
 func _follow_player(delta: float) -> void:
 	var to_player := _player.global_position - global_position
@@ -404,13 +496,56 @@ func _update_indicator() -> void:
 	if _indicator != null:
 		_indicator.visible = is_product_ready()
 
-func _toast(message: String) -> void:
+# --- Confiance : une pastille par repas, au-dessus de l'animal -------------------------------
+
+func _build_pips() -> void:
+	_pip_full = StandardMaterial3D.new()
+	_pip_full.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_pip_full.albedo_color = Color(1.0, 0.42, 0.55)
+	_pip_empty = StandardMaterial3D.new()
+	_pip_empty.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_pip_empty.albedo_color = Color(0.16, 0.14, 0.14)
+	var needed := int(TRUST_NEEDED.get(species, 3))
+	var top := 1.3 * float(_config["scale"]) + 0.55
+	_pip_root = Node3D.new()
+	_pip_root.position = Vector3(0.0, top, 0.0)
+	add_child(_pip_root)
+	for i in needed:
+		var pip := MeshInstance3D.new()
+		var sphere := SphereMesh.new()
+		sphere.radius = 0.1
+		sphere.height = 0.2
+		sphere.radial_segments = 8
+		sphere.rings = 4
+		pip.mesh = sphere
+		pip.position = Vector3((float(i) - float(needed - 1) * 0.5) * 0.3, 0.0, 0.0)
+		pip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		pip.visible = false
+		_pip_root.add_child(pip)
+		_pips.append(pip)
+	_update_pips()
+
+## La rangée de pastilles reste de face, quel que soit l'angle de vue.
+func _face_pips_to_camera() -> void:
+	if tamed or _pip_root == null or _pips.is_empty() or not _pips[0].visible:
+		return
+	var camera := get_viewport().get_camera_3d()
+	if camera != null:
+		_pip_root.global_rotation = Vector3(0.0, camera.global_rotation.y, 0.0)
+
+func _update_pips() -> void:
+	for i in _pips.size():
+		_pips[i].material_override = _pip_full if i < trust else _pip_empty
+		if tamed:
+			_pips[i].visible = false
+
+func _toast(message: String, duration: float = 2.2) -> void:
 	var tree := get_tree()
 	if tree == null:
 		return
 	var hud := tree.get_first_node_in_group("hud") as Node
 	if hud != null and hud.has_method("show_toast"):
-		hud.show_toast(message, 2.2)
+		hud.show_toast(message, duration)
 
 # --- Modèle ---------------------------------------------------------------------------------
 

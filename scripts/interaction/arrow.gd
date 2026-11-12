@@ -1,12 +1,17 @@
 class_name Arrow
 extends RigidBody3D
-## Flèche de chasse : physique balistique, se plante dans le sol, blessure les animaux.
+## Flèche de chasse : physique balistique, se plante dans le sol, blesse les animaux.
+## Une flèche plantée se ramasse toute seule quand le joueur passe à côté.
 
 const LIFETIME := 8.0
 const STICK_VELOCITY := 3.0
+const STUCK_LIFETIME := 120.0
+const PICKUP_DISTANCE := 1.8
 
 var _stuck: bool = false
 var _timer: float = 0.0
+var _stuck_time: float = 0.0
+var _pickup_check: float = 0.0
 var _hit_shape: CollisionShape3D
 
 func _ready() -> void:
@@ -15,6 +20,10 @@ func _ready() -> void:
 	continuous_cd = true
 	collision_layer = 0
 	collision_mask = 1
+	# Pas de frottement de l'air : la trajectoire calculée au tir reste exacte.
+	linear_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
+	linear_damp = 0.0
+	set_process(false)
 	body_entered.connect(_on_body_entered)
 	_build_shape()
 	_build_visual()
@@ -40,10 +49,12 @@ func _on_body_entered(body: Node) -> void:
 	if _stuck:
 		return
 	var velocity := linear_velocity
-	# Animal touché : blessure, fuite, puis dépôt de viande (une seule fois).
-	if body is PassiveAnimal:
+	# Animal touché (gibier ou prédateur) : blessure et retour visuel au tireur.
+	if body.has_method("take_arrow_hit"):
 		_stick()
-		(body as PassiveAnimal).take_arrow_hit(global_position)
+		var origin := global_position - velocity.normalized() * 4.0 if velocity.length_squared() > 0.01 else global_position
+		body.call("take_arrow_hit", origin)
+		_notify_hit(body)
 		queue_free()
 		return
 	# Sol ou décor : la flèche se plante et devient ramassable.
@@ -51,8 +62,34 @@ func _on_body_entered(body: Node) -> void:
 		_stick()
 		freeze = true
 		add_to_group("arrow_stuck")
+		set_process(true)
 
-## La flèche est récupérable : interaction E sur une flèche plantée.
+func _notify_hit(body: Node) -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	var hud := tree.get_first_node_in_group("hud") as Node
+	if hud != null and hud.has_method("notify_hit"):
+		hud.call("notify_hit", body)
+	var sfx := InteractionManager.get_sfx()
+	if sfx != null and sfx.has_method("play_event"):
+		sfx.call("play_event", "hit")
+
+## Flèche plantée : ramassage automatique à proximité, disparition au bout d'un moment.
+func _process(delta: float) -> void:
+	_stuck_time += delta
+	if _stuck_time >= STUCK_LIFETIME:
+		queue_free()
+		return
+	_pickup_check -= delta
+	if _pickup_check > 0.0:
+		return
+	_pickup_check = 0.2
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	if player != null and player.global_position.distance_to(global_position) <= PICKUP_DISTANCE:
+		pickup()
+
+## Récupère la flèche plantée dans le sac.
 func pickup() -> void:
 	var inventory := InteractionManager.get_inventory()
 	if inventory != null:

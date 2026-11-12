@@ -109,7 +109,7 @@ ITEM_ITEM_COOKED_MEAT,viande cuite
 ACTION_COOK,Cuisiner
 TOAST_NEED_MEAT,Pas de viande crue à cuire !
 TOAST_MEAT_COOKED,La viande embaume...
-TOAST_HUNT_SUCCESS,Proie abattue ! Vous récoltez %s.
+TOAST_HUNT_SUCCESS,Touché ! Vous récoltez : %s.
 QUEST_FIRST_HUNT_TITLE,Première chasse
 QUEST_FIRST_HUNT_DESC,Abattez un cerf à l'arc pour récolter de la viande crue.
 QUEST_COOKED_MEAL_TITLE,Un repas chaud
@@ -140,7 +140,7 @@ LEVEL_TITLE,Niveau %d
 LEVEL_MAX,Niveau maximum
 HINT_TOOL_STONE_AXE,Hache équipée : approchez-vous d'un arbre et agissez pour le couper.
 HINT_TOOL_SICKLE,Serpette équipée : approchez-vous d'un buisson de baies pour les cueillir.
-HINT_TOOL_HUNTING_BOW,Arc équipé : visez un animal et appuyez sur Tirer (clic gauche).
+HINT_TOOL_HUNTING_BOW,"Arc équipé : maintenez Tirer pour bander l'arc, relâchez pour décocher. Le gibier proche du viseur est verrouillé."
 QUEST_LUMBERJACK_TITLE,Bûcheron
 QUEST_LUMBERJACK_DESC,Équipez la hache (barre d'outils) et abattez 3 arbres : approchez-vous et agissez plusieurs fois.
 QUEST_SICKLE_TITLE,Une serpette pour la cueillette
@@ -161,7 +161,7 @@ TOAST_NEED_SEEDS,Il vous faut des graines (cueillez des baies pour en trouver).
 TOAST_PLANTED,Graine semée : la récolte sera prête dans quelques minutes.
 ACTION_TAME,Nourrir pour apprivoiser
 ACTION_NEED_FOOD,Apprivoiser (nourriture requise)
-ACTION_TAME_WITH_FOOD,Nourrir avec %s pour apprivoiser
+ACTION_TAME_WITH_FOOD,Donner %s (confiance %d/%d)
 ACTION_NEED_FOOD_LIST,Il lui faut : %s
 ACTION_MILK,Traire
 ACTION_SHEAR,Tondre (serpette)
@@ -232,11 +232,11 @@ QUEST_COOK_DESC,"Préparez 3 plats au feu de camp : viande, œufs, légumes, pai
 QUEST_WATER_TITLE,Un coup d'arrosoir
 QUEST_WATER_DESC,"Fabriquez un arrosoir (niveau 4), équipez-le et arrosez 2 cultures en train de pousser."
 QUEST_GRAIN_TITLE,Du blé en herbe
-QUEST_GRAIN_DESC,"Semez des graines de céréales (parfois trouvées en récoltant des légumes) et récoltez du blé."
+QUEST_GRAIN_DESC,Semez des graines de céréales (parfois trouvées en récoltant des légumes) et récoltez du blé.
 QUEST_WOOL_BED_TITLE,Un bon lit douillet
-QUEST_WOOL_BED_DESC,"Tondez des moutons à la serpette et fabriquez un lit en laine (niveau 4) : il permet de dormir la nuit."
+QUEST_WOOL_BED_DESC,Tondez des moutons à la serpette et fabriquez un lit en laine (niveau 4) : il permet de dormir la nuit.
 QUEST_PEN_TITLE,Un enclos pour le bétail
-QUEST_PEN_DESC,"Fabriquez un enclos (niveau 4) et posez-le : le bétail apprivoisé alentour y emménage et produit plus vite."
+QUEST_PEN_DESC,Fabriquez un enclos (niveau 4) et posez-le : le bétail apprivoisé alentour y emménage et produit plus vite.
 SEASON_SPRING,Printemps
 SEASON_SUMMER,Été
 SEASON_AUTUMN,Automne
@@ -249,7 +249,7 @@ TOAST_SEASON,Nouvelle saison : %s
 TOAST_RAIN,Il se met à pleuvoir : vos cultures sont arrosées.
 TOAST_SNOW,La neige se met à tomber.
 QUEST_SEASONS_TITLE,Au fil des saisons
-QUEST_SEASONS_DESC,"Voyez passer deux saisons (6 jours de jeu chacune). Les cultures poussent plus lentement en hiver et la soif est plus vive en été ; la pluie arrose les parcelles."
+QUEST_SEASONS_DESC,Voyez passer deux saisons (6 jours de jeu chacune). Les cultures poussent plus lentement en hiver et la soif est plus vive en été ; la pluie arrose les parcelles.
 VITAL_HEALTH,Santé
 ANIMAL_WOLF,Le loup
 ANIMAL_COYOTE,Le coyote
@@ -262,9 +262,9 @@ TOAST_BITTEN,Vous êtes mordu !
 TOAST_RAIDED,%s a été effrayée par un rôdeur : sa production prend du retard. Un enclos la protégerait.
 TOAST_DIED,Vous vous êtes évanoui : vous reprenez connaissance au camp de départ.
 QUEST_PREDATOR_TITLE,Le rôdeur de la nuit
-QUEST_PREDATOR_DESC,"Des coyotes (dès le niveau 2) et des loups (dès le niveau 4) rôdent la nuit. Équipez l'arc ou la hache (bouton d'attaque) et abattez-en un ; un feu de camp bien nourri les tient à distance."
+QUEST_PREDATOR_DESC,Des coyotes (dès le niveau 2) et des loups (dès le niveau 4) rôdent la nuit. Équipez l'arc ou la hache (bouton d'attaque) et abattez-en un ; un feu de camp bien nourri les tient à distance.
 QUEST_CLOAK_TITLE,Une cape de fourrure
-QUEST_CLOAK_DESC,"Fabriquez une cape avec 3 peaux et 1 laine (niveau 3) : elle réduit de 35 % les dégâts reçus."
+QUEST_CLOAK_DESC,Fabriquez une cape avec 3 peaux et 1 laine (niveau 3) : elle réduit de 35 % les dégâts reçus.
 CRAFT_CAMPFIRE,Feu de camp
 CRAFT_CHEST,Coffre
 CRAFT_PALISADE,Palissade
@@ -301,7 +301,7 @@ ITEM_ITEM_RELIC,relique ancienne
 QUEST_EXPLORE_TITLE,Explorateur
 QUEST_EXPLORE_DESC,"Découvrez 3 sites (ruines, grottes) en vous en approchant : la carte se dévoile et le voyage rapide s'ouvre (niveau 3)."
 QUEST_TREASURE_TITLE,Chasseur de reliques
-QUEST_TREASURE_DESC,"Ouvrez 2 coffres au trésor dans les ruines et les grottes : chacun contient une relique ancienne."
+QUEST_TREASURE_DESC,Ouvrez 2 coffres au trésor dans les ruines et les grottes : chacun contient une relique ancienne.
 CRAFT_FISHING_ROD,Canne à pêche
 ITEM_TOOL_FISHING_ROD,canne à pêche
 ITEM_ITEM_FISH,truite
@@ -314,7 +314,7 @@ ACTION_FISH_REEL,Relever la ligne
 ACTION_FISH_STRIKE,Ferrer !
 TOAST_FISH_NEED_ROD,Il faut une canne à pêche (niveau 2).
 TOAST_FISH_CAST,La ligne est à l'eau… patience.
-TOAST_FISH_TOO_EARLY,Rien ne mord : vous relevez la ligne.
+TOAST_FISH_TOO_EARLY,Vous relevez la ligne.
 TOAST_FISH_BITE,Ça mord ! Ferrez vite !
 TOAST_FISH_ESCAPED,Le poisson s'est échappé.
 TOAST_FISH_CAUGHT,Pris : %s !
@@ -323,17 +323,17 @@ MAP_LEGEND_POND,Étang de pêche
 QUEST_FISH_TITLE,Au bord de l'eau
 QUEST_FISH_DESC,"Fabriquez une canne à pêche (niveau 2), approchez-vous d'un étang, lancez la ligne et ferrez dès que ça mord : attrapez 3 poissons. Aube, crépuscule et pluie font mordre plus vite."
 QUEST_GRILL_TITLE,Poisson grillé
-QUEST_GRILL_DESC,"Faites griller 2 poissons au feu de camp."
+QUEST_GRILL_DESC,Faites griller 2 poissons au feu de camp.
 QUEST_ALTAR_TITLE,L'autel des reliques
-QUEST_ALTAR_DESC,"Offrez une relique à l'autel près du panneau de départ : chaque offrande accorde une bénédiction permanente."
+QUEST_ALTAR_DESC,Offrez une relique à l'autel près du panneau de départ : chaque offrande accorde une bénédiction permanente.
 ACTION_ALTAR_OFFER,Offrir une relique
 ACTION_ALTAR_FULL,Autel comblé
 TOAST_ALTAR_NEED_RELIC,Il faut une relique ancienne (coffres des ruines et grottes).
 TOAST_ALTAR_FULL,L'autel est comblé : les trois bénédictions sont à vous.
 TOAST_BLESSING,Bénédiction reçue : %s
-BLESSING_ENDURANCE,"Endurance (faim et soif ralenties)"
-BLESSING_PATHS,"Chemins anciens (voyage rapide gratuit)"
-BLESSING_FORTUNE,"Fortune (plus de butin)"
+BLESSING_ENDURANCE,Endurance (faim et soif ralenties)
+BLESSING_PATHS,Chemins anciens (voyage rapide gratuit)
+BLESSING_FORTUNE,Fortune (plus de butin)
 JOURNAL_SETTINGS,Réglages
 SETTING_MUSIC,Musique
 SETTING_VOLUME,Volume général
@@ -342,3 +342,19 @@ SETTING_QUALITY_AUTO,Automatique
 SETTING_QUALITY_HIGH,Haute
 SETTING_QUALITY_LOW,Basse (plus fluide)
 SETTING_FPS,Afficher les images par seconde
+HUD_ARROWS,Flèches : %d
+ANIMAL_DEER,Le cerf
+ANIMAL_RABBIT,Le lièvre
+ACTION_TAME_LEVEL,Niveau %d requis pour l'apprivoiser
+ACTION_PET,Caresser
+TOAST_PRODUCT_WAIT,%s : %s dans %s.
+HINT_TAMED_COW,Elle donne du lait : revenez la traire.
+HINT_TAMED_GOAT,Elle donne du lait : revenez la traire.
+HINT_TAMED_SHEEP,"Il donne de la laine, à tondre avec la faucille."
+HINT_TAMED_CHICKEN,Elle pond des œufs à ramasser.
+HINT_TAMED_HORSE,Montez-le pour voyager plus vite.
+HINT_TAMED_DOG,Il vous suit et vous aide à la chasse.
+ACTION_FISH_PULL,Tirer ! (appuyez plusieurs fois)
+HUD_FISH_REEL,Remontez le poisson !
+TOAST_FISH_BIG,Belle prise !
+TOAST_FISH_LEFT,Vous vous éloignez : la ligne est perdue.

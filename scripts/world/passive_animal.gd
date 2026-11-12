@@ -11,6 +11,10 @@ const TURN_SPEED := 6.0
 const GRAVITY := 18.0
 const STUCK_SECONDS := 1.2
 const HUNT_FLEE_SECONDS := 6.0
+## Le gibier abattu réapparaît sur son territoire après ce délai.
+const RESPAWN_SECONDS := 150.0
+## Un joueur qui court s'entend de plus loin.
+const SPRINT_ALERT_FACTOR := 1.7
 
 enum Mode { WALK, GRAZE }
 
@@ -39,6 +43,10 @@ var _gait: float = 0.0
 var _fleeing: bool = false
 var _dead: bool = false
 var _hp: int = 2
+var _home: Vector3
+var _base_layer: int = 1
+var _base_mask: int = 1
+var _down: bool = false
 var _legs: Array[Node3D] = []
 var _neck: Node3D
 var _head: Node3D
@@ -55,7 +63,12 @@ func _ready() -> void:
 	_rng.randomize()
 	_config = _species_config()
 	_center = global_position
+	_home = global_position
+	_base_layer = collision_layer
+	_base_mask = collision_mask
 	_player = get_tree().get_first_node_in_group("player") as Node3D
+	if is_huntable():
+		add_to_group("huntable")
 	_build_model()
 	_resize_collision()
 	_start_walk()
@@ -65,6 +78,18 @@ func _ready() -> void:
 func _bake_model() -> void:
 	if _model != null and is_instance_valid(_model):
 		MeshBaker.bake(_model)
+
+## Cible valable pour l'arc (les animaux domestiques ne se chassent pas).
+func is_huntable() -> bool:
+	return not _dead
+
+## Point visé par l'arc : le milieu du corps.
+func get_aim_point() -> Vector3:
+	return global_position + Vector3(0.0, 0.75 * float(_config.get("scale", 1.0)), 0.0)
+
+## Nom affiché près du viseur.
+func get_display_name() -> String:
+	return tr("ANIMAL_" + species.to_upper())
 
 ## Paramètres de l'espèce (surchargé par les animaux domestiques).
 func _species_config() -> Dictionary:
@@ -80,11 +105,16 @@ func _physics_process(delta: float) -> void:
 	if global_position.y < -80.0:
 		global_position = _center + Vector3(0.0, 2.0, 0.0)
 		velocity = Vector3.ZERO
-	_animate(delta)
+	if not _down:
+		_animate(delta)
 
 # --- Comportement ----------------------------------------------------------------
 
 func _update_behavior(delta: float) -> void:
+	if _down:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		return
 	var flat_velocity := Vector3.ZERO
 	var scare := _scare_direction()
 	_fleeing = scare != Vector3.ZERO
@@ -124,7 +154,10 @@ func _scare_direction() -> Vector3:
 	var away := global_position - _player.global_position
 	away.y = 0.0
 	var distance := away.length()
-	if distance >= FLEE_DISTANCE * float(_config["scale"] + 0.4) or distance < 0.001:
+	var limit := FLEE_DISTANCE * float(_config["scale"] + 0.4)
+	if _player.has_method("is_sprinting") and bool(_player.call("is_sprinting")):
+		limit *= SPRINT_ALERT_FACTOR
+	if distance >= limit or distance < 0.001:
 		return Vector3.ZERO
 	return away / distance
 
@@ -137,23 +170,18 @@ func _track_stuck(wanted: Vector3, delta: float) -> void:
 	else:
 		_stuck_time = 0.0
 
-## Touché par une flèche de chasse : blessure, fuite prolongée, puis dépôt de viande.
-## Le joueur ne tue pas l'animal à l'écran : il s'effondre hors de vue après sa course.
+## Touché par une flèche de chasse : l'animal s'effondre, la viande va dans le sac,
+## puis il disparaît et un autre revient sur ce territoire plus tard.
 func take_arrow_hit(_from_position: Vector3) -> void:
 	if _dead:
 		return
 	_dead = true
 	_hp -= 1
-	# Fuite immédiate, loin du tireur.
-	var away := global_position - _from_position
-	away.y = 0.0
-	if away.length_squared() > 0.001:
-		_center = global_position + away.normalized() * wander_radius
-	_target = _center
-	_mode = Mode.WALK
-	_mode_left = HUNT_FLEE_SECONDS
-	_fleeing = true
-	# Récompense : viande crue déposée à l'endroit de la chute.
+	remove_from_group("huntable")
+	_grant_hunt_reward()
+	_collapse()
+
+func _grant_hunt_reward() -> void:
 	var inventory := InteractionManager.get_inventory()
 	if inventory == null:
 		return
@@ -172,6 +200,49 @@ func take_arrow_hit(_from_position: Vector3) -> void:
 	var hud := get_tree().get_first_node_in_group("hud") as Node
 	if hud != null and hud.has_method("show_toast"):
 		hud.show_toast(tr("TOAST_HUNT_SUCCESS") % tr("ITEM_ITEM_RAW_MEAT"))
+
+## L'animal bascule sur le flanc, reste un instant, puis s'efface.
+func _collapse() -> void:
+	_down = true
+	_fleeing = false
+	velocity = Vector3.ZERO
+	collision_layer = 0
+	if _model == null or not is_inside_tree():
+		return
+	if DisplayServer.get_name() != "headless" and get_parent() is Node3D:
+		VfxParticles.dust_puff(get_parent() as Node3D, global_position + Vector3(0.0, 0.2, 0.0), Color(0.74, 0.6, 0.42, 0.5), 12)
+	var tween := create_tween()
+	tween.tween_property(_model, "rotation:z", PI * 0.5, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.tween_interval(2.2)
+	tween.tween_property(_model, "scale", Vector3.ONE * 0.01, 0.4)
+	tween.tween_callback(_vanish)
+
+func _vanish() -> void:
+	visible = false
+	collision_mask = 0
+	set_physics_process(false)
+	if is_inside_tree():
+		get_tree().create_timer(RESPAWN_SECONDS).timeout.connect(_respawn)
+
+## Un nouvel animal de la même espèce revient sur le territoire d'origine.
+func _respawn() -> void:
+	if not is_inside_tree():
+		return
+	global_position = _home + Vector3(0.0, 1.0, 0.0)
+	_center = _home
+	velocity = Vector3.ZERO
+	_dead = false
+	_down = false
+	_hp = 2
+	if _model != null:
+		_model.rotation.z = 0.0
+		_model.scale = Vector3.ONE * float(_config.get("scale", 1.0))
+	collision_layer = _base_layer
+	collision_mask = _base_mask
+	visible = true
+	set_physics_process(true)
+	add_to_group("huntable")
+	_start_walk()
 
 func _start_walk() -> void:
 	_mode = Mode.WALK

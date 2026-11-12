@@ -62,7 +62,8 @@ enum ViewMode { FIRST_PERSON, THIRD_PERSON }
 @export_group("Visée à l'arc")
 @export var aim_fov: float = 42.0
 @export var arrow_speed: float = 26.0
-@export var aim_arrow_speed: float = 30.0
+## Vitesse de la flèche à pleine tension (la vitesse de base vaut pour un tir sans bander).
+@export var full_draw_speed: float = 38.0
 ## Dispersion angulaire (radians) d'un tir sans visée.
 @export var hip_spread: float = 0.03
 
@@ -90,6 +91,18 @@ var _pitch_smooth: float = -0.25
 ## Visée à l'arc active (bouton droit maintenu, ou automatique au tactile).
 var _aiming: bool = false
 var _last_aiming: bool = false
+## Arc : on maintient pour bander, on relâche pour tirer. La cible la plus proche du
+## viseur est verrouillée et la flèche compense seule la distance et la chute.
+const DRAW_TIME := 0.7
+const DRAW_MOVE_FACTOR := 0.45
+const BOW_RANGE := 45.0
+const BOW_CONE_TOUCH := 0.28
+const BOW_CONE_MOUSE := 0.16
+const QUICK_SHOT_CHARGE := 0.25
+var _drawing: bool = false
+var _draw_time: float = 0.0
+var _bow_equipped: bool = false
+var _bow_target: Node3D
 var _last_equipped_tool: String = ""
 var _joystick_vector: Vector2 = Vector2.ZERO
 var _is_touch: bool = false
@@ -287,7 +300,46 @@ func _update_dust() -> void:
 	var snowy: bool = weather != null and float(weather.call("get_snow_amount")) > 0.4
 	(_dust.mesh.material as StandardMaterial3D).albedo_color = Color(0.95, 0.97, 1.0, 0.5) if snowy else Color(0.74, 0.6, 0.42, 0.4)
 
-## Attaque : tir à l'arc si l'arc est équipé, sinon coup de hache sur un prédateur proche.
+## Appui sur le bouton d'attaque : commence à bander l'arc, ou donne un coup de hache.
+func begin_attack() -> void:
+	var inventory := InteractionManager.get_inventory()
+	if inventory == null:
+		return
+	if inventory.is_equipped("tool_hunting_bow"):
+		if int(inventory.call("count_of", "arrow")) <= 0:
+			_hud_toast(tr("TOAST_NO_ARROWS"))
+			return
+		_drawing = true
+		_draw_time = 0.0
+	elif inventory.is_equipped("tool_stone_axe"):
+		try_melee()
+
+## Relâchement : la flèche part, d'autant plus vite et droit que l'arc était bandé.
+func end_attack() -> void:
+	if not _drawing:
+		return
+	var charge := get_draw_charge()
+	_drawing = false
+	_draw_time = 0.0
+	shoot_arrow(charge)
+
+## Tension de l'arc, de 0 (à peine bandé) à 1 (pleine tension).
+func get_draw_charge() -> float:
+	return clampf(_draw_time / DRAW_TIME, 0.0, 1.0) if _drawing else 0.0
+
+## État de l'arc pour l'affichage (viseur, cible verrouillée, flèches restantes).
+func get_bow_state() -> Dictionary:
+	var inventory := InteractionManager.get_inventory()
+	var target: Node3D = _bow_target if _bow_target != null and is_instance_valid(_bow_target) else null
+	return {
+		"equipped": _bow_equipped,
+		"drawing": _drawing,
+		"charge": get_draw_charge(),
+		"target": target,
+		"arrows": int(inventory.call("count_of", "arrow")) if inventory != null else 0,
+	}
+
+## Attaque immédiate (sans maintien) : tir rapide à l'arc ou coup de hache.
 func try_attack() -> void:
 	var inventory := InteractionManager.get_inventory()
 	if inventory == null:
@@ -350,42 +402,131 @@ func _on_died() -> void:
 func _try_interact() -> void:
 	try_interact()
 
-## Tir à l'arc de chasse : nécessite l'arc ET une flèche dans le sac.
-## La flèche part de la caméra vers le point visé, avec une balistique légère.
+## Tir immédiat : pleine tension si l'on vise, tir rapide sinon.
 func try_shoot_arrow() -> void:
+	shoot_arrow(1.0 if _aiming else QUICK_SHOT_CHARGE)
+
+## Tir à l'arc de chasse : nécessite l'arc ET une flèche dans le sac.
+## La flèche part du joueur vers la cible verrouillée (ou le point visé au centre de
+## l'écran) ; l'angle de tir compense la chute, la tension règle vitesse et précision.
+func shoot_arrow(charge: float) -> void:
 	var inventory := InteractionManager.get_inventory()
 	if inventory == null:
 		return
 	if not inventory.is_equipped("tool_hunting_bow"):
 		return
+	var camera := get_viewport().get_camera_3d()
+	var arrow_scene := load("res://scenes/interaction/arrow.tscn") as PackedScene
+	var host := get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	if camera == null or arrow_scene == null or host == null:
+		return
 	if not inventory.remove_item("arrow", 1):
 		_hud_toast(tr("TOAST_NO_ARROWS"))
 		return
-	var camera := get_viewport().get_camera_3d()
-	if camera == null:
-		inventory.add_item("arrow", 1)
-		return
-	var arrow_scene := load("res://scenes/interaction/arrow.tscn") as PackedScene
-	if arrow_scene == null:
-		inventory.add_item("arrow", 1)
-		return
+	charge = clampf(charge, 0.0, 1.0)
+	var speed := lerpf(arrow_speed, full_draw_speed, charge)
 	var arrow := arrow_scene.instantiate() as RigidBody3D
-	var host := get_tree().current_scene if get_tree().current_scene != null else get_parent()
-	if host == null:
-		inventory.add_item("arrow", 1)
-		return
 	host.add_child(arrow)
-	var from := camera.global_position + camera.global_transform.basis.z * -0.4
-	var aim := -camera.global_transform.basis.z
-	# Sans visée, la flèche disperse un peu ; en visée, tir tendu et plus rapide.
-	var dir := aim
-	if not _aiming and hip_spread > 0.0:
-		dir = dir.rotated(Vector3.UP, randf_range(-hip_spread, hip_spread))
-		dir = dir.rotated(Vector3.RIGHT, randf_range(-hip_spread, hip_spread)).normalized()
+	var from := _arrow_origin(camera)
+	var dir := ballistic_direction(from, _aim_point(camera, from, speed), speed, gravity * arrow.gravity_scale)
+	# Arc peu bandé : la flèche disperse un peu.
+	var spread := hip_spread * (1.0 - charge)
+	if spread > 0.0:
+		dir = dir.rotated(Vector3.UP, randf_range(-spread, spread))
+		dir = dir.rotated(camera.global_transform.basis.x.normalized(), randf_range(-spread, spread)).normalized()
 	arrow.global_position = from
 	arrow.look_at(from + dir, Vector3.UP)
-	arrow.linear_velocity = dir * (aim_arrow_speed if _aiming else arrow_speed)
+	arrow.linear_velocity = dir * speed
 	arrow.angular_velocity = Vector3.ZERO
+
+## Point de départ de la flèche : devant la caméra en vue subjective, à hauteur
+## d'épaule du personnage sinon (la flèche ne part plus de derrière son dos).
+func _arrow_origin(camera: Camera3D) -> Vector3:
+	var forward := -camera.global_transform.basis.z
+	if _view_mode == ViewMode.FIRST_PERSON:
+		return camera.global_position + forward * 0.4
+	var flat := Vector3(forward.x, 0.0, forward.z)
+	flat = flat.normalized() if flat.length_squared() > 0.0001 else -global_transform.basis.z
+	return global_position + Vector3(0.0, 1.35, 0.0) + flat * 0.6
+
+## Point à atteindre : la cible verrouillée (avec anticipation de sa course), sinon ce
+## que montre le centre de l'écran.
+func _aim_point(camera: Camera3D, from: Vector3, speed: float) -> Vector3:
+	if _bow_target != null and is_instance_valid(_bow_target) and _bow_target.is_inside_tree():
+		var point := _target_point(_bow_target)
+		var target_velocity: Variant = _bow_target.get("velocity")
+		if target_velocity is Vector3:
+			var flight := from.distance_to(point) / maxf(speed, 1.0)
+			point += Vector3(target_velocity.x, 0.0, target_velocity.z) * flight
+		return point
+	var forward := -camera.global_transform.basis.z
+	var start := camera.global_position + forward * (camera.global_position.distance_to(from) + 0.5)
+	var end := camera.global_position + forward * 70.0
+	var query := PhysicsRayQueryParameters3D.create(start, end)
+	query.collision_mask = 1
+	query.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	return hit["position"] if not hit.is_empty() else end
+
+func _target_point(target: Node3D) -> Vector3:
+	if target.has_method("get_aim_point"):
+		return target.call("get_aim_point")
+	return target.global_position + Vector3(0.0, 0.6, 0.0)
+
+## Direction de tir pour atteindre `to` depuis `from` à la vitesse donnée (arc tendu).
+## Hors de portée : tir en cloche vers la cible.
+static func ballistic_direction(from: Vector3, to: Vector3, speed: float, g: float) -> Vector3:
+	var offset := to - from
+	var flat := Vector3(offset.x, 0.0, offset.z)
+	var x := flat.length()
+	if x < 0.05 or g <= 0.0:
+		return offset.normalized() if offset.length_squared() > 0.0001 else Vector3.FORWARD
+	var v2 := speed * speed
+	var disc := v2 * v2 - g * (g * x * x + 2.0 * offset.y * v2)
+	var angle := deg_to_rad(40.0)
+	if disc >= 0.0:
+		angle = atan((v2 - sqrt(disc)) / (g * x))
+	return (flat / x * cos(angle) + Vector3.UP * sin(angle)).normalized()
+
+## Verrouille le gibier (ou le prédateur) le plus proche du centre de l'écran,
+## à portée et sans obstacle entre lui et le joueur.
+func _update_bow_target() -> void:
+	var camera := get_viewport().get_camera_3d()
+	if not _bow_equipped or camera == null or not is_inside_tree():
+		_bow_target = null
+		return
+	var cone := BOW_CONE_TOUCH if _is_touch else BOW_CONE_MOUSE
+	var forward := -camera.global_transform.basis.z
+	var eye := camera.global_position
+	var chest := global_position + Vector3(0.0, 1.35, 0.0)
+	var space := get_world_3d().direct_space_state
+	var best: Node3D = null
+	var best_score := cone
+	for node in get_tree().get_nodes_in_group("huntable"):
+		var candidate := node as Node3D
+		if candidate == null or not is_instance_valid(candidate) or not candidate.is_inside_tree():
+			continue
+		var point := _target_point(candidate)
+		var distance := point.distance_to(chest)
+		if distance > BOW_RANGE or distance < 1.0:
+			continue
+		var score := forward.angle_to(point - eye)
+		# La cible déjà verrouillée garde la priorité : le verrou ne saute pas sans arrêt.
+		if candidate == _bow_target:
+			score *= 0.6
+		if score >= best_score:
+			continue
+		var query := PhysicsRayQueryParameters3D.create(chest, point)
+		query.collision_mask = 1
+		var excluded: Array[RID] = [get_rid()]
+		if candidate is CollisionObject3D:
+			excluded.append((candidate as CollisionObject3D).get_rid())
+		query.exclude = excluded
+		if not space.intersect_ray(query).is_empty():
+			continue
+		best = candidate
+		best_score = score
+	_bow_target = best
 
 func _hud_toast(message: String) -> void:
 	var hud := get_tree().get_first_node_in_group("hud") if get_tree() != null else null
@@ -454,7 +595,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not _is_touch:
 		_rotate_look(event.relative * Vector2(mouse_sensitivity, mouse_sensitivity))
 	elif event.is_action_pressed("attack"):
-		try_attack()
+		begin_attack()
+	elif event.is_action_released("attack"):
+		end_attack()
 
 # --- Physique ----------------------------------------------------------------
 
@@ -463,7 +606,16 @@ func _physics_process(delta: float) -> void:
 	# Visée à l'arc : bouton droit (PC) ou visée automatique au tactile quand l'arc est équipé.
 	var inventory := InteractionManager.get_inventory()
 	var bow_equipped: bool = inventory != null and inventory.is_equipped("tool_hunting_bow")
-	_aiming = bow_equipped and (Input.is_action_pressed("aim") or _is_touch)
+	_bow_equipped = bow_equipped
+	if _drawing:
+		if bow_equipped:
+			_draw_time += delta
+		else:
+			_drawing = false
+			_draw_time = 0.0
+	_update_bow_target()
+	# Visée (zoom) : bouton droit sur PC, ou tant que l'arc est bandé.
+	_aiming = bow_equipped and (Input.is_action_pressed("aim") or _drawing)
 	if _aiming != _last_aiming:
 		_last_aiming = _aiming
 		var hud := get_tree().get_first_node_in_group("hud") if get_tree() != null else null
@@ -504,12 +656,14 @@ func _physics_process(delta: float) -> void:
 	var wish_len := wish.length()
 	var moving := wish_len > 0.001
 
-	_sprinting = moving and _wants_sprint() and not _exhausted
+	_sprinting = moving and _wants_sprint() and not _exhausted and not _drawing
 	_update_stamina(delta)
 
 	var top_speed := sprint_speed if _sprinting else walk_speed
 	if _mount != null:
 		top_speed *= MOUNT_SPEED_MULTIPLIER
+	elif _drawing:
+		top_speed *= DRAW_MOVE_FACTOR
 	var speed := 0.0
 	if moving:
 		speed = clampf(top_speed * wish_len, min_move_speed, top_speed)
@@ -677,7 +831,10 @@ func _swing(part: String, pivot: Vector3, angle: float) -> void:
 func _update_character(delta: float, horizontal_speed: float) -> void:
 	var moving := horizontal_speed > 0.3
 	# Le personnage se tourne vers sa direction de déplacement (repère du joueur).
-	if moving:
+	if _drawing:
+		# Arc bandé : le personnage fait face à ce que l'on vise.
+		_facing_yaw = lerp_angle(_facing_yaw, 0.0, 1.0 - exp(-14.0 * delta))
+	elif moving:
 		var local := transform.basis.inverse() * Vector3(velocity.x, 0.0, velocity.z)
 		_facing_yaw = lerp_angle(_facing_yaw, atan2(-local.x, -local.z), 1.0 - exp(-12.0 * delta))
 	else:

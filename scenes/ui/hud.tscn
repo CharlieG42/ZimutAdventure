@@ -18,8 +18,7 @@
 [ext_resource type="Texture2D" path="res://assets/vfx/overlays/vignette.png" id="16_vignette"]
 [ext_resource type="Texture2D" path="res://assets/vfx/overlays/grain.png" id="17_grain"]
 
-[node name="HUD" type="CanvasLayer"]
-groups = ["hud"]
+[node name="HUD" type="CanvasLayer" groups=["hud"]]
 script = ExtResource("1_hud")
 
 [node name="TouchLook" parent="." instance=ExtResource("3_look")]
