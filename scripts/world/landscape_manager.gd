@@ -8,9 +8,12 @@ extends Node3D
 @export var pine_count: int = 220
 @export var shrub_count: int = 180
 @export var grass_count: int = 400
+@export var extra_grass_count: int = 300
 @export var cactus_count: int = 70
 @export var agave_count: int = 110
 @export var flower_count: int = 160
+@export var arch_count: int = 6
+@export var pebble_count: int = 700
 @export var seed_value: int = 1887
 @export var collision_enabled: bool = true
 ## Props GLB externes (assets/props/kenney/) à la place des maillages procéduraux
@@ -28,6 +31,7 @@ var prop_placements: Array[Transform3D] = []
 
 ## Découpage du décor en blocs et portées d'affichage (mètres).
 const CHUNK_SIZE := 64.0
+const RANGE_PEBBLE := 45.0    # cailloux
 const RANGE_NEAR := 75.0      # herbes, fleurs
 const RANGE_SHRUB := 130.0    # buissons, agaves
 const RANGE_MEDIUM := 230.0   # arbres, cactus, blocs de grès
@@ -260,6 +264,31 @@ func _place_props() -> void:
 			for chunk in _place_multimesh(mesh, entry[1] as int, false, cr, ch, false, -1.0, far, tall):
 				_props_root.add_child(chunk)
 
+	# Ajouts placés APRÈS le décor historique : le tirage aléatoire des éléments existants
+	# (et donc la carte des joueurs) ne change pas.
+	# Arches naturelles (grands repères, toujours visibles) : une collision par pied.
+	if use_glb_props and arch_count > 0:
+		var arches := GlbPropLibrary.get_variant_meshes("arch")
+		if not arches.is_empty():
+			for entry in _split_counts(arch_count, arches.size()):
+				var arch: Mesh = arches[entry[0]]
+				var half_span := arch.get_aabb().size.x * 0.5 - 1.6
+				for chunk in _place_multimesh(arch, entry[1] as int, true, 1.9, 5.0, false, 2.0, 0.0, true,
+						[Vector3(half_span, 0.0, 0.0), Vector3(-half_span, 0.0, 0.0)]):
+					_props_root.add_child(chunk)
+	# Cailloux : parsèment le sol proche, sans collision ni ombre.
+	if use_glb_props and pebble_count > 0:
+		var pebbles := GlbPropLibrary.get_variant_meshes("pebble")
+		if not pebbles.is_empty():
+			for entry in _split_counts(pebble_count, pebbles.size()):
+				for chunk in _place_multimesh(pebbles[entry[0]], entry[1] as int, false, 0.0, 0.0, false, -1.0, RANGE_PEBBLE, false):
+					_props_root.add_child(chunk)
+	if extra_grass_count > 0:
+		var grasses := _plant_meshes(VegetationGenerator.PlantType.DRY_GRASS, "grass")
+		for entry in _split_counts(extra_grass_count, grasses.size()):
+			for chunk in _place_multimesh(grasses[entry[0]], entry[1] as int, false, 0.0, 0.0, false, -1.0, RANGE_NEAR, false):
+				_props_root.add_child(chunk)
+
 ## Maillages d'un type de rocher : variantes GLB si disponibles, sinon procédural.
 func _rock_meshes(type: RockGenerator.RockType, glb_key: String) -> Array:
 	if use_glb_props and not glb_key.is_empty():
@@ -300,7 +329,7 @@ static func _split_counts(total: int, n: int) -> Array:
 func _place_multimesh(mesh: Mesh, count: int, is_large_rock: bool,
 		collider_radius: float = 0.0, collider_height: float = 0.0,
 		collider_sphere: bool = false, collider_center_y: float = -1.0,
-		range_end: float = 0.0, casts_shadow: bool = true) -> Array:
+		range_end: float = 0.0, casts_shadow: bool = true, collider_offsets: Array = []) -> Array:
 	var buckets: Dictionary = {}
 	for i in range(count):
 		var pos := _random_ground_position(is_large_rock)
@@ -316,8 +345,14 @@ func _place_multimesh(mesh: Mesh, count: int, is_large_rock: bool,
 		(buckets[cell] as Array).append(transform)
 		prop_placements.append(transform)
 		if _prop_collision != null and collider_radius > 0.0:
-			_add_prop_shape(pos, scale_v, collider_radius, collider_height, collider_sphere,
-					collider_center_y if collider_center_y > -1.0 else collider_height * 0.5)
+			var center_y := collider_center_y if collider_center_y > -1.0 else collider_height * 0.5
+			if collider_offsets.is_empty():
+				_add_prop_shape(pos, scale_v, collider_radius, collider_height, collider_sphere, center_y)
+			else:
+				# Plusieurs formes par instance (pieds d'une arche), tournées avec elle.
+				for offset in collider_offsets:
+					var at := pos + basis * (offset as Vector3)
+					_add_prop_shape(Vector3(at.x, pos.y, at.z), scale_v, collider_radius, collider_height, collider_sphere, center_y)
 
 	var instances: Array = []
 	for cell in buckets:

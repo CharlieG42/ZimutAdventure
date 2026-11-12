@@ -70,6 +70,7 @@ func _build() -> void:
 	_quests_list = _add_tab(tr("JOURNAL_QUESTS"))
 	_craft_list = _add_tab(tr("JOURNAL_CRAFT"))
 	_inventory_list = _add_tab(tr("JOURNAL_INVENTORY_TITLE"))
+	_build_settings(_add_tab(tr("JOURNAL_SETTINGS")))
 
 	_close_button = Button.new()
 	_close_button.text = tr("ACTION_CLOSE")
@@ -78,6 +79,52 @@ func _build() -> void:
 	_close_button.pressed.connect(close)
 	box.add_child(_close_button)
 	add_child(box)
+
+## Onglet Réglages : musique, volume, qualité graphique, compteur d'images.
+func _build_settings(list: VBoxContainer) -> void:
+	var settings := get_tree().root.get_node_or_null("GameSettings")
+	if settings == null:
+		return
+	var music := CheckButton.new()
+	music.text = tr("SETTING_MUSIC")
+	music.button_pressed = bool(settings.get("music"))
+	music.custom_minimum_size = Vector2(0, BUTTON_HEIGHT)
+	music.focus_mode = Control.FOCUS_NONE
+	music.add_theme_font_size_override("font_size", 20)
+	music.toggled.connect(func(on): settings.call("set_music", on))
+	list.add_child(music)
+
+	_add_label(list, tr("SETTING_VOLUME"), 20, ACCENT)
+	var volume := HSlider.new()
+	volume.min_value = 0.0
+	volume.max_value = 1.0
+	volume.step = 0.05
+	volume.value = float(settings.get("volume"))
+	volume.custom_minimum_size = Vector2(0, 44)
+	volume.focus_mode = Control.FOCUS_NONE
+	volume.value_changed.connect(func(v): settings.call("set_volume", v))
+	list.add_child(volume)
+
+	_add_label(list, tr("SETTING_QUALITY"), 20, ACCENT)
+	var quality := OptionButton.new()
+	quality.custom_minimum_size = Vector2(0, BUTTON_HEIGHT)
+	quality.focus_mode = Control.FOCUS_NONE
+	quality.add_theme_font_size_override("font_size", 20)
+	var options: Array = settings.get("QUALITIES")
+	for i in options.size():
+		quality.add_item(tr("SETTING_QUALITY_" + String(options[i]).to_upper()), i)
+	quality.selected = maxi(options.find(String(settings.get("quality"))), 0)
+	quality.item_selected.connect(func(index): settings.call("set_quality", String(options[index])))
+	list.add_child(quality)
+
+	var fps := CheckButton.new()
+	fps.text = tr("SETTING_FPS")
+	fps.button_pressed = bool(settings.get("show_fps"))
+	fps.custom_minimum_size = Vector2(0, BUTTON_HEIGHT)
+	fps.focus_mode = Control.FOCUS_NONE
+	fps.add_theme_font_size_override("font_size", 20)
+	fps.toggled.connect(func(on): settings.call("set_show_fps", on))
+	list.add_child(fps)
 
 func _add_tab(title: String) -> VBoxContainer:
 	var scroll := KineticScroll.new()

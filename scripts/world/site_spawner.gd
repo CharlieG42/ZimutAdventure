@@ -21,6 +21,11 @@ func _ready() -> void:
 	var sign_node := get_node_or_null("../Signpost") as Node3D
 	var start := sign_node.global_position if sign_node != null else Vector3.ZERO
 	exploration.call("register_site", "start", "SITE_START", start, "start")
+	# Autel des reliques, à côté du panneau de départ.
+	var altar := RelicAltar.create()
+	var altar_xz := Vector2(start.x - 4.0, start.z + 3.0)
+	altar.position = Vector3(altar_xz.x, _ground_height(altar_xz.x, altar_xz.y), altar_xz.y)
+	add_child(altar)
 	for site in plan_sites(SEED, SITE_COUNT, start):
 		var pos := Vector3(site["x"], _ground_height(site["x"], site["z"]), site["z"])
 		var site_id: String = site["id"]

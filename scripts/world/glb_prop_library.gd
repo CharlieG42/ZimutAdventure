@@ -38,6 +38,15 @@ const PROPS := {
 		"res://assets/props/generated/cactus_saguaro_c.glb",
 	],
 	# Rochers de grès générés en Python (tools/make_rock_glb.py) : couleurs dans les sommets.
+	# Arches naturelles et cailloux, générés eux aussi par tools/make_rock_glb.py.
+	"arch": [
+		"res://assets/props/generated/arch_1.glb", "res://assets/props/generated/arch_2.glb",
+		"res://assets/props/generated/arch_3.glb",
+	],
+	"pebble": [
+		"res://assets/props/generated/pebble_1.glb", "res://assets/props/generated/pebble_2.glb",
+		"res://assets/props/generated/pebble_3.glb", "res://assets/props/generated/pebble_4.glb",
+	],
 	"sandstone": [
 		"res://assets/props/generated/rock_1.glb", "res://assets/props/generated/rock_2.glb",
 		"res://assets/props/generated/rock_3.glb", "res://assets/props/generated/rock_4.glb",

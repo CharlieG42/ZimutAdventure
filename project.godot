@@ -33,6 +33,7 @@ Weather="*res://scripts/autoload/weather_manager.gd"
 Exploration="*res://scripts/autoload/exploration_manager.gd"
 Ambience="*res://scripts/autoload/ambience.gd"
 PerformanceGuard="*res://scripts/autoload/performance_guard.gd"
+GameSettings="*res://scripts/autoload/game_settings.gd"
 
 [display]
 

@@ -301,7 +301,7 @@ ITEM_ITEM_RELIC,relique ancienne
 QUEST_EXPLORE_TITLE,Explorateur
 QUEST_EXPLORE_DESC,"Découvrez 3 sites (ruines, grottes) en vous en approchant : la carte se dévoile et le voyage rapide s'ouvre (niveau 3)."
 QUEST_TREASURE_TITLE,Chasseur de reliques
-QUEST_TREASURE_DESC,"Ouvrez les coffres des sites et rapportez 2 reliques anciennes."
+QUEST_TREASURE_DESC,"Ouvrez 2 coffres au trésor dans les ruines et les grottes : chacun contient une relique ancienne."
 CRAFT_FISHING_ROD,Canne à pêche
 ITEM_TOOL_FISHING_ROD,canne à pêche
 ITEM_ITEM_FISH,truite
@@ -324,3 +324,21 @@ QUEST_FISH_TITLE,Au bord de l'eau
 QUEST_FISH_DESC,"Fabriquez une canne à pêche (niveau 2), approchez-vous d'un étang, lancez la ligne et ferrez dès que ça mord : attrapez 3 poissons. Aube, crépuscule et pluie font mordre plus vite."
 QUEST_GRILL_TITLE,Poisson grillé
 QUEST_GRILL_DESC,"Faites griller 2 poissons au feu de camp."
+QUEST_ALTAR_TITLE,L'autel des reliques
+QUEST_ALTAR_DESC,"Offrez une relique à l'autel près du panneau de départ : chaque offrande accorde une bénédiction permanente."
+ACTION_ALTAR_OFFER,Offrir une relique
+ACTION_ALTAR_FULL,Autel comblé
+TOAST_ALTAR_NEED_RELIC,Il faut une relique ancienne (coffres des ruines et grottes).
+TOAST_ALTAR_FULL,L'autel est comblé : les trois bénédictions sont à vous.
+TOAST_BLESSING,Bénédiction reçue : %s
+BLESSING_ENDURANCE,"Endurance (faim et soif ralenties)"
+BLESSING_PATHS,"Chemins anciens (voyage rapide gratuit)"
+BLESSING_FORTUNE,"Fortune (plus de butin)"
+JOURNAL_SETTINGS,Réglages
+SETTING_MUSIC,Musique
+SETTING_VOLUME,Volume général
+SETTING_QUALITY,Qualité graphique
+SETTING_QUALITY_AUTO,Automatique
+SETTING_QUALITY_HIGH,Haute
+SETTING_QUALITY_LOW,Basse (plus fluide)
+SETTING_FPS,Afficher les images par seconde

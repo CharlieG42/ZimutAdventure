@@ -47,5 +47,16 @@ func _initialize() -> void:
 		_check(rock.get_aabb().position.y > -0.01 and rock.get_aabb().size.y > 1.0, "rocher posé au sol")
 		var triangles := (arrays[Mesh.ARRAY_INDEX] as PackedInt32Array).size() / 3
 		_check(triangles <= 1500, "budget triangles mobile (%d)" % triangles)
+	var arches: Array = library.get_variant_meshes("arch")
+	_check(arches.size() == 3, "trois arches chargées (%d)" % arches.size())
+	if not arches.is_empty():
+		var box: AABB = (arches[0] as Mesh).get_aabb()
+		_check(box.size.x > 10.0 and box.size.y > 5.0, "arche : %.0f m de large, %.0f m de haut" % [box.size.x, box.size.y])
+		_check(box.position.y <= 0.01, "arche posée au sol")
+	var pebbles: Array = library.get_variant_meshes("pebble")
+	_check(pebbles.size() == 4, "quatre cailloux chargés (%d)" % pebbles.size())
+	if not pebbles.is_empty():
+		var tri := ((pebbles[0] as Mesh).surface_get_arrays(0)[Mesh.ARRAY_INDEX] as PackedInt32Array).size() / 3
+		_check(tri <= 100, "caillou léger (%d triangles)" % tri)
 	print("RESULT: %s" % ("PASS" if _failures == 0 else "FAIL (%d)" % _failures))
 	quit(0 if _failures == 0 else 1)

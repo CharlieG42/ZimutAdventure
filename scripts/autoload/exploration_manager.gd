@@ -5,6 +5,7 @@ extends Node
 
 signal site_discovered(site_id: String)
 signal fog_changed
+signal blessing_gained(count: int)
 
 const SAVE_PATH := "user://exploration.cfg"
 const GRID := 32
@@ -15,6 +16,10 @@ const TRAVEL_HUNGER := 0.08
 const TRAVEL_THIRST := 0.05
 const CHECK_SECONDS := 0.5
 const START_SITE := "start"
+## Bénédictions de l'autel, dans l'ordre : endurance, chemins anciens, fortune.
+const MAX_BLESSINGS := 3
+const ENDURANCE_FACTOR := 0.8
+const FORTUNE_BONUS := 0.15
 
 var world_size: float = 512.0
 var _cells := PackedByteArray()
@@ -24,6 +29,7 @@ var _autosave: bool = DisplayServer.get_name() != "headless"
 var _timer: float = 0.0
 var _dirty: bool = false
 var _save_timer: float = 0.0
+var blessings: int = 0
 
 func _ready() -> void:
 	_cells.resize(GRID * GRID)
@@ -112,6 +118,33 @@ func discover(site_id: String, silent: bool = false) -> bool:
 	_save()
 	return true
 
+# --- Autel des reliques ----------------------------------------------------------------------
+
+## Offre une relique : accorde la bénédiction suivante. Retourne son numéro, 0 si impossible.
+func offer_relic() -> int:
+	if blessings >= MAX_BLESSINGS:
+		return 0
+	var inventory := InteractionManager.get_inventory()
+	if inventory == null or not bool(inventory.call("remove_item", "item_relic", 1)):
+		return 0
+	blessings += 1
+	_dirty = true
+	_save()
+	blessing_gained.emit(blessings)
+	return blessings
+
+## Endurance : faim et soif s'usent moins vite.
+func drain_factor() -> float:
+	return ENDURANCE_FACTOR if blessings >= 1 else 1.0
+
+## Chemins anciens : le voyage rapide ne coûte plus rien.
+func travel_is_free() -> bool:
+	return blessings >= 2
+
+## Fortune : chance de butin en plus.
+func loot_bonus() -> float:
+	return FORTUNE_BONUS if blessings >= 3 else 0.0
+
 # --- Voyage rapide ---------------------------------------------------------------------------------------
 
 ## Retourne "" si le voyage est possible, sinon la clé de traduction du refus.
@@ -122,7 +155,7 @@ func can_travel(site_id: String) -> String:
 	if progression != null and not bool(progression.call("meets_level", TRAVEL_LEVEL)):
 		return "TOAST_TRAVEL_LEVEL"
 	var survival := InteractionManager.get_survival()
-	if survival != null and (float(survival.call("get_hunger")) < TRAVEL_HUNGER or float(survival.call("get_thirst")) < TRAVEL_THIRST):
+	if survival != null and not travel_is_free() and (float(survival.call("get_hunger")) < TRAVEL_HUNGER or float(survival.call("get_thirst")) < TRAVEL_THIRST):
 		return "TOAST_TRAVEL_TIRED"
 	return ""
 
@@ -140,7 +173,7 @@ func fast_travel(site_id: String, player: Node3D) -> String:
 	if player is CharacterBody3D:
 		(player as CharacterBody3D).velocity = Vector3.ZERO
 	var survival := InteractionManager.get_survival()
-	if survival != null:
+	if survival != null and not travel_is_free():
 		survival.call("consume", TRAVEL_HUNGER, TRAVEL_THIRST)
 	var progression := InteractionManager.get_progression()
 	if progression != null:
@@ -192,6 +225,7 @@ func _load() -> void:
 		_cells = saved
 	_pending_found = config.get_value("sites", "found", [])
 	_looted = config.get_value("sites", "looted", [])
+	blessings = int(config.get_value("altar", "blessings", 0))
 	for site_id in _pending_found:
 		if _sites.has(site_id):
 			_sites[site_id]["found"] = true
@@ -221,6 +255,7 @@ func _save() -> void:
 	config.set_value("fog", "cells", _cells)
 	config.set_value("sites", "found", get_discovered_ids())
 	config.set_value("sites", "looted", _looted)
+	config.set_value("altar", "blessings", blessings)
 	config.save(SAVE_PATH)
 	_dirty = false
 
@@ -232,3 +267,4 @@ func clear_for_test() -> void:
 	_sites.clear()
 	_pending_found = []
 	_looted = []
+	blessings = 0

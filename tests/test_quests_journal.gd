@@ -81,8 +81,8 @@ func _init() -> void:
 	journal.open()
 	await process_frame
 	var tabs := journal.find_children("*", "TabContainer", true, false)
-	if tabs.is_empty() or (tabs[0] as TabContainer).get_tab_count() != 3:
-		errors.append("le journal doit avoir 3 onglets")
+	if tabs.is_empty() or (tabs[0] as TabContainer).get_tab_count() != 4:
+		errors.append("le journal doit avoir 4 onglets (quêtes, fabrication, sac, réglages)")
 	# Le journal se met à jour tout seul quand une quête progresse.
 	var cards_before := journal.find_children("*", "ProgressBar", true, false).size()
 	inventory.call("add_item", "item_wood", 3)

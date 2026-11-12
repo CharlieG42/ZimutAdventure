@@ -45,7 +45,7 @@ func _init() -> void:
 	root.add_child(world)
 	await process_frame
 	var landscape := world.get_node("Landscape")
-	var expected := 40 + 12 + 150 + 220 + 180 + 400 + 70 + 110 + 160
+	var expected := 40 + 12 + 150 + 220 + 180 + 400 + 70 + 110 + 160 + 6 + 700 + 300
 	if landscape.prop_placements.size() != expected:
 		errors.append("placements %d != %d attendu" % [landscape.prop_placements.size(), expected])
 	var props := landscape.get_node("Props")
