@@ -7,7 +7,7 @@ const MODEL_PATH := "res://assets/characters/hero.glb"
 const WALK := "walk"
 const HAND_BONE := "mixamorig_RightHand"
 ## Instants de la boucle où les deux pieds sont à la même hauteur (mesurés sur l'animation).
-const REST_TIMES: Array[float] = [0.02, 0.503]
+const REST_TIMES: Array[float] = [0.012, 0.532]
 ## Vitesse (m/s) à laquelle la marche s'anime à vitesse normale, sans glissement des pieds.
 const STRIDE_SPEED := 2.6
 const MIN_SPEED_SCALE := 0.5

@@ -35,4 +35,4 @@ __pycache__/
 *.pyc
 
 # Texture extraite du GLB du personnage (régénérée par l'import Godot)
-assets/characters/hero_materiaumat_albedo.png
+assets/characters/hero_*.png
