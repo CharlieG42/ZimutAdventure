@@ -56,6 +56,11 @@ var _stamina_exhausted: bool = false
 var _panels_open: bool = false
 ## Le joueur vise à l'arc : le réticule s'affiche même sans objet visé.
 var _aiming: bool = false
+## Viseur de l'arc (tension, cible verrouillée) et jauge d'action (pêche, confiance).
+var _bow_overlay: Control
+var _gauge: ProgressBar
+var _gauge_label: Label
+var _prompt_refresh: float = 0.0
 
 ## Qualité réduite (PerformanceGuard) : niveau 1 coupe le grain, niveau 2 aussi la vignette.
 func set_fx_level(level: int) -> void:
@@ -67,6 +72,8 @@ func set_fx_level(level: int) -> void:
 
 func _ready() -> void:
 	add_to_group("fx_quality")
+	# Tous les messages du jeu (animaux, pêche, quêtes...) passent par ce groupe.
+	add_to_group("hud")
 	var is_touch := PlatformInfo.is_touch()
 	action_pad.visible = is_touch
 	journal_button.visible = is_touch
@@ -76,7 +83,11 @@ func _ready() -> void:
 	touch_look.visible = is_touch
 
 	interact_button.pressed.connect(_on_interact_pressed)
-	attack_button.pressed.connect(_on_attack_pressed)
+	# Maintenir pour bander l'arc, relâcher pour tirer (la hache frappe dès l'appui).
+	attack_button.button_down.connect(_on_attack_down)
+	attack_button.button_up.connect(_on_attack_up)
+	_build_bow_overlay()
+	_build_gauge()
 	jump_button.button_down.connect(_on_jump_pressed)
 	sprint_button.toggled.connect(_on_sprint_toggled)
 	journal_button.pressed.connect(_on_journal_pressed)
@@ -177,8 +188,14 @@ func _process(delta: float) -> void:
 	vitals.visible = not panel_open
 	if panel_open and interact_button.visible:
 		_on_focus_changed(null)
+	_prompt_refresh -= delta
+	if _prompt_refresh <= 0.0 and is_instance_valid(_focused_interactable):
+		_prompt_refresh = 0.15
+		_refresh_prompt_text(_focused_interactable)
 	if _player == null:
 		return
+	if _bow_overlay != null and _player.has_method("get_bow_state"):
+		_bow_overlay.call("update_state", _player.call("get_bow_state"))
 	if _camera_joystick_vector != Vector2.ZERO and _player.has_method("apply_camera_joystick"):
 		_player.call("apply_camera_joystick", _camera_joystick_vector, delta)
 	if _player.has_method("get_heading_degrees"):
@@ -294,14 +311,8 @@ func _on_focus_changed(target: Node3D) -> void:
 		interactable = target as Interactable
 	_focused_interactable = interactable
 	if interactable != null:
-		var label := tr(interactable.get_prompt())
-		if interactable.has_method("get_prompt_args"):
-			var args: Array = interactable.call("get_prompt_args")
-			if not args.is_empty() and "%s" in label:
-				label = label % args
-		interact_prompt.text = label if PlatformInfo.is_touch() else "[%s] %s" % [_interact_key_text(), label]
+		_refresh_prompt_text(interactable)
 		interact_prompt.visible = true
-		interact_button.disabled = not interactable.can_interact()
 		interact_button.visible = true
 		reticle.call("set_focused", true)
 		_pulse_interact(not interact_button.disabled)
@@ -311,6 +322,18 @@ func _on_focus_changed(target: Node3D) -> void:
 		interact_button.visible = false
 		reticle.call("set_focused", _aiming)
 		_pulse_interact(false)
+
+## Texte de l'invite : il peut changer pendant que l'objet reste visé (pêche, animal).
+func _refresh_prompt_text(interactable: Interactable) -> void:
+	var label := tr(interactable.get_prompt())
+	if interactable.has_method("get_prompt_args"):
+		var args: Array = interactable.call("get_prompt_args")
+		if not args.is_empty() and "%" in label:
+			label = label % args
+	var text := label if PlatformInfo.is_touch() else "[%s] %s" % [_interact_key_text(), label]
+	if interact_prompt.text != text:
+		interact_prompt.text = text
+	interact_button.disabled = not interactable.can_interact()
 
 ## Sécurité : si l'objet visé a disparu ou n'est plus interactif (ramassé,
 ## cassé), l'invite et le bouton doivent s'éteindre même si le signal
@@ -361,9 +384,79 @@ func _refresh_attack_button() -> void:
 	if attack_button.visible != ready_to_shoot:
 		attack_button.visible = ready_to_shoot
 
-func _on_attack_pressed() -> void:
-	if _player != null and _player.has_method("try_attack"):
-		_player.call("try_attack")
+func _on_attack_down() -> void:
+	if _player != null and _player.has_method("begin_attack"):
+		_player.call("begin_attack")
+
+func _on_attack_up() -> void:
+	if _player != null and _player.has_method("end_attack"):
+		_player.call("end_attack")
+
+func _build_bow_overlay() -> void:
+	_bow_overlay = Control.new()
+	_bow_overlay.name = "BowOverlay"
+	_bow_overlay.set_script(load("res://scripts/ui/bow_overlay.gd"))
+	$Overlay.add_child(_bow_overlay)
+	$Overlay.move_child(_bow_overlay, 0)
+
+## Flèche au but : croix autour du viseur et petite vibration.
+func notify_hit(_body: Node = null) -> void:
+	if _bow_overlay != null:
+		_bow_overlay.call("flash_hit")
+	if PlatformInfo.is_touch():
+		Input.vibrate_handheld(40)
+
+func _build_gauge() -> void:
+	_gauge = ProgressBar.new()
+	_gauge.name = "ActionGauge"
+	_gauge.min_value = 0.0
+	_gauge.max_value = 1.0
+	_gauge.step = 0.0
+	_gauge.show_percentage = false
+	_gauge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_gauge.custom_minimum_size = Vector2(320.0, 22.0)
+	_gauge.set_anchors_preset(Control.PRESET_CENTER)
+	_gauge.offset_left = -160.0
+	_gauge.offset_right = 160.0
+	_gauge.offset_top = 150.0
+	_gauge.offset_bottom = 172.0
+	var back := StyleBoxFlat.new()
+	back.bg_color = Color(0.0, 0.0, 0.0, 0.55)
+	back.set_corner_radius_all(11)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(0.98, 0.74, 0.32)
+	fill.set_corner_radius_all(11)
+	_gauge.add_theme_stylebox_override("background", back)
+	_gauge.add_theme_stylebox_override("fill", fill)
+	_gauge.visible = false
+	$Overlay.add_child(_gauge)
+	_gauge_label = Label.new()
+	_gauge_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_gauge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_gauge_label.set_anchors_preset(Control.PRESET_CENTER)
+	_gauge_label.offset_left = -260.0
+	_gauge_label.offset_right = 260.0
+	_gauge_label.offset_top = 114.0
+	_gauge_label.offset_bottom = 146.0
+	_gauge_label.add_theme_font_size_override("font_size", 24)
+	_gauge_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	_gauge_label.add_theme_constant_override("outline_size", 6)
+	_gauge_label.visible = false
+	$Overlay.add_child(_gauge_label)
+
+## Jauge d'action sous le viseur (remontée du poisson, etc.). `ratio` de 0 à 1.
+func set_gauge(text: String, ratio: float) -> void:
+	if _gauge == null:
+		return
+	_gauge.value = clampf(ratio, 0.0, 1.0)
+	_gauge.visible = true
+	_gauge_label.text = text
+	_gauge_label.visible = text != ""
+
+func clear_gauge() -> void:
+	if _gauge != null:
+		_gauge.visible = false
+		_gauge_label.visible = false
 
 # --- Endurance ------------------------------------------------------------------
 

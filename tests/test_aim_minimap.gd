@@ -37,7 +37,7 @@ func _init() -> void:
 	if player.camera.fov > 60.0:
 		errors.append("FOV de visée non réduit (fov=%f)" % player.camera.fov)
 
-	# Tir en visée : flèche consommée, vitesse = aim_arrow_speed.
+	# Tir en visée : flèche consommée, pleine tension (full_draw_speed).
 	var before: int = inventory.call("count_of", "arrow")
 	player.call("try_shoot_arrow")
 	if inventory.call("count_of", "arrow") != before - 1:
@@ -47,8 +47,8 @@ func _init() -> void:
 		errors.append("aucune flèche tirée")
 	else:
 		var speed: float = (arrow as RigidBody3D).linear_velocity.length()
-		if absf(speed - 30.0) > 0.6:
-			errors.append("tir visé devrait être à 30 m/s (got %f)" % speed)
+		if absf(speed - 38.0) > 0.6:
+			errors.append("tir visé devrait être à 38 m/s (got %f)" % speed)
 
 	# Hors visée : vitesse de base.
 	Input.action_release("aim")
@@ -60,8 +60,8 @@ func _init() -> void:
 	arrow = _last_arrow(world)
 	if arrow != null:
 		var speed: float = (arrow as RigidBody3D).linear_velocity.length()
-		if absf(speed - 26.0) > 2.5:  # dispersion légère acceptée
-			errors.append("tir non visé devrait être ~26 m/s (got %f)" % speed)
+		if absf(speed - 29.0) > 0.6:  # tir rapide : arc à peine bandé
+			errors.append("tir non visé devrait être ~29 m/s (got %f)" % speed)
 
 	# Clic sur la mini-carte (souris capturée) : la carte plein écran s'ouvre.
 	var minimap: Control = hud.get_node("Overlay/MiniMap")
