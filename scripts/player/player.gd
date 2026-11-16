@@ -46,18 +46,18 @@ enum ViewMode { FIRST_PERSON, THIRD_PERSON }
 @export_range(0.0, 1.0) var exhausted_recovery: float = 0.3
 
 @export_group("Caméra")
-@export var mouse_sensitivity: float = 0.0022
+@export var mouse_sensitivity: float = 0.0028
 @export var touch_sensitivity: float = 0.006
-@export var camera_joystick_speed: float = 3.2
-@export_range(0.0, 0.5) var camera_stick_deadzone: float = 0.1
-@export var camera_stick_curve: float = 2.0
+@export var camera_joystick_speed: float = 5.2
+@export_range(0.0, 0.5) var camera_stick_deadzone: float = 0.08
+@export var camera_stick_curve: float = 1.5
 @export var pitch_min: float = -1.45
 @export var pitch_max: float = 1.55
 @export var eye_height: float = 1.6
 @export var head_bob: bool = true
 @export var sprint_fov_boost: float = 6.0
 ## Lissage exponentiel de la visée (yaw/pitch) : mouvements de caméra fluides.
-@export var look_smoothing: float = 18.0
+@export var look_smoothing: float = 30.0
 
 @export_group("Visée à l'arc")
 @export var aim_fov: float = 42.0
@@ -91,6 +91,8 @@ var _pitch_smooth: float = -0.25
 ## Visée à l'arc active (bouton droit maintenu, ou automatique au tactile).
 var _aiming: bool = false
 var _last_aiming: bool = false
+var _pivot_yaw: float = 0.0
+var _aim_override: bool = false  # bouton « Viser » tactile
 ## Arc : on maintient pour bander, on relâche pour tirer. La cible la plus proche du
 ## viseur est verrouillée et la flèche compense seule la distance et la chute.
 const DRAW_TIME := 0.7
@@ -190,7 +192,7 @@ func set_joystick_vector(vector: Vector2) -> void:
 	_joystick_vector = vector if vector.length() <= 1.0 else vector.normalized()
 
 func apply_touch_look(delta: Vector2) -> void:
-	_rotate_look(delta * touch_sensitivity * 160.0)
+	_rotate_look(delta * touch_sensitivity * 240.0)
 
 func apply_camera_joystick(vector: Vector2, delta: float) -> void:
 	var shaped := shape_stick(vector, camera_stick_deadzone, camera_stick_curve)
@@ -320,13 +322,21 @@ func begin_attack() -> void:
 		try_melee()
 
 ## Relâchement : la flèche part, d'autant plus vite et droit que l'arc était bandé.
+## Un appui bref (bouton « Tirer ») tire quand même une flèche correcte.
 func end_attack() -> void:
 	if not _drawing:
 		return
-	var charge := get_draw_charge()
+	var charge := maxf(get_draw_charge(), QUICK_SHOT_CHARGE)
 	_drawing = false
 	_draw_time = 0.0
 	shoot_arrow(charge)
+
+## Bouton « Viser » (tactile) : verrouille la visée à l'arc sans toucher au personnage.
+func set_aim_override(value: bool) -> void:
+	_aim_override = value
+
+func is_aiming() -> bool:
+	return _aiming
 
 ## Tension de l'arc, de 0 (à peine bandé) à 1 (pleine tension).
 func get_draw_charge() -> float:
@@ -372,8 +382,9 @@ func try_melee() -> bool:
 	forward = forward.normalized()
 	var best: Node3D = null
 	var best_distance := MELEE_RANGE
-	for target in get_tree().get_nodes_in_group("predators"):
-		if not is_instance_valid(target) or not target.has_method("hit"):
+	var targets: Array = get_tree().get_nodes_in_group("predators") + get_tree().get_nodes_in_group("huntable")
+	for target in targets:
+		if not is_instance_valid(target) or not (target.has_method("hit") or target.has_method("take_arrow_hit")):
 			continue
 		var offset: Vector3 = target.global_position - global_position
 		offset.y = 0.0
@@ -382,7 +393,10 @@ func try_melee() -> bool:
 			best = target
 			best_distance = distance
 	if best != null:
-		best.call("hit", 2, global_position)
+		if best.has_method("take_arrow_hit"):
+			best.call("take_arrow_hit", global_position)
+		else:
+			best.call("hit", 2, global_position)
 		var sfx := InteractionManager.get_sfx()
 		if sfx != null and sfx.has_method("play_event"):
 			sfx.call("play_event", "hit", -4.0, randf_range(0.9, 1.1))
@@ -555,9 +569,13 @@ static func shape_stick(raw: Vector2, deadzone: float, curve: float) -> Vector2:
 # --- Caméra ------------------------------------------------------------------
 
 func _rotate_look(delta: Vector2) -> void:
-	# Yaw immédiat (1:1 avec la souris), pitch lissé dans _process : la caméra
-	# monte/descend sans saccade, le cap reste fidèle au mouvement.
-	rotate_y(-delta.x)
+	# En visée à l'arc, seul le viseur bouge : le yaw part sur le pivot caméra,
+	# le corps du personnage reste en place. Sinon yaw immédiat (1:1 souris) sur
+	# le personnage ; le pitch est lissé dans _process.
+	if _aiming:
+		_pivot_yaw = wrapf(_pivot_yaw - delta.x, -PI, PI)
+	else:
+		rotate_y(-delta.x)
 	_pitch = clampf(_pitch - delta.y, _pitch_lo(), _pitch_hi())
 
 func _pitch_lo() -> float:
@@ -584,6 +602,7 @@ func _update_camera() -> void:
 	# personne la caméra orbite autour de lui (la visée = l'axe de la caméra).
 	camera.rotation = Vector3.ZERO
 	camera_pivot.rotation.x = _pitch_smooth
+	camera_pivot.rotation.y = _pivot_yaw
 
 ## Rapproche la caméra 3ème personne quand le décor (falaise, rocher) la gêne.
 func _update_third_person_camera(delta: float) -> void:
@@ -596,7 +615,7 @@ func _update_third_person_camera(delta: float) -> void:
 	if not hit.is_empty():
 		target = maxf(third_person_min_distance, from.distance_to(hit.get("position")) - 0.3)
 	# Se rapproche vite (pas de traversée du décor), s'éloigne doucement.
-	var rate := 18.0 if target < _tp_distance else 4.0
+	var rate := 18.0 if target < _tp_distance else 9.0
 	_tp_distance = lerpf(_tp_distance, target, 1.0 - exp(-rate * delta))
 	var ratio := _tp_distance / third_person_distance
 	camera.position = Vector3(third_person_shoulder * ratio, 0.0, _tp_distance)
@@ -625,7 +644,7 @@ func _physics_process(delta: float) -> void:
 			_draw_time = 0.0
 	_update_bow_target()
 	# Visée (zoom) : bouton droit sur PC, ou tant que l'arc est bandé.
-	_aiming = bow_equipped and (Input.is_action_pressed("aim") or _drawing)
+	_aiming = bow_equipped and (Input.is_action_pressed("aim") or _drawing or _aim_override)
 	if _aiming != _last_aiming:
 		_last_aiming = _aiming
 		var hud := get_tree().get_first_node_in_group("hud") if get_tree() != null else null
@@ -661,6 +680,8 @@ func _physics_process(delta: float) -> void:
 	# Intention de déplacement (clavier / manette + stick virtuel).
 	var wish := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	wish += shape_stick(_joystick_vector, stick_deadzone, stick_curve)
+	if _aiming:
+		wish = Vector2.ZERO  # en visée, on déplace le viseur, pas le personnage
 	if wish.length() > 1.0:
 		wish = wish.normalized()
 	var wish_len := wish.length()
@@ -817,6 +838,9 @@ func _process(delta: float) -> void:
 	# Lissage de la visée verticale : le pivot suit le pitch cible en douceur.
 	var k := 1.0 - exp(-look_smoothing * delta)
 	_pitch_smooth = lerpf(_pitch_smooth, _pitch, k)
+	if not _aiming:
+		# Hors visée, le pivot caméra revient dans l'axe du personnage.
+		_pivot_yaw = lerpf(_pivot_yaw, 0.0, 1.0 - exp(-10.0 * delta))
 	_update_camera()
 	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
 	if _view_mode == ViewMode.FIRST_PERSON:
@@ -824,7 +848,7 @@ func _process(delta: float) -> void:
 	var fov_target := _base_fov + (sprint_fov_boost if _sprinting and horizontal_speed > walk_speed else 0.0)
 	if _aiming:
 		fov_target = aim_fov
-	camera.fov = lerpf(camera.fov, fov_target, 1.0 - exp(-8.0 * delta))
+	camera.fov = lerpf(camera.fov, fov_target, 1.0 - exp(-12.0 * delta))
 	if _view_mode == ViewMode.THIRD_PERSON:
 		_update_character(delta, horizontal_speed)
 
