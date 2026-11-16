@@ -11,6 +11,7 @@ const BASE_MARGIN := 16
 @onready var action_pad: Control = $Overlay/ActionPad
 @onready var interact_button: Button = $Overlay/ActionPad/InteractButton
 @onready var attack_button: Button = $Overlay/ActionPad/AttackButton
+@onready var aim_button: Button = $Overlay/ActionPad/AimButton
 @onready var jump_button: Button = $Overlay/ActionPad/JumpButton
 @onready var sprint_button: Button = $Overlay/ActionPad/SprintButton
 @onready var journal_button: Button = $SafeArea/VBox/BottomBar/JournalButton
@@ -86,6 +87,8 @@ func _ready() -> void:
 	# Maintenir pour bander l'arc, relâcher pour tirer (la hache frappe dès l'appui).
 	attack_button.button_down.connect(_on_attack_down)
 	attack_button.button_up.connect(_on_attack_up)
+	aim_button.toggled.connect(_on_aim_toggled)
+	aim_button.text = tr("ACTION_AIM")
 	_build_bow_overlay()
 	_build_gauge()
 	jump_button.button_down.connect(_on_jump_pressed)
@@ -377,12 +380,25 @@ func _on_item_removed(_item_id: String, _amount: int) -> void:
 	_refresh_attack_button()
 
 ## Le bouton de tir n'apparaît (tactile) que lorsque l'arc de chasse est ÉQUIPÉ.
+## Le bouton « Viser » n'apparaît que si l'arc est équipé : en visée, déplacer le
+## viseur ne fait plus tourner le personnage.
 func _refresh_attack_button() -> void:
 	if not PlatformInfo.is_touch() or _inventory == null:
 		return
 	var ready_to_shoot: bool = _inventory.is_equipped("tool_hunting_bow") or _inventory.is_equipped("tool_stone_axe")
 	if attack_button.visible != ready_to_shoot:
 		attack_button.visible = ready_to_shoot
+	var bow: bool = _inventory.is_equipped("tool_hunting_bow")
+	if aim_button.visible != bow:
+		aim_button.visible = bow
+	if bow:
+		attack_button.text = tr("ACTION_FIRE")
+	else:
+		attack_button.text = ""
+
+func _on_aim_toggled(pressed: bool) -> void:
+	if _player != null and _player.has_method("set_aim_override"):
+		_player.call("set_aim_override", pressed)
 
 func _on_attack_down() -> void:
 	if _player != null and _player.has_method("begin_attack"):

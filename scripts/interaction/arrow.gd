@@ -19,7 +19,7 @@ func _ready() -> void:
 	max_contacts_reported = 4
 	continuous_cd = true
 	collision_layer = 0
-	collision_mask = 1
+	collision_mask = 1 | 8  # sol/décor + hurtbox gibier (couche 8)
 	# Pas de frottement de l'air : la trajectoire calculée au tir reste exacte.
 	linear_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
 	linear_damp = 0.0
@@ -35,6 +35,7 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 	if _timer >= LIFETIME:
 		queue_free()
 		return
+	_proximity_check()
 	# Oriente la flèche dans la direction du mouvement (tangente de la trajectoire).
 	var velocity := state.get_linear_velocity()
 	if velocity.length_squared() > 0.5:
@@ -44,6 +45,29 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 			var angle := forward.angle_to(velocity.normalized())
 			state.set_angular_velocity(axis.normalized() * 20.0)
 			look_at(global_position + velocity.normalized(), Vector3.UP)
+
+## Détection de proximité : si la flèche passe à moins de ~1 m du point visé d'un
+## gibier/prédateur, l'impact compte (anti-traversée des cibles rapides).
+const PROXIMITY_RADIUS := 1.0
+
+func _proximity_check() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	var targets: Array = tree.get_nodes_in_group("huntable") + tree.get_nodes_in_group("predators")
+	for target in targets:
+		if not is_instance_valid(target):
+			continue
+		var point: Vector3 = target.call("get_aim_point") if target.has_method("get_aim_point") else target.global_position + Vector3(0.0, 0.6, 0.0)
+		if global_position.distance_to(point) < PROXIMITY_RADIUS:
+			var origin := global_position - linear_velocity.normalized() * 4.0 if linear_velocity.length_squared() > 0.01 else global_position
+			if target.has_method("take_arrow_hit"):
+				target.call("take_arrow_hit", origin)
+			elif target.has_method("hit"):
+				target.call("hit", 2, origin)
+			_notify_hit(target)
+			queue_free()
+			return
 
 func _on_body_entered(body: Node) -> void:
 	if _stuck:

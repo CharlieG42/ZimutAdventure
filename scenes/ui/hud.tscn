@@ -294,6 +294,18 @@ icon = ExtResource("8_interact")
 icon_alignment = 1
 expand_icon = true
 
+[node name="AimButton" type="Button" parent="Overlay/ActionPad"]
+visible = false
+layout_mode = 0
+offset_left = 16.0
+offset_top = -84.0
+offset_right = 112.0
+offset_bottom = 12.0
+focus_mode = 0
+toggle_mode = true
+theme_type_variation = &"RoundButton"
+text = "Viser"
+
 [node name="InventoryCenter" type="CenterContainer" parent="."]
 anchors_preset = 8
 anchor_left = 0.5
