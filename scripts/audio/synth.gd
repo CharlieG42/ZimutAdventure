@@ -93,3 +93,46 @@ static func splash(seconds: float = 0.35, gain: float = 0.6) -> AudioStreamWAV:
 		last = last * 0.55 + rng.randf_range(-1.0, 1.0) * 0.45
 		samples[i] = last * pow(1.0 - t, 2.0) * gain
 	return _to_wav(samples, false)
+
+## Voix d'animal : contour de hauteur `points` ([[t, f], ...] en secondes et Hz), son riche
+## en harmoniques filtré autour d'un formant, vibrato, attaque et relâche douces.
+## `breath` ajoute un souffle (bruit) ; utile au hurlement.
+static func voice(points: Array, seconds: float, formant: float, vibrato_hz: float, vibrato_depth: float,
+		gain: float = 0.5, breath: float = 0.1) -> AudioStreamWAV:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 91
+	var count := int(seconds * RATE)
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	var phase := 0.0
+	var noise := 0.0
+	for i in count:
+		var t := float(i) / float(RATE)
+		var f := _contour(points, t)
+		f *= 1.0 + vibrato_depth * sin(TAU * vibrato_hz * t)
+		phase += TAU * f / float(RATE)
+		var value := 0.0
+		var harmonics := mini(14, int(5000.0 / maxf(f, 50.0)))
+		for h in range(1, harmonics + 1):
+			var hf := f * float(h)
+			# Résonance autour du formant : les harmoniques proches sonnent plus fort.
+			var weight := 1.0 / float(h) * (0.3 + exp(-pow((hf - formant) / (formant * 0.45), 2.0)))
+			value += sin(phase * float(h)) * weight
+		noise = noise * 0.7 + rng.randf_range(-1.0, 1.0) * 0.3
+		value = value * 0.6 + noise * breath
+		var env := minf(t / 0.06, 1.0) * minf((seconds - t) / 0.15, 1.0)
+		samples[i] = value * env * gain
+	return _to_wav(samples, false)
+
+static func _contour(points: Array, t: float) -> float:
+	if points.is_empty():
+		return 200.0
+	if t <= float(points[0][0]):
+		return float(points[0][1])
+	for k in range(1, points.size()):
+		var a: Array = points[k - 1]
+		var b: Array = points[k]
+		if t <= float(b[0]):
+			var u := (t - float(a[0])) / maxf(float(b[0]) - float(a[0]), 0.001)
+			return lerpf(float(a[1]), float(b[1]), smoothstep(0.0, 1.0, u))
+	return float(points[points.size() - 1][1])
