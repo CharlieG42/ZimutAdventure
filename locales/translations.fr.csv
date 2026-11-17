@@ -111,9 +111,12 @@ ITEM_ITEM_COOKED_MEAT,viande cuite
 ACTION_COOK,Cuisiner
 TOAST_NEED_MEAT,Pas de viande crue à cuire !
 TOAST_MEAT_COOKED,La viande embaume...
+ACTION_BUTCHER,Dépecer
+TOAST_BUTCHER,Vous dépecez la bête : %s.
+TOAST_HUNT_DOWN,Touché ! Approchez-vous pour dépecer la bête.
 TOAST_HUNT_SUCCESS,Touché ! Vous récoltez : %s.
 QUEST_FIRST_HUNT_TITLE,Première chasse
-QUEST_FIRST_HUNT_DESC,Abattez un cerf à l'arc pour récolter de la viande crue.
+QUEST_FIRST_HUNT_DESC,Abattez un cerf à l'arc puis dépecez-le pour récolter de la viande crue.
 QUEST_COOKED_MEAL_TITLE,Un repas chaud
 QUEST_COOKED_MEAL_DESC,Cuisez de la viande crue sur un feu de camp plein.
 ACTION_DRINK,Boire

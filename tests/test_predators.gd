@@ -98,7 +98,10 @@ func _initialize() -> void:
 	_check(wolf_hp == 2, "la hache inflige 2 dégâts")
 	player.call("try_melee")
 	await process_frame
-	_check(inventory.call("count_of", "item_pelt") == 2, "deux peaux de loup")
+	_check(inventory.call("count_of", "item_pelt") == 0, "la peau reste sur la dépouille")
+	_check(wolf.get_node_or_null("Carcass") != null, "une dépouille de loup est laissée")
+	wolf.get_node("Carcass").call("harvest")
+	_check(inventory.call("count_of", "item_pelt") == 2, "deux peaux de loup une fois dépecé")
 	_check(int(progression.call("get_stat", "stat_predators")) == 1, "compteur de prédateurs")
 	coyote.queue_free()
 	# --- Arc ---------------------------------------------------------------------------------------------------
@@ -109,6 +112,7 @@ func _initialize() -> void:
 	coyote2.call("take_arrow_hit", anchor)
 	await process_frame
 	_check(int(progression.call("get_stat", "stat_predators")) == 2, "une flèche abat un coyote")
+	coyote2.get_node("Carcass").call("harvest")
 	_check(inventory.call("count_of", "item_pelt") == 3, "peau de coyote")
 
 	# --- Feu de camp ---------------------------------------------------------------------------------------------------

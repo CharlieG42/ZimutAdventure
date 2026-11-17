@@ -99,6 +99,8 @@ func _initialize() -> void:
 			hit = true
 			break
 	_check(hit, "la flèche atteint la cible verrouillée à 16 m")
+	_check(inventory.call("count_of", "item_raw_meat") == meat_before, "pas de viande avant le dépeçage")
+	prey.get_node("Carcass").call("harvest")
 	_check(inventory.call("count_of", "item_raw_meat") > meat_before, "viande récoltée")
 	_check(not prey.is_in_group("huntable"), "l'animal abattu n'est plus une cible")
 	for i in 4:
