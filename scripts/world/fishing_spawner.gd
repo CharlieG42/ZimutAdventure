@@ -24,7 +24,7 @@ func plan(count: int) -> Array:
 		var angle := rng.randf() * TAU
 		var radius := rng.randf_range(60.0, 170.0)
 		var point := Vector2(cos(angle), sin(angle)) * radius
-		if _ground_height(point.x, point.y) < -2.0:
+		if _ground_height(point.x, point.y) < -8.0 or _in_water(point.x, point.y, 12.0):
 			continue
 		var far := true
 		for other in result:
@@ -38,3 +38,7 @@ func _ground_height(x: float, z: float) -> float:
 	if _landscape != null and _landscape.has_method("terrain_height_at"):
 		return float(_landscape.call("terrain_height_at", x, z))
 	return 0.0
+
+## Vrai si le point tombe dans la rivière ou un lac (avec une marge en mètres).
+func _in_water(x: float, z: float, margin: float = 3.0) -> bool:
+	return _landscape != null and _landscape.has_method("is_water") and bool(_landscape.call("is_water", x, z, margin))

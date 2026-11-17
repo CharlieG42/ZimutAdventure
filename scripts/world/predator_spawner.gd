@@ -70,7 +70,7 @@ func spawn(species: String, around: Vector3) -> Node3D:
 		var x := around.x + cos(angle) * distance
 		var z := around.z + sin(angle) * distance
 		var y := _ground_height(x, z)
-		if y < -5.0 or _near_camp(Vector3(x, y, z)):
+		if y < -5.0 or _in_water(x, z) or _near_camp(Vector3(x, y, z)):
 			continue
 		var predator := Predator.new_for(species)
 		predator.position = Vector3(x, y + 1.0, z)
@@ -89,3 +89,7 @@ func _ground_height(x: float, z: float) -> float:
 	if _landscape != null and _landscape.has_method("terrain_height_at"):
 		return float(_landscape.call("terrain_height_at", x, z))
 	return 0.0
+
+## Vrai si le point tombe dans la rivière ou un lac (avec une marge en mètres).
+func _in_water(x: float, z: float, margin: float = 3.0) -> bool:
+	return _landscape != null and _landscape.has_method("is_water") and bool(_landscape.call("is_water", x, z, margin))

@@ -6,6 +6,8 @@ extends Control
 
 const RESOLUTION := 160
 const REFRESH_PERIOD := 0.2
+## Teintes des zones sur la carte : pinède, mesas, berges, eau.
+const ZONE_TINTS := [Color(0.42, 0.52, 0.3), Color(0.78, 0.38, 0.22), Color(0.56, 0.64, 0.34), Color(0.3, 0.58, 0.78)]
 const COLORS := {
 	"backdrop": Color(0.05, 0.03, 0.02, 0.72),
 	"frame": Color(0.88, 0.64, 0.36, 1.0),
@@ -178,6 +180,7 @@ static func build_terrain_texture(landscape: Node3D, resolution: int) -> ImageTe
 			var wz := (float(py) / float(resolution - 1) - 0.5) * terrain_size
 			heights[py * resolution + px] = landscape.call("terrain_height_at", wx, wz)
 	var cell := terrain_size / float(resolution - 1)
+	var zoned := landscape.has_method("zone_weights") and landscape.has_method("is_water")
 	for py in resolution:
 		for px in resolution:
 			var h := heights[py * resolution + px]
@@ -191,7 +194,18 @@ static func build_terrain_texture(landscape: Node3D, resolution: int) -> ImageTe
 			var t := clampf((h + 12.0) / 42.0, 0.0, 1.0)
 			var color: Color = COLORS["low"].lerp(COLORS["mid"], minf(t * 2.0, 1.0))
 			color = color.lerp(COLORS["high"], clampf(t * 2.0 - 1.0, 0.0, 1.0))
-			img.set_pixel(px, py, Color(color.r * light, color.g * light, color.b * light))
+			color = Color(color.r * light, color.g * light, color.b * light)
+			if zoned:
+				# Zones : pinède verte, mesas rouges, berges herbeuses, eau bleue.
+				var wx := (float(px) / float(resolution - 1) - 0.5) * terrain_size
+				var wz := (float(py) / float(resolution - 1) - 0.5) * terrain_size
+				var weights: Array = landscape.call("zone_weights", wx, wz)
+				color = color.lerp(ZONE_TINTS[0] * light, float(weights[1]) * 0.55)
+				color = color.lerp(ZONE_TINTS[1] * light, float(weights[2]) * 0.45)
+				color = color.lerp(ZONE_TINTS[2] * light, float(weights[3]) * 0.6)
+				if bool(landscape.call("is_water", wx, wz)):
+					color = ZONE_TINTS[3]
+			img.set_pixel(px, py, color)
 	return ImageTexture.create_from_image(img)
 
 # --- Dessin ----------------------------------------------------------------------
@@ -217,6 +231,7 @@ func _draw() -> void:
 	_draw_resources(to_map, rect)
 	_draw_sites(to_map, rect, font)
 	_draw_fog(rect)
+	_draw_zone_labels(to_map, rect, font)
 	_draw_player(to_map, rect)
 	var north_pos := Vector2(rect.end.x - 30.0, rect.position.y + 32.0)
 	draw_string_outline(font, north_pos, "N", HORIZONTAL_ALIGNMENT_CENTER, -1, 28, 6, Color(0.08, 0.05, 0.03, 0.95))
@@ -277,6 +292,24 @@ func _draw_sites(to_map: Transform2D, rect: Rect2, font: Font) -> void:
 			var label := tr(String(site["name"]))
 			draw_string_outline(font, pos + Vector2(-60.0, -22.0), label, HORIZONTAL_ALIGNMENT_LEFT, 200, 20, 5, Color(0.08, 0.05, 0.03, 0.95))
 			draw_string(font, pos + Vector2(-60.0, -22.0), label, HORIZONTAL_ALIGNMENT_LEFT, 200, 20, COLORS["text"])
+
+## Nom des zones déjà visitées (leur point d'ancrage est sorti du brouillard).
+func _draw_zone_labels(to_map: Transform2D, rect: Rect2, font: Font) -> void:
+	if _landscape == null or not _landscape.has_method("get_zone_labels"):
+		return
+	var exploration := InteractionManager.get_exploration()
+	for label in _landscape.call("get_zone_labels"):
+		var x := float(label["x"])
+		var z := float(label["z"])
+		if exploration != null and not bool(exploration.call("is_revealed", x, z)):
+			continue
+		var pos := to_map * Vector2(x, z)
+		if not rect.has_point(pos):
+			continue
+		var text := tr(String(label["name"]))
+		var at := pos + Vector2(-110.0, 6.0)
+		draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_CENTER, 220, 18, 5, Color(0.08, 0.05, 0.03, 0.9))
+		draw_string(font, at, text, HORIZONTAL_ALIGNMENT_CENTER, 220, 18, Color(0.97, 0.94, 0.88, 0.9))
 
 ## Formes distinctes (pas seulement des couleurs) pour rester lisible en plein soleil.
 func _draw_marker(kind: String, pos: Vector2) -> void:
