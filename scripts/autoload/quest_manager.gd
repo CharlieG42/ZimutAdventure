@@ -264,6 +264,14 @@ const QUESTS := {
 		"requires": "quest_mesa",
 		"reward": {"item_relic": 1},
 	},
+	"quest_naturalist": {
+		"title": "QUEST_NATURALIST_TITLE",
+		"description": "QUEST_NATURALIST_DESC",
+		"goal_item": "stat_observations",
+		"goal_count": 8,
+		"requires": "quest_river",
+		"reward": {"arrow": 4, "item_berries": 3},
+	},
 	"quest_dog": {
 		"title": "QUEST_DOG_TITLE",
 		"description": "QUEST_DOG_DESC",

@@ -382,3 +382,85 @@ TOAST_MARKERS_FULL,Eight markers at most: remove one first.
 SETTING_MINIMAP,Minimap (turn off for explorer mode)
 VITAL_WARMTH,Warmth
 TOAST_COLD_HINT,"You are getting cold: stand near a lit fire or a shelter, or wear a fur cloak. Being wet chills you faster."
+JOURNAL_NOTEBOOK,Notebook
+NOTEBOOK_INTRO,Take a close look at what you come across: it is noted automatically. %d / %d observations.
+NOTEBOOK_NEXT,Next milestone: %d observations — %s
+NOTEBOOK_FAUNA,Wildlife
+NOTEBOOK_FLORA,Plants
+NOTEBOOK_LANDSCAPE,Landscapes
+TOAST_OBSERVED,Notebook: %s (%d/%d)
+TOAST_NOTEBOOK_REWARD,Milestone reached: %s
+QUEST_NATURALIST_TITLE,Naturalist's notebook
+QUEST_NATURALIST_DESC,"Take a close look at animals, plants and landscapes: each one goes into the Notebook (Journal). Make 8 observations."
+NOTE_DEER,Deer
+NOTE_DEER_DESC,Grazes at the edge of the woods and bolts at the slightest sound.
+NOTE_DEER_HINT,"A large, wary grazer of the plains."
+NOTE_RABBIT,Hare
+NOTE_RABBIT_DESC,Hops between bushes; its long ears give it away.
+NOTE_RABBIT_HINT,"Small and quick, it hides in the grass."
+NOTE_COYOTE,Coyote
+NOTE_COYOTE_DESC,Prowls at dusk. A well-fed fire keeps it away.
+NOTE_COYOTE_HINT,"An evening hunter, wary yet bold."
+NOTE_WOLF,Wolf
+NOTE_WOLF_DESC,Stronger and more stubborn than the coyote: avoid it at night.
+NOTE_WOLF_HINT,It only shows itself to seasoned travellers.
+NOTE_COW,Cow
+NOTE_COW_DESC,Gives milk once fed and tamed.
+NOTE_COW_HINT,A peaceful farm animal.
+NOTE_SHEEP,Sheep
+NOTE_SHEEP_DESC,Its wool makes beds and cloaks.
+NOTE_SHEEP_HINT,A farm animal with a thick fleece.
+NOTE_GOAT,Goat
+NOTE_GOAT_DESC,Climbs everywhere and gives milk.
+NOTE_GOAT_HINT,A nimble farm animal.
+NOTE_CHICKEN,Hen
+NOTE_CHICKEN_DESC,Lays eggs every day once tamed.
+NOTE_CHICKEN_HINT,A small farm animal.
+NOTE_HORSE,Horse
+NOTE_HORSE_DESC,"Once tamed, it carries you much faster."
+NOTE_HORSE_HINT,A companion for long distances.
+NOTE_DOG,Dog
+NOTE_DOG_DESC,"Loyal, it follows you everywhere."
+NOTE_DOG_HINT,A four-legged companion.
+NOTE_FISH,Fish
+NOTE_FISH_DESC,"Bites best at dawn, dusk and in the rain."
+NOTE_FISH_HINT,You need a fishing rod to meet it.
+NOTE_PINE,Pine
+NOTE_PINE_DESC,The wood of the pinewood: chop it with an axe.
+NOTE_PINE_HINT,Grows in numbers in the north-west of the canyon.
+NOTE_CACTUS,Cactus
+NOTE_CACTUS_DESC,Stores water in its stems; its spines sting.
+NOTE_CACTUS_HINT,Typical of the dry flats.
+NOTE_AGAVE,Agave
+NOTE_AGAVE_DESC,A rosette of fleshy leaves that flowers only once.
+NOTE_AGAVE_HINT,A succulent of the flats.
+NOTE_SHRUB,Desert shrub
+NOTE_SHRUB_DESC,A small bush that holds the sand.
+NOTE_SHRUB_HINT,"A modest bush, all over the canyon."
+NOTE_FLOWERS,Wildflowers
+NOTE_FLOWERS_DESC,They colour the riverbanks in spring.
+NOTE_FLOWERS_HINT,Look near the water.
+NOTE_BERRIES,Berry bush
+NOTE_BERRIES_DESC,Its berries ease hunger; they grow back.
+NOTE_BERRIES_HINT,"A nourishing bush, often near water."
+NOTE_HOODOO,Hoodoo
+NOTE_HOODOO_DESC,A sandstone column carved by wind and rain.
+NOTE_HOODOO_HINT,"An odd rock column, on the mesas."
+NOTE_ARCH,Stone arch
+NOTE_ARCH_DESC,Erosion wore through the rock until it opened.
+NOTE_ARCH_HINT,"A pierced rock, rare and striking."
+NOTE_BUTTE,Butte
+NOTE_BUTTE_DESC,"What is left of an old plateau, isolated by erosion."
+NOTE_BUTTE_HINT,A tall red rock butte.
+NOTE_RIVER,Old Ford River
+NOTE_RIVER_DESC,It winds from one lake to the other; you can wade across.
+NOTE_RIVER_HINT,"South of the start, you can hear water."
+NOTE_PINEWOOD,Jaybird Pinewood
+NOTE_PINEWOOD_DESC,"Hills covered in pines, cool and shady."
+NOTE_PINEWOOD_HINT,"To the north-west, where the trees close in."
+NOTE_PLATEAU,Red Mesas plateau
+NOTE_PLATEAU_DESC,From up here you can see the whole canyon.
+NOTE_PLATEAU_HINT,Climb the mesas to the south-east.
+NOTE_SOURCE,Source Lake
+NOTE_SOURCE_DESC,The river is born here.
+NOTE_SOURCE_HINT,Follow the river west.

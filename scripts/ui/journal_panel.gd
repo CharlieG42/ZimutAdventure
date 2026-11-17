@@ -1,7 +1,7 @@
 class_name JournalPanel
 extends PanelContainer
 ## Journal à onglets : Quêtes (avec progression), Fabrication (par catégorie, avec
-## les ingrédients manquants) et Sac. Se met à jour en direct quand l'inventaire ou
+## les ingrédients manquants), Sac, Carnet d'observation et Réglages. Se met à jour en direct quand l'inventaire ou
 ## une quête change, et s'adapte à la taille de l'écran (défilement tactile).
 
 const ACCENT := Color(0.88, 0.64, 0.36, 1.0)
@@ -14,6 +14,8 @@ var _tabs: TabContainer
 var _quests_list: VBoxContainer
 var _craft_list: VBoxContainer
 var _inventory_list: VBoxContainer
+var _notebook_list: VBoxContainer
+var _notebook: Node
 var _close_button: Button
 var _quest_manager: Node
 var _craft_manager: Node
@@ -25,6 +27,7 @@ func _ready() -> void:
 	if tree != null and tree.root != null:
 		_quest_manager = tree.root.get_node_or_null("QuestManager")
 		_craft_manager = tree.root.get_node_or_null("CraftManager")
+		_notebook = tree.root.get_node_or_null("Notebook")
 	_inventory = InteractionManager.get_inventory()
 	_build()
 	_connect_live_updates()
@@ -46,7 +49,7 @@ func open() -> void:
 func close() -> void:
 	visible = false
 
-## Numéro de l'onglet affiché (0 quêtes, 1 fabrication, 2 sac).
+## Numéro de l'onglet affiché (0 quêtes, 1 fabrication, 2 sac, 3 carnet, 4 réglages).
 func show_tab(index: int) -> void:
 	if _tabs != null:
 		_tabs.current_tab = clampi(index, 0, _tabs.get_tab_count() - 1)
@@ -70,6 +73,7 @@ func _build() -> void:
 	_quests_list = _add_tab(tr("JOURNAL_QUESTS"))
 	_craft_list = _add_tab(tr("JOURNAL_CRAFT"))
 	_inventory_list = _add_tab(tr("JOURNAL_INVENTORY_TITLE"))
+	_notebook_list = _add_tab(tr("JOURNAL_NOTEBOOK"))
 	_build_settings(_add_tab(tr("JOURNAL_SETTINGS")))
 
 	_close_button = Button.new()
@@ -163,6 +167,8 @@ func _connect_live_updates() -> void:
 	if progression != null:
 		progression.connect("xp_changed", _on_data_changed)
 		progression.connect("stat_changed", _on_data_changed)
+	if _notebook != null and _notebook.has_signal("entry_observed"):
+		_notebook.connect("entry_observed", _on_data_changed)
 
 func _on_data_changed(_a = null, _b = null, _c = null) -> void:
 	if visible:
@@ -172,6 +178,63 @@ func _refresh() -> void:
 	_refresh_quests()
 	_refresh_craft()
 	_refresh_inventory()
+	_refresh_notebook()
+
+# --- Carnet d'observation ---------------------------------------------------------------
+
+## Une carte par catégorie : progression, puis chaque entrée (nom et description une fois
+## observée, sinon « ??? » et un indice pour la trouver).
+func _refresh_notebook() -> void:
+	if _notebook_list == null:
+		return
+	_clear(_notebook_list)
+	if _notebook == null:
+		return
+	var total := int(_notebook.call("get_total"))
+	var count := int(_notebook.call("get_count"))
+	_add_label(_notebook_list, tr("NOTEBOOK_INTRO") % [count, total], 18, Color(1, 0.95, 0.85))
+	var next := int(_notebook.call("get_next_milestone"))
+	if next > 0:
+		var reward: Dictionary = _notebook.call("get_milestone_reward", next)
+		var parts: PackedStringArray = []
+		for item_id in reward:
+			parts.append("%d× %s" % [int(reward[item_id]), tr("ITEM_" + String(item_id).to_upper())])
+		_add_label(_notebook_list, tr("NOTEBOOK_NEXT") % [next, ", ".join(parts)], 16, ACCENT)
+	for category in _notebook.get("CATEGORIES"):
+		var progress: Vector2i = _notebook.call("get_category_progress", category)
+		var complete := progress.x >= progress.y
+		var card := PanelContainer.new()
+		card.add_theme_stylebox_override("panel", _box(Color(0.12, 0.2, 0.1, 0.8) if complete else Color(0.18, 0.115, 0.065, 0.85),
+				Color(GOOD, 0.7) if complete else Color(ACCENT, 0.6), 2, 12, 12))
+		var box := VBoxContainer.new()
+		box.add_theme_constant_override("separation", 6)
+		card.add_child(box)
+		_add_label(box, "%s  —  %d / %d" % [tr("NOTEBOOK_" + String(category).to_upper()), progress.x, progress.y], 22,
+				GOOD if complete else Color(1, 0.95, 0.85))
+		var bar := ProgressBar.new()
+		bar.theme_type_variation = &"StaminaBar"
+		bar.custom_minimum_size = Vector2(0, 12)
+		bar.max_value = maxf(1.0, float(progress.y))
+		bar.value = float(progress.x)
+		bar.show_percentage = false
+		box.add_child(bar)
+		for entry_id in _notebook.call("get_entries_in_category", category):
+			var seen := bool(_notebook.call("is_observed", entry_id))
+			var line := RichTextLabel.new()
+			line.bbcode_enabled = true
+			line.fit_content = true
+			line.scroll_active = false
+			line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			line.add_theme_font_size_override("normal_font_size", 17)
+			line.add_theme_font_size_override("bold_font_size", 18)
+			line.add_theme_font_size_override("italics_font_size", 17)
+			if seen:
+				line.text = "[b][color=#e8c690]%s[/color][/b]  [color=#ffffffcc]%s[/color]" % [
+						tr(_notebook.call("name_key", entry_id)), tr(_notebook.call("description_key", entry_id))]
+			else:
+				line.text = "[b][color=#ffffff80]???[/color][/b]  [color=#ffffff80][i]%s[/i][/color]" % tr(_notebook.call("hint_key", entry_id))
+			box.add_child(line)
+		_notebook_list.add_child(card)
 
 # --- Quêtes ------------------------------------------------------------------------
 
