@@ -129,7 +129,8 @@ func felt_temperature(context: Dictionary) -> float:
 	if fire >= 0.0 and fire < FIRE_RADIUS:
 		t += FIRE_HEAT * (1.0 - smoothstep(FIRE_RADIUS * 0.4, FIRE_RADIUS, fire))
 	if bool(context.get("sheltered", false)):
-		t += SHELTER_HEAT
+		# Un abri amélioré garde mieux la chaleur : +40 % par niveau au-dessus du premier.
+		t += SHELTER_HEAT * (1.0 + 0.4 * float(maxi(int(context.get("shelter_level", 1)) - 1, 0)))
 	if bool(context.get("cloak", false)):
 		t += CLOAK_HEAT
 	return t - WET_CHILL * _wet
@@ -199,7 +200,7 @@ func _gather_context(player: Node3D) -> Dictionary:
 		if structure is Node3D and str(structure.get("kind")) == "shelter" \
 				and (structure as Node3D).global_position.distance_to(p) < SHELTER_RADIUS:
 			context["sheltered"] = true
-			break
+			context["shelter_level"] = maxi(int(context.get("shelter_level", 1)), int(structure.get("level")))
 	var inventory := InteractionManager.get_inventory()
 	context["cloak"] = inventory != null and bool(inventory.call("has_item", CLOAK_ITEM, 1))
 	context["in_water"] = player.has_method("is_wading") and bool(player.call("is_wading"))
