@@ -139,6 +139,16 @@ func _build_settings(list: VBoxContainer) -> void:
 	minimap.toggled.connect(func(on): settings.call("set_minimap", on))
 	list.add_child(minimap)
 
+	var replay := Button.new()
+	replay.text = tr("SETTING_TUTORIAL")
+	replay.custom_minimum_size = Vector2(0, BUTTON_HEIGHT)
+	replay.focus_mode = Control.FOCUS_NONE
+	replay.add_theme_font_size_override("font_size", 20)
+	replay.pressed.connect(func():
+		close()
+		get_tree().call_group("tutorial", "restart"))
+	list.add_child(replay)
+
 func _add_tab(title: String) -> VBoxContainer:
 	var scroll := KineticScroll.new()
 	scroll.name = title

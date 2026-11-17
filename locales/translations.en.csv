@@ -464,3 +464,18 @@ NOTE_PLATEAU_HINT,Climb the mesas to the south-east.
 NOTE_SOURCE,Source Lake
 NOTE_SOURCE_DESC,The river is born here.
 NOTE_SOURCE_HINT,Follow the river west.
+TUTO_TITLE,First steps — %d / %d
+TUTO_SKIP,Skip
+TUTO_DONE,"You are ready. Follow the goals at the top of the screen, and enjoy exploring!"
+TUTO_MOVE_TOUCH,Place your left thumb at the bottom left and drag to [b]walk[/b].
+TUTO_MOVE_KEYS,[b]Walk[/b] with W A S D (or Z Q S D). Hold Shift to run.
+TUTO_LOOK_TOUCH,Drag your right thumb across the screen to [b]look around[/b].
+TUTO_LOOK_KEYS,Move the mouse to [b]look around[/b].
+TUTO_PICKUP_TOUCH,Walk up to a stone or a branch on the ground and tap the [b]target[/b] button that appears on the right to pick it up.
+TUTO_PICKUP_KEYS,Walk up to a stone or a branch on the ground and press [b]E[/b] to pick it up.
+TUTO_JOURNAL_TOUCH,"Open the [b]Journal[/b] (button at the bottom): quests, crafting, belongings, notebook and settings."
+TUTO_JOURNAL_KEYS,"Open the [b]Journal[/b] with the C key: quests, crafting, belongings, notebook and settings."
+TUTO_MAP_TOUCH,Tap the [b]minimap[/b] at the top right to open the map. Tap a spot to place a marker there.
+TUTO_MAP_KEYS,Open the [b]map[/b] with M. Click a spot to place a marker there.
+TUTO_COMPASS,"The [b]compass[/b] at the top shows your heading. For your first quest, gather stones, then follow bearing 180° (due south) to the river."
+SETTING_TUTORIAL,Replay the tutorial
