@@ -383,6 +383,8 @@ func try_melee() -> bool:
 
 func _swing_arm() -> void:
 	_attack_anim = ATTACK_ANIM_TIME
+	if _hero != null:
+		_hero.call("play_chop")
 
 ## Le lit ou l'abri où l'on se repose devient le nouveau point de réveil.
 func set_home(point: Vector3) -> void:
@@ -805,10 +807,21 @@ func _hide_rigid_body(node: Node) -> void:
 		_hide_rigid_body(child)
 
 func _update_hero(delta: float, horizontal_speed: float, moving: bool) -> void:
+	_hero.call("set_riding", _mount != null)
+	_hero.call("set_bow", _bow_equipped and (_aiming or _drawing), get_draw_charge())
+	_hero.call("set_vertical_speed", velocity.y)
 	_hero.call("update_motion", horizontal_speed, moving, is_on_floor())
+	_hero.call("advance_poses", delta)
 	var hand: Transform3D = _hero.call("hand_transform")
 	if _held_bow != null:
-		_held_bow.global_transform = hand * held_bow_offset
+		var bow_transform := hand * held_bow_offset
+		var aim_weight: float = _hero.call("get_aim_weight")
+		if aim_weight > 0.01:
+			# Bras tendu : l'arc se redresse à la verticale, ventre vers la cible.
+			var forward := _hero.global_basis.z.normalized()
+			var upright := Basis(forward, Vector3.UP, forward.cross(Vector3.UP)).orthonormalized()
+			bow_transform.basis = bow_transform.basis.orthonormalized().slerp(upright, aim_weight)
+		_held_bow.global_transform = bow_transform
 	if _held_axe != null:
 		_held_axe.global_transform = hand * held_axe_offset
 	if _attack_anim > 0.0:
@@ -841,9 +854,9 @@ func _update_character(delta: float, horizontal_speed: float) -> void:
 		_facing_yaw = lerp_angle(_facing_yaw, 0.0, 1.0 - exp(-3.0 * delta))
 	var lean := clampf(horizontal_speed / sprint_speed, 0.0, 1.0) * (0.14 if _sprinting else 0.05)
 	if _hero != null:
-		# Pas d'animation de coup : le buste plonge vers l'avant le temps du geste.
+		# Le geste du bras est joué par le modèle ; le corps accompagne à peine.
 		if _attack_anim > 0.0:
-			lean += 0.45 * sin((1.0 - _attack_anim / ATTACK_ANIM_TIME) * PI)
+			lean += 0.12 * sin((1.0 - _attack_anim / ATTACK_ANIM_TIME) * PI)
 		visuals.rotation = Vector3(lean, _visuals_base_yaw + _facing_yaw, 0.0)
 		visuals.position.y = _mount_lift
 		_update_hero(delta, horizontal_speed, moving)
