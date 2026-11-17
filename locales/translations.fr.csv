@@ -94,6 +94,13 @@ MAP_HINT,Touche M ou bouton Fermer
 ACTION_PLACE,Poser
 ACTION_REST_BED,Se reposer sur le lit
 ACTION_SLEEP,Dormir
+ACTION_MOVE,Déplacer
+ACTION_ROTATE,Tourner
+ACTION_DROP,Poser ici
+ACTION_CANCEL,Annuler
+TOAST_MOVED,Construction déplacée.
+TOAST_MOVE_CANCELLED,Déplacement annulé.
+TOAST_MOVE_HINT,Marchez pour choisir l'emplacement (vert = possible) puis posez.
 TOAST_PLACED,Posé : %s
 TOAST_TOO_STEEP,Terrain trop pentu pour construire ici.
 TOAST_CANNOT_PLACE,Impossible de poser ça ici.
