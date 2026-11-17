@@ -362,3 +362,21 @@ ZONE_FOREST,Jaybird Pinewood
 ZONE_BADLANDS,Red Mesas
 ZONE_DESERT,Cactus Flats
 ZONE_RIVER,Old Ford River
+QUEST_RIVER_TITLE,Due south
+QUEST_RIVER_DESC,"From the starting signpost, walk due south (bearing 180°, about fifty metres) to the river. You can drink anywhere along it."
+QUEST_MARKER_TITLE,Getting your bearings
+QUEST_MARKER_DESC,"Open the map, tap a spot, then “Place a marker”. The compass then shows its heading, and the map its bearing and distance."
+QUEST_PINEWOOD_TITLE,Jaybird Pinewood
+QUEST_PINEWOOD_DESC,"From the starting signpost, follow bearing 305° (north-west) for about 170 m to the heart of the pinewood, where the trees close in."
+QUEST_MESA_TITLE,On top of the Mesas
+QUEST_MESA_DESC,"From the starting signpost, bearing 150° (south-east), about 150 m: cross the river and climb onto the Red Mesas plateau. Look for the ramp, the cliffs cannot be climbed."
+QUEST_SOURCE_TITLE,Up to the source
+QUEST_SOURCE_DESC,"Follow the river west, upstream, to the lake it flows from (bearing 260° from the start, over 200 m)."
+LANDMARK_MESA,Red Mesas plateau
+LANDMARK_SOURCE,Source Lake
+TOAST_LANDMARK,Place reached: %s
+MAP_MARKER_ADD,Place a marker here
+MAP_MARKER_REMOVE,Remove marker
+MAP_MARKER_INFO,Bearing %03d° · %d m
+TOAST_MARKERS_FULL,Eight markers at most: remove one first.
+SETTING_MINIMAP,Minimap (turn off for explorer mode)

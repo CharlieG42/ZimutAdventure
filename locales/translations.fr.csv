@@ -362,3 +362,21 @@ ZONE_FOREST,Pinède des Geais
 ZONE_BADLANDS,Mesas Rouges
 ZONE_DESERT,Plaine aux Cactus
 ZONE_RIVER,Rivière du Vieux Gué
+QUEST_RIVER_TITLE,Cap au sud
+QUEST_RIVER_DESC,"Depuis le panneau de départ, marchez plein sud (azimut 180°, une cinquantaine de mètres) jusqu'à la rivière. On peut y boire partout."
+QUEST_MARKER_TITLE,Prendre ses repères
+QUEST_MARKER_DESC,"Ouvrez la carte, touchez un endroit puis « Poser un repère ». La boussole indique alors son cap, et la carte son azimut et sa distance."
+QUEST_PINEWOOD_TITLE,La Pinède des Geais
+QUEST_PINEWOOD_DESC,"Du panneau de départ, suivez l'azimut 305° (nord-ouest) sur environ 170 m jusqu'au cœur de la pinède, là où les arbres se resserrent."
+QUEST_MESA_TITLE,Sur le toit des Mesas
+QUEST_MESA_DESC,"Du panneau de départ, azimut 150° (sud-est), environ 150 m : traversez la rivière et grimpez sur le plateau des Mesas Rouges. Cherchez la rampe, les falaises ne se montent pas."
+QUEST_SOURCE_TITLE,Remonter à la source
+QUEST_SOURCE_DESC,"Remontez la rivière vers l'ouest, à contre-courant, jusqu'au lac d'où elle sort (azimut 260° depuis le départ, plus de 200 m)."
+LANDMARK_MESA,Plateau des Mesas Rouges
+LANDMARK_SOURCE,Lac de la Source
+TOAST_LANDMARK,Lieu atteint : %s
+MAP_MARKER_ADD,Poser un repère ici
+MAP_MARKER_REMOVE,Retirer le repère
+MAP_MARKER_INFO,Azimut %03d° · %d m
+TOAST_MARKERS_FULL,Huit repères au plus : retirez-en un d'abord.
+SETTING_MINIMAP,Mini-carte (désactiver : mode explorateur)

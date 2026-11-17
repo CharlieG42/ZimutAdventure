@@ -6,6 +6,8 @@ extends Node
 signal site_discovered(site_id: String)
 signal fog_changed
 signal blessing_gained(count: int)
+signal markers_changed
+signal landmark_reached(landmark_id: String)
 
 const SAVE_PATH := "user://exploration.cfg"
 const GRID := 32
@@ -20,6 +22,19 @@ const START_SITE := "start"
 const MAX_BLESSINGS := 3
 const ENDURANCE_FACTOR := 0.8
 const FORTUNE_BONUS := 0.15
+## Repères posés par le joueur sur la carte (orientation à l'azimut).
+const MAX_MARKERS := 8
+## Lieux à atteindre (quêtes d'exploration) : compteur de Progression et nom affiché.
+## `azimuth` / `distance` : cap et distance depuis le panneau de départ, cités dans les quêtes.
+const LANDMARKS := {
+	"river": {"stat": "stat_reach_river", "name": "ZONE_RIVER", "azimuth": 180, "distance": 55},
+	"forest": {"stat": "stat_reach_forest", "name": "ZONE_FOREST", "azimuth": 305, "distance": 170},
+	"mesa": {"stat": "stat_reach_mesa", "name": "LANDMARK_MESA", "azimuth": 150, "distance": 150},
+	"source": {"stat": "stat_reach_source", "name": "LANDMARK_SOURCE", "azimuth": 260, "distance": 220},
+}
+const FOREST_HEART := Vector2(-100.0, -125.0)
+const FOREST_RADIUS := 30.0
+const MESA_HEIGHT := 9.5
 
 var world_size: float = 512.0
 var _cells := PackedByteArray()
@@ -30,6 +45,10 @@ var _timer: float = 0.0
 var _dirty: bool = false
 var _save_timer: float = 0.0
 var blessings: int = 0
+## Repères du joueur (x, z monde) et repère suivi par la boussole (-1 = aucun).
+var _markers: Array[Vector2] = []
+var _tracked: int = -1
+var _reached: Array = []
 
 func _ready() -> void:
 	_cells.resize(GRID * GRID)
@@ -118,6 +137,123 @@ func discover(site_id: String, silent: bool = false) -> bool:
 	_save()
 	return true
 
+# --- Repères du joueur ---------------------------------------------------------------------
+
+## Cap (degrés, 0 = Nord, sens horaire) pour aller de `from` à `to` (x, z monde).
+static func bearing(from: Vector2, to: Vector2) -> float:
+	return fposmod(rad_to_deg(atan2(to.x - from.x, -(to.y - from.y))), 360.0)
+
+func get_markers() -> Array[Vector2]:
+	return _markers
+
+func can_add_marker() -> bool:
+	return _markers.size() < MAX_MARKERS
+
+## Pose un repère et le suit. Retourne son indice, -1 si la limite est atteinte.
+func add_marker(x: float, z: float) -> int:
+	if not can_add_marker():
+		return -1
+	var half := world_size * 0.5
+	_markers.append(Vector2(clampf(x, -half, half), clampf(z, -half, half)))
+	_tracked = _markers.size() - 1
+	var progression := InteractionManager.get_progression()
+	if progression != null:
+		progression.call("add_stat", "stat_markers", 1)
+	_dirty = true
+	_save()
+	markers_changed.emit()
+	return _tracked
+
+func remove_marker(index: int) -> void:
+	if index < 0 or index >= _markers.size():
+		return
+	_markers.remove_at(index)
+	if _tracked == index:
+		_tracked = -1
+	elif _tracked > index:
+		_tracked -= 1
+	_dirty = true
+	_save()
+	markers_changed.emit()
+
+func get_tracked_index() -> int:
+	return _tracked
+
+func set_tracked(index: int) -> void:
+	_tracked = index if index >= 0 and index < _markers.size() else -1
+	_dirty = true
+	markers_changed.emit()
+
+func has_tracked() -> bool:
+	return _tracked >= 0 and _tracked < _markers.size()
+
+## Cap vers le repère suivi depuis `from`, -1 s'il n'y en a pas.
+func tracked_bearing(from: Vector3) -> float:
+	if not has_tracked():
+		return -1.0
+	return bearing(Vector2(from.x, from.z), _markers[_tracked])
+
+func tracked_distance(from: Vector3) -> float:
+	if not has_tracked():
+		return -1.0
+	return Vector2(from.x, from.z).distance_to(_markers[_tracked])
+
+## Indice du repère le plus proche de (x, z) à moins de `radius` mètres, sinon -1.
+func marker_near(x: float, z: float, radius: float) -> int:
+	var best := -1
+	var best_distance := radius
+	for i in _markers.size():
+		var distance := _markers[i].distance_to(Vector2(x, z))
+		if distance <= best_distance:
+			best_distance = distance
+			best = i
+	return best
+
+# --- Lieux à atteindre ------------------------------------------------------------------------
+
+func is_landmark_reached(landmark_id: String) -> bool:
+	return _reached.has(landmark_id)
+
+## Vrai si un joueur en `pos` se trouve au lieu `landmark_id` (lu sur le relief).
+static func at_landmark(landmark_id: String, landscape: Node, pos: Vector3) -> bool:
+	if landscape == null or not landscape.has_method("zone_weights"):
+		return false
+	match landmark_id:
+		"river":
+			return bool(landscape.call("is_water", pos.x, pos.z, 2.0))
+		"forest":
+			return FOREST_HEART.distance_to(Vector2(pos.x, pos.z)) <= FOREST_RADIUS
+		"mesa":
+			var weights: Array = landscape.call("zone_weights", pos.x, pos.z)
+			return float(weights[2]) > 0.5 and float(landscape.call("terrain_height_at", pos.x, pos.z)) >= MESA_HEIGHT
+		"source":
+			var x_min := float(landscape.get("RIVER_X_MIN"))
+			var lake := Vector2(x_min, float(landscape.call("river_center_z", x_min)))
+			return lake.distance_to(Vector2(pos.x, pos.z)) <= float(landscape.get("LAKE_RADIUS")) + 5.0
+	return false
+
+## Vérifie les lieux pas encore atteints. Retourne ceux qui viennent de l'être.
+func check_landmarks(landscape: Node, pos: Vector3) -> Array:
+	var gained: Array = []
+	for landmark_id in LANDMARKS:
+		if _reached.has(landmark_id) or not at_landmark(landmark_id, landscape, pos):
+			continue
+		_reached.append(landmark_id)
+		gained.append(landmark_id)
+		var progression := InteractionManager.get_progression()
+		if progression != null:
+			progression.call("add_stat", String(LANDMARKS[landmark_id]["stat"]), 1)
+			progression.call("add_xp_for", "discover")
+		var sfx := InteractionManager.get_sfx()
+		if sfx != null and sfx.has_method("play_event"):
+			sfx.call("play_event", "chime")
+		_toast(tr("TOAST_LANDMARK") % tr(String(LANDMARKS[landmark_id]["name"])))
+		landmark_reached.emit(landmark_id)
+	if not gained.is_empty():
+		_dirty = true
+		_save()
+	return gained
+
 # --- Autel des reliques ----------------------------------------------------------------------
 
 ## Offre une relique : accorde la bénédiction suivante. Retourne son numéro, 0 si impossible.
@@ -197,6 +333,8 @@ func _process(delta: float) -> void:
 	if player == null:
 		return
 	reveal(player.global_position.x, player.global_position.z)
+	if _reached.size() < LANDMARKS.size():
+		check_landmarks(get_tree().get_first_node_in_group("landscape"), player.global_position)
 	for site_id in _sites.keys():
 		if bool(_sites[site_id]["found"]):
 			continue
@@ -226,6 +364,11 @@ func _load() -> void:
 	_pending_found = config.get_value("sites", "found", [])
 	_looted = config.get_value("sites", "looted", [])
 	blessings = int(config.get_value("altar", "blessings", 0))
+	_markers.assign(config.get_value("markers", "list", []))
+	_tracked = int(config.get_value("markers", "tracked", -1))
+	if _tracked >= _markers.size():
+		_tracked = -1
+	_reached = config.get_value("landmarks", "reached", [])
 	for site_id in _pending_found:
 		if _sites.has(site_id):
 			_sites[site_id]["found"] = true
@@ -256,6 +399,9 @@ func _save() -> void:
 	config.set_value("sites", "found", get_discovered_ids())
 	config.set_value("sites", "looted", _looted)
 	config.set_value("altar", "blessings", blessings)
+	config.set_value("markers", "list", _markers)
+	config.set_value("markers", "tracked", _tracked)
+	config.set_value("landmarks", "reached", _reached)
 	config.save(SAVE_PATH)
 	_dirty = false
 
@@ -268,3 +414,6 @@ func clear_for_test() -> void:
 	_pending_found = []
 	_looted = []
 	blessings = 0
+	_markers.clear()
+	_tracked = -1
+	_reached = []

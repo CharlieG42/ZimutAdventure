@@ -21,6 +21,7 @@ const COLORS := {
 	"fire": Color(1.0, 0.55, 0.15),
 	"camp": Color(0.55, 0.85, 0.5),
 	"player": Color(0.25, 0.6, 1.0),
+	"marker": Color(1.0, 0.82, 0.2),
 	"north": Color(0.95, 0.55, 0.35),
 	"text": Color(0.97, 0.94, 0.88),
 }
@@ -33,6 +34,10 @@ var _close_button: Button
 var _elapsed: float = 0.0
 var _travel_button: Button
 var _selected_site: String = ""
+## Repères du joueur : bouton poser / retirer, repère sélectionné, point touché en attente.
+var _marker_button: Button
+var _selected_marker: int = -1
+var _pending_point: Vector2 = Vector2.INF
 
 func _ready() -> void:
 	visible = false
@@ -49,6 +54,12 @@ func _ready() -> void:
 	_travel_button.visible = false
 	_travel_button.pressed.connect(_on_travel_pressed)
 	add_child(_travel_button)
+	_marker_button = Button.new()
+	_marker_button.focus_mode = Control.FOCUS_NONE
+	_marker_button.custom_minimum_size = Vector2(260, 60)
+	_marker_button.visible = false
+	_marker_button.pressed.connect(_on_marker_pressed)
+	add_child(_marker_button)
 	_layout_close_button()
 
 func toggle() -> void:
@@ -66,6 +77,99 @@ func open() -> void:
 func close() -> void:
 	visible = false
 	_select_site("")
+	_clear_marker_selection()
+
+# --- Repères du joueur -----------------------------------------------------------------------------
+
+func _clear_marker_selection() -> void:
+	_selected_marker = -1
+	_pending_point = Vector2.INF
+	if _marker_button != null:
+		_marker_button.visible = false
+	queue_redraw()
+
+## Un toucher sur la carte (coordonnées monde) : sélectionne le repère voisin, sinon propose
+## d'en poser un à cet endroit. `pick_radius` : rayon de sélection en mètres.
+func touch_world_point(world: Vector2, pick_radius: float) -> void:
+	var exploration := InteractionManager.get_exploration()
+	if exploration == null:
+		return
+	_selected_marker = int(exploration.call("marker_near", world.x, world.y, pick_radius))
+	_pending_point = Vector2.INF
+	if _selected_marker >= 0:
+		exploration.call("set_tracked", _selected_marker)
+		_marker_button.text = tr("MAP_MARKER_REMOVE")
+	elif bool(exploration.call("can_add_marker")):
+		_pending_point = world
+		_marker_button.text = tr("MAP_MARKER_ADD")
+	else:
+		_show_toast(tr("TOAST_MARKERS_FULL"))
+		_marker_button.visible = false
+		queue_redraw()
+		return
+	_marker_button.visible = true
+	_marker_button.position = Vector2((size.x - _marker_button.custom_minimum_size.x) * 0.5, size.y - 86.0 - _marker_button.custom_minimum_size.y)
+	queue_redraw()
+
+func _on_marker_pressed() -> void:
+	var exploration := InteractionManager.get_exploration()
+	if exploration == null:
+		return
+	if _selected_marker >= 0:
+		exploration.call("remove_marker", _selected_marker)
+		_clear_marker_selection()
+	elif _pending_point != Vector2.INF:
+		_selected_marker = int(exploration.call("add_marker", _pending_point.x, _pending_point.y))
+		_pending_point = Vector2.INF
+		_marker_button.text = tr("MAP_MARKER_REMOVE")
+		_marker_button.visible = _selected_marker >= 0
+		queue_redraw()
+
+## Texte « Azimut 240° · 180 m » d'un point vu depuis le joueur.
+func _bearing_text(world: Vector2) -> String:
+	if _player == null or not is_instance_valid(_player):
+		return ""
+	var from := Vector2(_player.global_position.x, _player.global_position.z)
+	var exploration := InteractionManager.get_exploration()
+	var azimuth := int(roundf(float(exploration.call("bearing", from, world)))) % 360
+	return tr("MAP_MARKER_INFO") % [azimuth, int(roundf(from.distance_to(world)))]
+
+func _draw_markers(to_map: Transform2D, rect: Rect2, font: Font) -> void:
+	var exploration := InteractionManager.get_exploration()
+	if exploration == null:
+		return
+	var markers: Array = exploration.call("get_markers")
+	var tracked := int(exploration.call("get_tracked_index"))
+	for i in markers.size():
+		var pos: Vector2 = to_map * (markers[i] as Vector2)
+		if not rect.has_point(pos):
+			continue
+		_draw_flag(pos, i == tracked)
+		if i == tracked or i == _selected_marker:
+			_draw_caption(font, pos, _bearing_text(markers[i]))
+	if _pending_point != Vector2.INF:
+		var pos := to_map * _pending_point
+		draw_arc(pos, 12.0, 0.0, TAU, 20, Color(1, 1, 1, 0.95), 2.5)
+		draw_line(pos - Vector2(6, 0), pos + Vector2(6, 0), Color(1, 1, 1, 0.95), 2.0)
+		draw_line(pos - Vector2(0, 6), pos + Vector2(0, 6), Color(1, 1, 1, 0.95), 2.0)
+		_draw_caption(font, pos, _bearing_text(_pending_point))
+
+## Fanion : une hampe et un triangle, forme réservée aux repères du joueur.
+func _draw_flag(pos: Vector2, highlighted: bool) -> void:
+	var dark := Color(0.08, 0.05, 0.03, 0.95)
+	var fill: Color = COLORS["marker"] if highlighted else COLORS["marker"].darkened(0.3)
+	draw_line(pos + Vector2(0, 2), pos + Vector2(0, -22), dark, 5.0)
+	draw_colored_polygon(PackedVector2Array([pos + Vector2(-1, -24), pos + Vector2(19, -17), pos + Vector2(-1, -9)]), dark)
+	draw_line(pos, pos + Vector2(0, -21), Color(0.97, 0.94, 0.88), 2.0)
+	draw_colored_polygon(PackedVector2Array([pos + Vector2(1, -21.5), pos + Vector2(15, -17), pos + Vector2(1, -11.5)]), fill)
+	draw_circle(pos, 3.0, dark)
+
+func _draw_caption(font: Font, pos: Vector2, text: String) -> void:
+	if text.is_empty():
+		return
+	var at := pos + Vector2(-90.0, 24.0)
+	draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_CENTER, 180, 18, 5, Color(0.08, 0.05, 0.03, 0.95))
+	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_CENTER, 180, 18, COLORS["text"])
 
 # --- Sites et voyage rapide ------------------------------------------------------------------
 
@@ -121,6 +225,16 @@ func _gui_input(event: InputEvent) -> void:
 			best_distance = distance
 			best = String(site_id)
 	_select_site(best)
+	if best != "":
+		_clear_marker_selection()
+		return
+	# Ailleurs sur la carte : repères du joueur.
+	var rect := _map_rect()
+	if not rect.has_point(at):
+		_clear_marker_selection()
+		return
+	var world := to_map.affine_inverse() * at
+	touch_world_point(world, 30.0 / to_map.get_scale().x)
 
 func set_context(landscape: Node3D, player: Node3D) -> void:
 	_landscape = landscape
@@ -232,6 +346,7 @@ func _draw() -> void:
 	_draw_sites(to_map, rect, font)
 	_draw_fog(rect)
 	_draw_zone_labels(to_map, rect, font)
+	_draw_markers(to_map, rect, font)
 	_draw_player(to_map, rect)
 	var north_pos := Vector2(rect.end.x - 30.0, rect.position.y + 32.0)
 	draw_string_outline(font, north_pos, "N", HORIZONTAL_ALIGNMENT_CENTER, -1, 28, 6, Color(0.08, 0.05, 0.03, 0.95))

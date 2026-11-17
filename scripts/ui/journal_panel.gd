@@ -126,6 +126,15 @@ func _build_settings(list: VBoxContainer) -> void:
 	fps.toggled.connect(func(on): settings.call("set_show_fps", on))
 	list.add_child(fps)
 
+	var minimap := CheckButton.new()
+	minimap.text = tr("SETTING_MINIMAP")
+	minimap.button_pressed = bool(settings.get("minimap"))
+	minimap.custom_minimum_size = Vector2(0, BUTTON_HEIGHT)
+	minimap.focus_mode = Control.FOCUS_NONE
+	minimap.add_theme_font_size_override("font_size", 20)
+	minimap.toggled.connect(func(on): settings.call("set_minimap", on))
+	list.add_child(minimap)
+
 func _add_tab(title: String) -> VBoxContainer:
 	var scroll := KineticScroll.new()
 	scroll.name = title
