@@ -47,42 +47,33 @@ varying float v_slope;
 varying float v_height;
 varying vec4 v_zone;
 
-float hash(vec2 p) {
-	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-}
+// Bruits lus dans une texture précalculée et raccordable (tools/generate_noise_texture.py) :
+// une lecture au lieu de 4 hachages à base de sinus par bruit, bien moins cher sur mobile.
+//   R : bruit de valeur (32 cellules)  G : fbm 4 octaves (8 cellules)
+//   B : bruit indépendant (32 cellules) A : bruit fin (64 cellules)
+uniform sampler2D noise_tex : filter_linear_mipmap, repeat_enable, hint_default_white;
 
+// Même échelle que l'ancien noise(p) : une cellule par unité de p.
 float noise(vec2 p) {
-	vec2 i = floor(p);
-	vec2 f = fract(p);
-	f = f * f * (3.0 - 2.0 * f);
-	float a = hash(i);
-	float b = hash(i + vec2(1.0, 0.0));
-	float c = hash(i + vec2(0.0, 1.0));
-	float d = hash(i + vec2(1.0, 1.0));
-	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+	return texture(noise_tex, p * (1.0 / 32.0)).r;
 }
 
+float noise_b(vec2 p) {
+	return texture(noise_tex, p * (1.0 / 32.0)).b;
+}
+
+float noise_fine(vec2 p) {
+	return texture(noise_tex, p * (1.0 / 64.0)).a;
+}
+
+// fbm 4 octaves précalculé (cellule de base d'une unité de p).
 float fbm(vec2 p) {
-	float value = 0.0;
-	float amplitude = 0.5;
-	for (int i = 0; i < 4; i++) {
-		value += amplitude * noise(p);
-		p *= 2.0;
-		amplitude *= 0.5;
-	}
-	return value;
+	return texture(noise_tex, p * (1.0 / 8.0)).g;
 }
 
-// fbm à 3 octaves : suffisant pour les grandes taches du sol, moins coûteux.
-float fbm3(vec2 p) {
-	float value = 0.0;
-	float amplitude = 0.5;
-	for (int i = 0; i < 3; i++) {
-		value += amplitude * noise(p);
-		p *= 2.0;
-		amplitude *= 0.5;
-	}
-	return value;
+// Micro-relief : deux lectures au lieu de deux bruits procéduraux.
+float bump_height(vec2 p) {
+	return noise(p) + 0.5 * noise_fine(p * 2.3);
 }
 
 void vertex() {
@@ -99,11 +90,11 @@ void fragment() {
 	float near = (1.0 - smoothstep(detail_fade_start, detail_fade_end, view_dist)) * ground_detail;
 
 	// --- Sol : grandes taches (≈ 50 m), mouchetures (≈ 3 m), gravier (≈ 0,3 m) ---
-	float macro = fbm3(w * 0.02);
-	float patch_red = fbm3(w * 0.035 + vec2(17.0, 9.0));
+	float macro = fbm(w * 0.02);
+	float patch_red = fbm(w * 0.035 + vec2(17.0, 9.0));
 	float meso = noise(w * 0.35);
-	float micro = noise(w * 3.0);
-	float pebble_cell = noise(w * 4.5 + vec2(3.0, 11.0));
+	float micro = noise_fine(w * 3.0);
+	float pebble_cell = noise_b(w * 4.5 + vec2(3.0, 11.0));
 
 	vec3 dust = mix(ground_dust.rgb, ground_pale.rgb, smoothstep(0.35, 0.75, macro) * 0.65);
 	dust = mix(dust, ground_red.rgb, smoothstep(0.52, 0.85, patch_red) * 0.6);
@@ -118,7 +109,7 @@ void fragment() {
 	// Rive : sable mouillé, plus sombre, jusque sous l'eau.
 	dust = mix(dust, dust * vec3(0.55, 0.52, 0.5), v_zone.a);
 	// Rides de sable étirées par le vent.
-	float ripple = noise(vec2(w.x * 0.9 + w.y * 0.25, w.y * 6.0));
+	float ripple = noise_b(vec2(w.x * 0.9 + w.y * 0.25, w.y * 6.0));
 	dust *= 1.0 + (ripple - 0.5) * 0.12 * near;
 	// Cailloux épars.
 	dust = mix(dust, pebble_dark.rgb, smoothstep(0.76, 0.9, pebble_cell) * 0.6 * near);
@@ -133,7 +124,7 @@ void fragment() {
 		float strata = sin((v_height + warp) * strata_scale * 6.2831 + fbm(uv_world * 0.3) * strata_roughness * 3.0);
 		strata = smoothstep(-strata_thickness, strata_thickness, strata);
 
-		float grain = noise(w * 2.2) * 0.6 + noise(w * 7.0) * 0.4;
+		float grain = noise_b(w * 2.2) * 0.6 + noise_fine(w * 7.0) * 0.4;
 		vec3 rock = mix(strata_dark.rgb, strata_mid.rgb, strata);
 		rock = mix(rock, strata_light.rgb, grain * 0.5 + 0.15);
 		// Veines claires occasionnelles dans certaines couches.
@@ -157,23 +148,23 @@ void fragment() {
 	float bump_amount = near * bump_strength + rock_factor * bump_strength * 1.4 * (1.0 - smoothstep(60.0, 160.0, view_dist));
 	if (bump_amount > 0.01) {
 		vec2 bp = w * 2.4 + vec2(v_height * 0.9, -v_height * 0.4) * rock_factor;
-		float h0 = noise(bp) + 0.5 * noise(bp * 2.3);
-		float hx = noise(bp + vec2(0.1, 0.0)) + 0.5 * noise((bp + vec2(0.1, 0.0)) * 2.3);
-		float hz = noise(bp + vec2(0.0, 0.1)) + 0.5 * noise((bp + vec2(0.0, 0.1)) * 2.3);
+		float h0 = bump_height(bp);
+		float hx = bump_height(bp + vec2(0.1, 0.0));
+		float hz = bump_height(bp + vec2(0.0, 0.1));
 		vec3 n_world = normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
 		n_world = normalize(n_world + vec3(h0 - hx, 0.0, h0 - hz) * bump_amount * 6.0);
 		NORMAL = normalize((VIEW_MATRIX * vec4(n_world, 0.0)).xyz);
 	}
 
 	// Éclat discret du sable au soleil (grains quartz) sur le sol proche.
-	float sparkle = step(0.985, noise(w * 38.0)) * near * (1.0 - rock_factor);
+	float sparkle = step(0.97, noise_fine(w * 38.0)) * near * (1.0 - rock_factor);
 	albedo += vec3(0.5, 0.45, 0.35) * sparkle * 0.6;
 
 	// Pluie : le sol s'assombrit et devient brillant.
 	albedo *= 1.0 - 0.28 * wetness * (1.0 - rock_factor * 0.4);
 
 	// Neige : se dépose d'abord sur les replats, un peu moins sur les pentes raides ; bords irréguliers.
-	float snow_edge = noise(w * 0.8) * 0.5 + noise(w * 3.1) * 0.5;
+	float snow_edge = noise(w * 0.8) * 0.5 + noise_b(w * 3.1) * 0.5;
 	float snow_cover = snow_amount * (1.0 - smoothstep(0.18, 0.7, v_slope)) ;
 	snow_cover = smoothstep(0.35, 0.6, snow_cover + (snow_edge - 0.5) * 0.45 * snow_amount);
 	vec3 snow_color = vec3(0.92, 0.95, 1.0) * (0.94 + micro * 0.06);

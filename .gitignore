@@ -36,3 +36,6 @@ __pycache__/
 
 # Texture extraite du GLB du personnage (régénérée par l'import Godot)
 assets/characters/hero_*.png
+
+# Texture de bruit du terrain : réglages d'import versionnés (sans perte, mipmaps).
+!assets/landscapes/textures/terrain_noise.png.import
