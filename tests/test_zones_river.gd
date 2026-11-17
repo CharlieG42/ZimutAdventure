@@ -98,6 +98,22 @@ func _init() -> void:
 		if bool(script.call("is_reachable", landscape, Vector3(start.x, 0.0, start.y))):
 			errors.append("pas d'eau à boire au camp de départ")
 
+	# --- Horizon : mesas hors de la carte, maillage léger, sans ombre.
+	var mesas := landscape.get_node_or_null("Horizon/Mesas") as MeshInstance3D
+	if mesas == null or mesas.mesh == null:
+		errors.append("l'horizon de mesas manque")
+	else:
+		var verts: PackedVector3Array = mesas.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+		if verts.size() / 3 > 5000:
+			errors.append("l'horizon doit rester léger (%d triangles)" % (verts.size() / 3))
+		var half: float = float(landscape.get("terrain_size")) * 0.5
+		for v in verts:
+			if v.y > float(landscape.get("HORIZON_GROUND_Y")) + 1.0 and maxf(absf(v.x), absf(v.z)) < half + 40.0:
+				errors.append("une mesa d'horizon empiète sur la carte en %s" % v)
+				break
+		if mesas.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+			errors.append("l'horizon ne projette pas d'ombre")
+
 	# --- Annonce des zones : silencieuse au départ, puis après deux relevés identiques.
 	var announcer := (load("res://scripts/world/zone_announcer.gd") as GDScript).new() as Node
 	root.add_child(announcer)
