@@ -303,6 +303,30 @@ static func river_distance(x: float, z: float) -> float:
 		d = minf(d, maxf(0.0, to_lake - (LAKE_RADIUS - RIVER_HALF_WIDTH)))
 	return d
 
+## Point de la surface de l'eau (rivière ou lacs) le plus proche de `p`.
+func nearest_water_point(p: Vector3) -> Vector3:
+	var xc := clampf(p.x, RIVER_X_MIN, RIVER_X_MAX)
+	var best := Vector2(xc, river_center_z(xc))
+	var best_distance := best.distance_to(Vector2(p.x, p.z))
+	# Affinage le long du tracé (la rivière serpente).
+	for k in range(-12, 13):
+		var x := clampf(xc + float(k) * 3.0, RIVER_X_MIN, RIVER_X_MAX)
+		var c := Vector2(x, river_center_z(x))
+		var d := c.distance_to(Vector2(p.x, p.z))
+		if d < best_distance:
+			best_distance = d
+			best = c
+	for end_x in [RIVER_X_MIN, RIVER_X_MAX]:
+		var lake := Vector2(end_x, river_center_z(end_x))
+		var to := Vector2(p.x, p.z) - lake
+		if to.length() < best_distance + LAKE_RADIUS:
+			var edge := lake + to.limit_length(LAKE_RADIUS - 2.0)
+			var d := edge.distance_to(Vector2(p.x, p.z))
+			if d < best_distance:
+				best_distance = d
+				best = edge
+	return Vector3(best.x, water_level_at(best.x), best.y)
+
 ## Vrai si le point est dans l'eau (lit de la rivière ou lac), avec une marge optionnelle.
 func is_water(x: float, z: float, margin: float = 0.0) -> bool:
 	return river_distance(x, z) < RIVER_HALF_WIDTH + margin

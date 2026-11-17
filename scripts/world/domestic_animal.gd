@@ -174,16 +174,43 @@ static func format_wait(seconds: float) -> String:
 		return "%d s" % total
 	return "%d min %02d" % [total / 60, total % 60]
 
-## Cri de l'animal (poule, vache, chien...).
+## Cri de chaque espèce : événement sonore, volume (dB), hauteur min / max.
+const VOICES := {
+	"chicken": ["cluck", -6.0, 0.9, 1.15],
+	"cow": ["moo", -2.0, 0.92, 1.05],
+	"sheep": ["baa", -4.0, 0.92, 1.08],
+	"goat": ["baa", -4.0, 1.2, 1.38],
+	"horse": ["neigh", -4.0, 0.92, 1.05],
+	"dog": ["bark", -3.0, 0.92, 1.1],
+}
+## De temps en temps, l'animal se fait entendre tout seul (si le joueur est assez près).
+const IDLE_VOICE_MIN := 25.0
+const IDLE_VOICE_MAX := 70.0
+const IDLE_VOICE_RANGE := 35.0
+var _idle_voice_left: float = -1.0
+
+## Cri de l'animal (poule, vache, chien...), placé sur lui dans l'espace.
 func _voice() -> void:
 	var sfx := InteractionManager.get_sfx()
-	if sfx == null or not sfx.has_method("play_event"):
+	if sfx == null or not VOICES.has(species):
 		return
-	match species:
-		"chicken": sfx.call("play_event", "cluck", -8.0, randf_range(0.9, 1.15))
-		"cow": sfx.call("play_event", "moo", -6.0)
-		"sheep", "goat": sfx.call("play_event", "moo", -8.0, 1.6)
-		"dog": sfx.call("play_event", "bark", -6.0)
+	var voice: Array = VOICES[species]
+	if sfx.has_method("play_event_at") and is_inside_tree():
+		sfx.call("play_event_at", voice[0], global_position + Vector3(0.0, 1.0, 0.0), float(voice[1]),
+				randf_range(float(voice[2]), float(voice[3])))
+	elif sfx.has_method("play_event"):
+		sfx.call("play_event", voice[0], float(voice[1]) - 4.0, randf_range(float(voice[2]), float(voice[3])))
+
+func _update_idle_voice(delta: float) -> void:
+	if _idle_voice_left < 0.0:
+		_idle_voice_left = _rng.randf_range(IDLE_VOICE_MIN * 0.3, IDLE_VOICE_MAX)
+	_idle_voice_left -= delta
+	if _idle_voice_left > 0.0:
+		return
+	_idle_voice_left = _rng.randf_range(IDLE_VOICE_MIN, IDLE_VOICE_MAX)
+	if _player != null and is_instance_valid(_player) and not mounted \
+			and _player.global_position.distance_to(global_position) < IDLE_VOICE_RANGE:
+		_voice()
 
 ## Nourriture affichée dans l'invite d'apprivoisement : l'item disponible dans le
 ## sac, sinon la liste des nourritures acceptées (noms localisés).
@@ -376,6 +403,7 @@ func _physics_process(delta: float) -> void:
 		_animate(delta)
 		return
 	_eat_left = maxf(0.0, _eat_left - delta)
+	_update_idle_voice(delta)
 	_face_pips_to_camera()
 	super._physics_process(delta)
 	_indicator_time += delta

@@ -383,6 +383,9 @@ func try_melee() -> bool:
 			best_distance = distance
 	if best != null:
 		best.call("hit", 2, global_position)
+		var sfx := InteractionManager.get_sfx()
+		if sfx != null and sfx.has_method("play_event"):
+			sfx.call("play_event", "hit", -4.0, randf_range(0.9, 1.1))
 		return true
 	return false
 
@@ -695,12 +698,58 @@ func _physics_process(delta: float) -> void:
 			_safe_timer = 0.0
 			_safe_position = global_position
 	_update_dust()
+	_update_footsteps()
 	if global_position.y < respawn_below_y:
 		global_position = _safe_position + Vector3(0.0, 1.0, 0.0)
 		velocity = Vector3.ZERO
 
 	if _view_mode == ViewMode.THIRD_PERSON:
 		_update_third_person_camera(delta)
+
+## Pas : un son par foulée, selon le sol (sable, herbe, neige, eau) ; sabots à cheval.
+const STEP_LENGTH := 0.85
+const STRIDE_RUN := 1.25
+const HOOF_LENGTH := 1.5
+var _step_distance: float = 0.0
+var _last_step_position: Vector3 = Vector3.INF
+
+func _update_footsteps() -> void:
+	var here := global_position
+	if _last_step_position == Vector3.INF or not is_on_floor():
+		_last_step_position = here
+		return
+	var flat := Vector2(here.x - _last_step_position.x, here.z - _last_step_position.z).length()
+	_last_step_position = here
+	if flat > 3.0:
+		# Téléportation (voyage rapide, réapparition) : pas de pas.
+		return
+	_step_distance += flat
+	var stride := HOOF_LENGTH if _mount != null else (STRIDE_RUN if _sprinting else STEP_LENGTH)
+	if _step_distance < stride:
+		return
+	_step_distance = 0.0
+	var surface := footstep_surface()
+	var sfx := InteractionManager.get_sfx()
+	if sfx == null or not sfx.has_method("play_event"):
+		return
+	if _mount != null:
+		# Sabots : pas plus graves et plus appuyés.
+		sfx.call("play_event", "step_" + surface, -9.0, randf_range(0.62, 0.72))
+	else:
+		sfx.call("play_event", "step_" + surface, -15.0 if not _sprinting else -12.0, randf_range(0.92, 1.08))
+
+## Nature du sol sous le joueur : water, snow, grass ou sand.
+func footstep_surface() -> String:
+	if _wading:
+		return "water"
+	var weather := InteractionManager.get_weather()
+	if weather != null and weather.has_method("get_snow_amount") and float(weather.call("get_snow_amount")) > 0.45:
+		return "snow"
+	if _landscape_ref != null and is_instance_valid(_landscape_ref) and _landscape_ref.has_method("zone_weights"):
+		var weights: Array = _landscape_ref.call("zone_weights", global_position.x, global_position.z)
+		if float(weights[1]) + float(weights[3]) > 0.5:
+			return "grass"
+	return "sand"
 
 ## Vrai quand le joueur a les pieds dans la rivière ou un lac.
 func is_wading() -> bool:

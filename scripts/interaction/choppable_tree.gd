@@ -128,7 +128,7 @@ func _drop_wood(amount: int) -> void:
 func _play_hit_sound() -> void:
 	var sfx := InteractionManager.get_sfx()
 	if sfx != null:
-		sfx.call("play", load("res://assets/audio/pickup/collect.wav"), -8.0, 0.5 + 0.08 * float(hits))
+		sfx.call("play_event", "chop", -4.0, randf_range(0.9, 1.1) + 0.04 * float(hits))
 
 func _toast(message: String) -> void:
 	var tree := get_tree()
