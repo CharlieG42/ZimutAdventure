@@ -264,7 +264,7 @@ TOAST_DIED,Vous vous êtes évanoui : vous reprenez connaissance au camp de dép
 QUEST_PREDATOR_TITLE,Le rôdeur de la nuit
 QUEST_PREDATOR_DESC,Des coyotes (dès le niveau 2) et des loups (dès le niveau 4) rôdent la nuit. Équipez l'arc ou la hache (bouton d'attaque) et abattez-en un ; un feu de camp bien nourri les tient à distance.
 QUEST_CLOAK_TITLE,Une cape de fourrure
-QUEST_CLOAK_DESC,Fabriquez une cape avec 3 peaux et 1 laine (niveau 3) : elle réduit de 35 % les dégâts reçus.
+QUEST_CLOAK_DESC,Fabriquez une cape avec 3 peaux et 1 laine (niveau 3) : elle réduit de 35 % les dégâts reçus et tient chaud (+7 °C) pendant les nuits d'automne et d'hiver.
 CRAFT_CAMPFIRE,Feu de camp
 CRAFT_CHEST,Coffre
 CRAFT_PALISADE,Palissade
@@ -380,3 +380,5 @@ MAP_MARKER_REMOVE,Retirer le repère
 MAP_MARKER_INFO,Azimut %03d° · %d m
 TOAST_MARKERS_FULL,Huit repères au plus : retirez-en un d'abord.
 SETTING_MINIMAP,Mini-carte (désactiver : mode explorateur)
+VITAL_WARMTH,Chaleur
+TOAST_COLD_HINT,"Vous avez froid : approchez-vous d'un feu allumé, d'un abri, ou portez une cape de fourrure. Mouillé, on se refroidit plus vite."

@@ -264,7 +264,7 @@ TOAST_DIED,You passed out: you come to at the starting camp.
 QUEST_PREDATOR_TITLE,The night prowler
 QUEST_PREDATOR_DESC,Coyotes (from level 2) and wolves (from level 4) prowl at night. Equip the bow or the axe (attack button) and take one down; a well-fed campfire keeps them away.
 QUEST_CLOAK_TITLE,A fur cloak
-QUEST_CLOAK_DESC,Craft a cloak from 3 pelts and 1 wool (level 3): it reduces damage taken by 35%.
+QUEST_CLOAK_DESC,Craft a cloak from 3 pelts and 1 wool (level 3): it reduces damage taken by 35% and keeps you warm (+7 °C) on autumn and winter nights.
 CRAFT_CAMPFIRE,Campfire
 CRAFT_CHEST,Chest
 CRAFT_PALISADE,Palisade
@@ -380,3 +380,5 @@ MAP_MARKER_REMOVE,Remove marker
 MAP_MARKER_INFO,Bearing %03d° · %d m
 TOAST_MARKERS_FULL,Eight markers at most: remove one first.
 SETTING_MINIMAP,Minimap (turn off for explorer mode)
+VITAL_WARMTH,Warmth
+TOAST_COLD_HINT,"You are getting cold: stand near a lit fire or a shelter, or wear a fur cloak. Being wet chills you faster."
