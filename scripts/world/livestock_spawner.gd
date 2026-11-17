@@ -70,7 +70,7 @@ func _pick_center(rng: RandomNumberGenerator, origin: Vector3, near_start: bool)
 			if Vector2(x - origin.x, z - origin.z).length() < 55.0:
 				continue
 		var y := _ground_height(x, z)
-		if y < min_terrain_height:
+		if y < min_terrain_height or _in_water(x, z, 8.0):
 			continue
 		# Terrain à peu près plat autour du groupe.
 		var flat := true
@@ -130,3 +130,7 @@ func _save() -> void:
 ## API de test : ne touche pas au disque.
 func disable_saving_for_test() -> void:
 	_autosave = false
+
+## Vrai si le point tombe dans la rivière ou un lac (avec une marge en mètres).
+func _in_water(x: float, z: float, margin: float = 3.0) -> bool:
+	return _landscape != null and _landscape.has_method("is_water") and bool(_landscape.call("is_water", x, z, margin))

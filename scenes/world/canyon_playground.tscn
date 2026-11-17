@@ -1,6 +1,7 @@
-[gd_scene load_steps=27 format=3 uid="uid://zimutcanyonplay"]
+[gd_scene load_steps=28 format=3 uid="uid://zimutcanyonplay"]
 
 [ext_resource type="Script" path="res://scripts/world/distance_culler.gd" id="96_culler"]
+[ext_resource type="Script" path="res://scripts/world/zone_announcer.gd" id="95_zones"]
 [ext_resource type="Script" path="res://scripts/world/landscape_manager.gd" id="1_landscape"]
 [ext_resource type="Script" path="res://scripts/world/predator_spawner.gd" id="99_predators"]
 [ext_resource type="Script" path="res://scripts/world/site_spawner.gd" id="98_sites"]
@@ -142,6 +143,7 @@ count = 45
 spawn_radius = 130.0
 seed_offset = 777
 min_distance_to_player = 8.0
+zone_affinity = Array[float]([0.1, 1.0, 0.04, 0.55])
 
 [node name="BerryBushes" type="Node3D" parent="."]
 script = ExtResource("10_rockspawn")
@@ -150,6 +152,7 @@ count = 30
 spawn_radius = 140.0
 seed_offset = 909
 min_distance_to_player = 6.0
+zone_affinity = Array[float]([0.15, 0.6, 0.05, 1.0])
 
 [node name="Predators" type="Node3D" parent="."]
 script = ExtResource("99_predators")
@@ -174,3 +177,6 @@ script = ExtResource("6_setup")
 
 [node name="DistanceCuller" type="Node" parent="."]
 script = ExtResource("96_culler")
+
+[node name="ZoneAnnouncer" type="Node" parent="."]
+script = ExtResource("95_zones")

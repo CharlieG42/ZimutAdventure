@@ -358,3 +358,7 @@ ACTION_FISH_PULL,Pull! (press repeatedly)
 HUD_FISH_REEL,Reel the fish in!
 TOAST_FISH_BIG,Great catch!
 TOAST_FISH_LEFT,You walked away: the line is lost.
+ZONE_FOREST,Jaybird Pinewood
+ZONE_BADLANDS,Red Mesas
+ZONE_DESERT,Cactus Flats
+ZONE_RIVER,Old Ford River

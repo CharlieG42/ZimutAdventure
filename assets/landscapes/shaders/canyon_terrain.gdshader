@@ -16,6 +16,13 @@ uniform vec4 ground_pale : source_color = vec4(0.86, 0.71, 0.50, 1.0);
 uniform vec4 ground_red : source_color = vec4(0.62, 0.34, 0.18, 1.0);
 uniform vec4 pebble_dark : source_color = vec4(0.30, 0.19, 0.12, 1.0);
 
+// Zones (couleur de sommet : R berges, V pinède, B mesas, A rive mouillée).
+uniform vec4 bank_grass : source_color = vec4(0.40, 0.46, 0.20, 1.0);
+uniform vec4 bank_grass_dry : source_color = vec4(0.58, 0.55, 0.28, 1.0);
+uniform vec4 forest_floor : source_color = vec4(0.40, 0.31, 0.19, 1.0);
+uniform vec4 badlands_red : source_color = vec4(0.66, 0.30, 0.15, 1.0);
+uniform float zone_tint : hint_range(0.0, 1.0) = 1.0;
+
 uniform float strata_scale : hint_range(0.01, 2.0) = 0.12;
 uniform float strata_thickness : hint_range(0.05, 1.0) = 0.35;
 uniform float strata_roughness : hint_range(0.0, 1.0) = 0.35;
@@ -38,6 +45,7 @@ global uniform float wetness;
 varying vec3 v_world_pos;
 varying float v_slope;
 varying float v_height;
+varying vec4 v_zone;
 
 float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -81,6 +89,7 @@ void vertex() {
 	v_world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	v_slope = 1.0 - abs(dot(NORMAL, vec3(0.0, 1.0, 0.0)));
 	v_height = v_world_pos.y;
+	v_zone = COLOR * zone_tint;
 }
 
 void fragment() {
@@ -100,6 +109,14 @@ void fragment() {
 	dust = mix(dust, ground_red.rgb, smoothstep(0.52, 0.85, patch_red) * 0.6);
 	dust *= 0.86 + meso * 0.28;
 	dust *= 1.0 + (micro - 0.5) * 0.2 * near;
+	// Zones : herbe des berges (par touffes), humus sombre de la pinède, terre rouge des mesas.
+	float tuft = smoothstep(0.25, 0.6, meso * 0.6 + macro * 0.5);
+	vec3 grass = mix(bank_grass_dry.rgb, bank_grass.rgb, tuft) * (0.9 + micro * 0.2 * near);
+	dust = mix(dust, grass, clamp(v_zone.r * 1.25, 0.0, 1.0) * (0.55 + 0.4 * tuft));
+	dust = mix(dust, forest_floor.rgb * (0.85 + meso * 0.3), v_zone.g * 0.7);
+	dust = mix(dust, badlands_red.rgb * (0.85 + meso * 0.3), v_zone.b * 0.55);
+	// Rive : sable mouillé, plus sombre, jusque sous l'eau.
+	dust = mix(dust, dust * vec3(0.55, 0.52, 0.5), v_zone.a);
 	// Rides de sable étirées par le vent.
 	float ripple = noise(vec2(w.x * 0.9 + w.y * 0.25, w.y * 6.0));
 	dust *= 1.0 + (ripple - 0.5) * 0.12 * near;

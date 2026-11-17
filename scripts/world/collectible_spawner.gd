@@ -25,7 +25,7 @@ func _spawn_all() -> void:
 		var x := rng.randf_range(-spawn_radius, spawn_radius)
 		var z := rng.randf_range(-spawn_radius, spawn_radius)
 		var y := _ground_height(x, z)
-		if y < min_terrain_height:
+		if y < min_terrain_height or _in_water(x, z):
 			continue
 		var item := item_scene.instantiate() as Node3D
 		item.position = Vector3(x, y + 0.4, z)
@@ -37,3 +37,7 @@ func _ground_height(x: float, z: float) -> float:
 	if _landscape != null and _landscape.has_method("terrain_height_at"):
 		return _landscape.call("terrain_height_at", x, z)
 	return 0.0
+
+## Vrai si le point tombe dans la rivière ou un lac (avec une marge en mètres).
+func _in_water(x: float, z: float, margin: float = 3.0) -> bool:
+	return _landscape != null and _landscape.has_method("is_water") and bool(_landscape.call("is_water", x, z, margin))

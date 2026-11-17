@@ -41,6 +41,8 @@ func place(item_id: String, origin: Vector3, yaw: float) -> String:
 	var ground := _ground_height(origin.x, origin.z)
 	if ground < -50.0:
 		return "TOAST_CANNOT_PLACE"
+	if _landscape != null and _landscape.has_method("is_water") and bool(_landscape.call("is_water", origin.x, origin.z, 2.5)):
+		return "TOAST_CANNOT_PLACE"
 	for offset in [Vector2(1.5, 0), Vector2(-1.5, 0), Vector2(0, 1.5), Vector2(0, -1.5)]:
 		var h := _ground_height(origin.x + offset.x, origin.z + offset.y)
 		if absf(h - ground) > MAX_SLOPE:
@@ -103,6 +105,9 @@ func _load() -> void:
 			continue
 		var position: Vector3 = entry.get("pos", Vector3.ZERO)
 		var yaw := float(entry.get("yaw", 0.0))
+		# Le relief a pu changer depuis la sauvegarde : la construction suit le sol.
+		if _landscape != null and _landscape.has_method("terrain_height_at"):
+			position.y = _ground_height(position.x, position.z)
 		var node := _spawn(PLACEABLE[entry["item"]], position, yaw)
 		if node.has_method("apply_state"):
 			node.call("apply_state", entry)

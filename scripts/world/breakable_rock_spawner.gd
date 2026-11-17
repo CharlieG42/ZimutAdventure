@@ -8,6 +8,8 @@ extends Node3D
 @export var seed_offset: int = 4242
 ## Distance minimale au point de départ du joueur.
 @export var min_distance_to_player: float = 12.0
+## Préférence de zone [désert, pinède, mesas, berges] (0 à 1) ; vide = partout pareil.
+@export var zone_affinity: Array[float] = []
 
 var _landscape: Node3D
 
@@ -32,7 +34,9 @@ func _spawn_all() -> void:
 		if Vector2(x - player_pos.x, z - player_pos.z).length() < min_distance_to_player:
 			continue
 		var y := _ground_height(x, z)
-		if y < min_terrain_height:
+		if y < min_terrain_height or _in_water(x, z):
+			continue
+		if not _zone_accepts(rng, x, z):
 			continue
 		var rock := rock_scene.instantiate() as Node3D
 		add_child(rock)
@@ -47,3 +51,17 @@ func _ground_height(x: float, z: float) -> float:
 	if _landscape != null and _landscape.has_method("terrain_height_at"):
 		return _landscape.call("terrain_height_at", x, z)
 	return 0.0
+
+## Vrai si le point tombe dans la rivière ou un lac (avec une marge en mètres).
+func _in_water(x: float, z: float, margin: float = 3.0) -> bool:
+	return _landscape != null and _landscape.has_method("is_water") and bool(_landscape.call("is_water", x, z, margin))
+
+## Tirage selon la préférence de zone : les arbres poussent surtout en pinède, etc.
+func _zone_accepts(rng: RandomNumberGenerator, x: float, z: float) -> bool:
+	if zone_affinity.size() < 4 or _landscape == null or not _landscape.has_method("zone_weights"):
+		return true
+	var weights: Array = _landscape.call("zone_weights", x, z)
+	var chance := 0.0
+	for i in 4:
+		chance += float(weights[i]) * zone_affinity[i]
+	return rng.randf() <= chance

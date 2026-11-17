@@ -47,7 +47,7 @@ func plan_sites(seed_value: int, count: int, start: Vector3) -> Array:
 		var radius := rng.randf_range(MIN_RADIUS, MAX_RADIUS)
 		var x := cos(angle) * radius
 		var z := sin(angle) * radius
-		if _ground_height(x, z) < -2.0:
+		if _ground_height(x, z) < -8.0 or _in_water(x, z, 12.0):
 			continue
 		var ok := true
 		for other in taken:
@@ -191,3 +191,7 @@ func _block(parent: Node3D, size: Vector3, at: Vector3, material: Material) -> v
 	shape.shape = box
 	body.add_child(shape)
 	parent.add_child(body)
+
+## Vrai si le point tombe dans la rivière ou un lac (avec une marge en mètres).
+func _in_water(x: float, z: float, margin: float = 3.0) -> bool:
+	return _landscape != null and _landscape.has_method("is_water") and bool(_landscape.call("is_water", x, z, margin))

@@ -129,6 +129,11 @@ var _safe_position: Vector3 = Vector3.ZERO
 var _mount: Node3D
 var _mount_lift: float = 0.0
 
+## Dans la rivière, on avance moins vite (à pied comme à cheval).
+const WADE_SPEED_FACTOR := 0.6
+var _wading: bool = false
+var _landscape_ref: Node3D
+
 const MOUNT_LIFT := 0.75
 const MOUNT_SPEED_MULTIPLIER := 1.7
 var _safe_timer: float = 0.0
@@ -664,6 +669,9 @@ func _physics_process(delta: float) -> void:
 		top_speed *= MOUNT_SPEED_MULTIPLIER
 	elif _drawing:
 		top_speed *= DRAW_MOVE_FACTOR
+	_wading = _is_wading()
+	if _wading:
+		top_speed *= WADE_SPEED_FACTOR
 	var speed := 0.0
 	if moving:
 		speed = clampf(top_speed * wish_len, min_move_speed, top_speed)
@@ -691,6 +699,21 @@ func _physics_process(delta: float) -> void:
 
 	if _view_mode == ViewMode.THIRD_PERSON:
 		_update_third_person_camera(delta)
+
+## Vrai quand le joueur a les pieds dans la rivière ou un lac.
+func is_wading() -> bool:
+	return _wading
+
+func _is_wading() -> bool:
+	if _landscape_ref == null or not is_instance_valid(_landscape_ref):
+		_landscape_ref = get_tree().get_first_node_in_group("landscape") as Node3D
+		if _landscape_ref == null or not _landscape_ref.has_method("is_water"):
+			_landscape_ref = null
+			return false
+	var p := global_position
+	if not bool(_landscape_ref.call("is_water", p.x, p.z)):
+		return false
+	return p.y - _mount_lift < float(_landscape_ref.call("water_level_at", p.x)) + 0.5
 
 func _wants_sprint() -> bool:
 	# Faim et soif vides : le corps ne suit plus (SurvivalManager).

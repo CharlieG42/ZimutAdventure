@@ -358,3 +358,7 @@ ACTION_FISH_PULL,Tirer ! (appuyez plusieurs fois)
 HUD_FISH_REEL,Remontez le poisson !
 TOAST_FISH_BIG,Belle prise !
 TOAST_FISH_LEFT,Vous vous éloignez : la ligne est perdue.
+ZONE_FOREST,Pinède des Geais
+ZONE_BADLANDS,Mesas Rouges
+ZONE_DESERT,Plaine aux Cactus
+ZONE_RIVER,Rivière du Vieux Gué
