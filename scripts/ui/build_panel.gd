@@ -12,7 +12,9 @@ const BUTTON_SIZE := Vector2(150.0, 72.0)
 var _spawner: Node
 var _player: Node3D
 var _target: Node3D
+var _upgrade_target: Node3D
 var _grab: Button
+var _upgrade: Button
 var _rotate: Button
 var _drop: Button
 var _cancel: Button
@@ -24,6 +26,10 @@ func _ready() -> void:
 	grow_horizontal = Control.GROW_DIRECTION_BOTH
 	grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_grab = _make_button("ACTION_MOVE", _on_grab)
+	_upgrade = _make_button("ACTION_UPGRADE", _on_upgrade)
+	_upgrade.custom_minimum_size = Vector2(300.0, 72.0)
+	_upgrade.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_upgrade.add_theme_font_size_override("font_size", 20)
 	_rotate = _make_button("ACTION_ROTATE", func(): _spawner_call("rotate_move"))
 	_drop = _make_button("ACTION_DROP", _on_drop)
 	_cancel = _make_button("ACTION_CANCEL", func(): _spawner_call("cancel_move"))
@@ -62,15 +68,19 @@ func is_moving() -> bool:
 func _on_focus_changed(target: Node3D) -> void:
 	var spawner := _get_spawner()
 	_target = spawner.call("movable_for", target) as Node3D if spawner != null and target != null else null
+	_upgrade_target = target if target != null and target.has_method("can_upgrade") and bool(target.call("can_upgrade")) else null
 	_refresh()
 
 func _refresh() -> void:
 	var moving := is_moving()
 	_grab.visible = not moving and _target != null and is_instance_valid(_target)
+	_upgrade.visible = not moving and _upgrade_target != null and is_instance_valid(_upgrade_target)
+	if _upgrade.visible:
+		_upgrade.text = _upgrade_label(_upgrade_target)
 	_rotate.visible = moving
 	_drop.visible = moving
 	_cancel.visible = moving
-	visible = moving or _grab.visible
+	visible = moving or _grab.visible or _upgrade.visible
 
 func _on_grab() -> void:
 	var spawner := _get_spawner()
@@ -80,6 +90,32 @@ func _on_grab() -> void:
 		_target = null
 		_toast(tr("TOAST_MOVE_HINT"))
 		_refresh()
+
+## « Améliorer (bois ×6, peau ×2) » : le coût du prochain niveau.
+func _upgrade_label(node: Node) -> String:
+	var parts: Array[String] = []
+	var cost: Dictionary = node.call("next_upgrade_cost")
+	for item_id in cost:
+		parts.append("%s ×%d" % [tr("ITEM_" + String(item_id).to_upper()), int(cost[item_id])])
+	return tr("ACTION_UPGRADE") + " (" + ", ".join(parts) + ")"
+
+func _on_upgrade() -> void:
+	if _upgrade_target == null or not is_instance_valid(_upgrade_target):
+		return
+	var error: String = _upgrade_target.call("upgrade")
+	if error == "":
+		_toast(tr("TOAST_UPGRADED") % int(_upgrade_target.get("level")))
+		if not bool(_upgrade_target.call("can_upgrade")):
+			_upgrade_target = null
+	elif error == "TOAST_UPGRADE_MISSING":
+		var parts: Array[String] = []
+		var missing: Dictionary = _upgrade_target.call("upgrade_missing")
+		for item_id in missing:
+			parts.append("%s ×%d" % [tr("ITEM_" + String(item_id).to_upper()), int(missing[item_id])])
+		_toast(tr(error) % ", ".join(parts))
+	else:
+		_toast(tr(error))
+	_refresh()
 
 func _on_drop() -> void:
 	_spawner_call("confirm_move")

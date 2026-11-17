@@ -282,6 +282,10 @@ func _save() -> void:
 	config.set_value("structures", "list", saved)
 	config.save(SAVE_PATH)
 
+## Sauvegarde immédiate (une construction a changé d'état).
+func save_now() -> void:
+	_save()
+
 ## API de test : ne touche pas au disque.
 func disable_saving_for_test() -> void:
 	_autosave = false

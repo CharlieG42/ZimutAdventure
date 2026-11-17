@@ -8,8 +8,20 @@ extends Interactable
 const KINDS := ["camp_bed", "shelter"]
 const SOLID_LAYER := 1
 const WAKE_HOUR := 7.0
+const MAX_LEVEL := 3
+## Coût pour atteindre chaque niveau (index = niveau visé). Seul l'abri évolue.
+const UPGRADE_COSTS := {
+	"shelter": {
+		2: {"item_wood": 6, "item_pelt": 2},
+		3: {"item_wood": 8, "item_stone": 6, "item_pelt": 2},
+	},
+}
+## Part de santé rendue par une nuit dans l'abri, selon son niveau.
+const SLEEP_HEAL := {1: 0.0, 2: 0.35, 3: 0.8}
 
 @export var kind: String = "camp_bed"
+## Niveau de la construction (1 à MAX_LEVEL).
+var level: int = 1
 
 static func create(structure_kind: String) -> Area3D:
 	var area := Area3D.new()
@@ -25,11 +37,73 @@ func _ready() -> void:
 	prompt_text = "ACTION_SLEEP" if kind == "shelter" else "ACTION_REST_BED"
 	if kind == "wool_bed" and _is_night():
 		prompt_text = "ACTION_SLEEP"
+	_build()
+
+func _build() -> void:
 	match kind:
 		"shelter":
 			_build_shelter()
 		_:
 			_build_bed()
+
+# --- Évolution ------------------------------------------------------------------------
+
+func can_upgrade() -> bool:
+	return UPGRADE_COSTS.has(kind) and level < MAX_LEVEL
+
+## Matériaux du prochain niveau ({} si la construction est au maximum).
+func next_upgrade_cost() -> Dictionary:
+	if not can_upgrade():
+		return {}
+	return (UPGRADE_COSTS[kind] as Dictionary).get(level + 1, {})
+
+## Matériaux qui manquent dans le sac pour le prochain niveau.
+func upgrade_missing() -> Dictionary:
+	var missing := {}
+	var inventory := InteractionManager.get_inventory()
+	for item_id in next_upgrade_cost():
+		var have: int = int(inventory.call("count_of", item_id)) if inventory != null else 0
+		var need: int = int(next_upgrade_cost()[item_id])
+		if have < need:
+			missing[item_id] = need - have
+	return missing
+
+## Améliore la construction. Renvoie "" si réussi, sinon la clé d'erreur.
+func upgrade() -> String:
+	if not can_upgrade():
+		return "TOAST_MAX_LEVEL"
+	if not upgrade_missing().is_empty():
+		return "TOAST_UPGRADE_MISSING"
+	var inventory := InteractionManager.get_inventory()
+	var cost := next_upgrade_cost()
+	for item_id in cost:
+		inventory.call("remove_item", item_id, int(cost[item_id]))
+	level += 1
+	_rebuild()
+	var progression := InteractionManager.get_progression()
+	if progression != null:
+		progression.call("add_xp_for", "build")
+	var spawner := get_parent()
+	if spawner != null and spawner.has_method("save_now"):
+		spawner.call("save_now")
+	return ""
+
+func _rebuild() -> void:
+	for child in get_children():
+		remove_child(child)
+		child.queue_free()
+	_build()
+
+func get_state() -> Dictionary:
+	return {"level": level}
+
+func apply_state(state: Dictionary) -> void:
+	var saved := clampi(int(state.get("level", 1)), 1, MAX_LEVEL)
+	if saved != level and UPGRADE_COSTS.has(kind):
+		level = saved
+		# Avant l'entrée dans l'arbre, _ready() construira directement au bon niveau.
+		if is_inside_tree():
+			_rebuild()
 
 ## Il fait nuit (le lit en laine permet de dormir comme l'abri).
 func _is_night() -> bool:
@@ -40,12 +114,17 @@ func _is_night() -> bool:
 	return hour >= 19.0 or hour < 5.0
 
 func get_prompt() -> String:
+	if kind == "shelter" and level >= MAX_LEVEL and not _is_night():
+		return "ACTION_REST_BED"
 	if kind == "wool_bed":
 		return "ACTION_SLEEP" if _is_night() else "ACTION_REST_BED"
 	return prompt_text
 
 func _on_interact(interactor: Node3D) -> void:
-	if kind == "wool_bed" and not _is_night():
+	if kind == "shelter" and level >= MAX_LEVEL and not _is_night():
+		# La cabane est assez confortable pour une sieste de jour.
+		_rest(interactor)
+	elif kind == "wool_bed" and not _is_night():
 		_rest(interactor)
 	elif kind == "shelter" or kind == "wool_bed":
 		_sleep(interactor)
@@ -77,6 +156,10 @@ func _sleep(interactor: Node3D) -> void:
 	clock.call("set_hour", WAKE_HOUR)
 	if interactor != null and interactor.has_method("restore_stamina"):
 		interactor.restore_stamina()
+	var heal: float = float(SLEEP_HEAL.get(level, 0.0)) if kind == "shelter" else 0.0
+	var survival := InteractionManager.get_survival()
+	if heal > 0.0 and survival != null:
+		survival.call("heal", heal)
 	_toast("TOAST_SLEPT")
 
 func _toast(key: String) -> void:
@@ -118,7 +201,41 @@ func _build_shelter() -> void:
 	for x in [-1.42, 1.42]:
 		_add_solid(Vector3(0.16, 2.0, 2.8), Vector3(x, 1.0, 0.0))
 	_add_solid(Vector3(3.5, 0.2, 3.2), Vector3(0.0, 2.15, -0.1))
+	if level >= 2:
+		_build_shelter_reinforced(wood, hide)
+	if level >= 3:
+		_build_shelter_cabin(wood, hide)
 	_add_trigger(Vector3(2.6, 2.0, 2.6), Vector3(0.0, 1.0, 0.1))
+
+## Niveau 2 : seuil et pieux de façade, peaux tendues sur les côtés, couchage garni.
+func _build_shelter_reinforced(wood: Material, hide: Material) -> void:
+	var fur := _material(Color(0.82, 0.72, 0.58))
+	for x in [-1.42, 1.42]:
+		_box(self, Vector3(0.2, 2.3, 0.2), Vector3(x, 1.15, 1.45), wood)
+	_box(self, Vector3(3.1, 0.14, 0.16), Vector3(0.0, 2.3, 1.45), wood)
+	for x in [-1.1, 1.1]:
+		_box(self, Vector3(0.7, 1.3, 0.05), Vector3(x, 1.5, 1.45), hide)
+	_box(self, Vector3(1.8, 0.16, 0.9), Vector3(0.0, 0.1, -0.85), fur)
+	_box(self, Vector3(0.9, 0.05, 1.4), Vector3(0.0, 0.07, 0.7), fur)
+
+## Niveau 3 : cabane — second toit, foyer de pierre au fond et lanterne.
+func _build_shelter_cabin(wood: Material, hide: Material) -> void:
+	var stone := _material(Color(0.5, 0.48, 0.46))
+	var glow := StandardMaterial3D.new()
+	glow.albedo_color = Color(1.0, 0.78, 0.4)
+	glow.emission_enabled = true
+	glow.emission = Color(1.0, 0.62, 0.22)
+	glow.emission_energy_multiplier = 1.6
+	# Second toit posé sur des chevrons, même pente que le premier (pas d'interpénétration).
+	for x in [-1.5, 0.0, 1.5]:
+		_box(self, Vector3(0.12, 0.34, 3.2), Vector3(x, 2.33, -0.1), wood).rotation_degrees.x = 7.0
+	var upper := _box(self, Vector3(3.9, 0.14, 3.6), Vector3(0.0, 2.58, -0.1), hide)
+	upper.rotation_degrees.x = 7.0
+	_box(self, Vector3(1.0, 0.5, 0.6), Vector3(1.0, 0.25, -1.0), stone)
+	_box(self, Vector3(0.7, 0.16, 0.4), Vector3(1.0, 0.58, -1.0), stone)
+	_box(self, Vector3(0.16, 0.22, 0.16), Vector3(-1.0, 1.7, 0.9), glow)
+	_box(self, Vector3(0.04, 0.3, 0.04), Vector3(-1.0, 1.95, 0.9), wood)
+	_add_solid(Vector3(1.0, 0.5, 0.6), Vector3(1.0, 0.25, -1.0))
 
 func _material(color: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
