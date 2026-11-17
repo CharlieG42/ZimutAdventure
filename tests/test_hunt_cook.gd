@@ -96,6 +96,15 @@ func _init() -> void:
 				break
 		if not hit:
 			errors.append("la flèche tirée droit sur la proie doit la toucher")
+		if int(inventory.call("count_of", "item_raw_meat")) != meat_before:
+			errors.append("la viande ne tombe pas dans le sac avant le dépeçage")
+		var carcass := prey.get_node_or_null("Carcass")
+		if carcass == null or not bool(carcass.call("can_interact")):
+			errors.append("une proie abattue laisse une dépouille à dépecer")
+		else:
+			carcass.call("interact", player)
+			if bool(carcass.call("can_interact")):
+				errors.append("une dépouille ne se dépèce qu'une fois")
 		var meat_after := int(inventory.call("count_of", "item_raw_meat"))
 		if meat_after <= meat_before:
 			errors.append("une proie abattue doit donner de la viande crue (avant %d, après %d)" % [meat_before, meat_after])

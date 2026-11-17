@@ -105,6 +105,9 @@ func _init() -> void:
 		var ok: bool = bool(player.call("try_melee"))
 		if not ok or prey.get("_dead") != true:
 			errors.append("la hache doit tuer le gibier (ok=%s dead=%s)" % [str(ok), str(prey.get("_dead"))])
+		var corpse := prey.get_node_or_null("Carcass")
+		if corpse != null:
+			corpse.call("harvest")
 		if int(inventory.call("count_of", "item_raw_meat")) <= meat_before:
 			errors.append("le gibier tué à la hache doit lâcher de la viande")
 

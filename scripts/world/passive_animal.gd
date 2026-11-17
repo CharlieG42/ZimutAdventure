@@ -12,7 +12,10 @@ const GRAVITY := 18.0
 const STUCK_SECONDS := 1.2
 const HUNT_FLEE_SECONDS := 6.0
 ## Le gibier abattu réapparaît sur son territoire après ce délai.
+const CarcassScript := preload("res://scripts/world/carcass.gd")
 const RESPAWN_SECONDS := 150.0
+## Durée pendant laquelle la dépouille reste sur place avant de s'effacer.
+const CORPSE_SECONDS := 120.0
 ## Un joueur qui court s'entend de plus loin.
 const SPRINT_ALERT_FACTOR := 1.7
 
@@ -42,6 +45,7 @@ var _player: Node3D
 var _gait: float = 0.0
 var _fleeing: bool = false
 var _dead: bool = false
+var _corpse_tween: Tween
 var _hp: int = 2
 var _home: Vector3
 var _base_layer: int = 1
@@ -173,21 +177,23 @@ func _track_stuck(wanted: Vector3, delta: float) -> void:
 	else:
 		_stuck_time = 0.0
 
-## Touché par une flèche de chasse : l'animal s'effondre, la viande va dans le sac,
-## puis il disparaît et un autre revient sur ce territoire plus tard.
+## Touché par une flèche de chasse : l'animal s'effondre. Sa dépouille reste sur place
+## le temps de la dépecer (viande, peau) ; elle s'efface ensuite et un autre animal
+## revient sur ce territoire plus tard.
 func take_arrow_hit(_from_position: Vector3) -> void:
 	if _dead:
 		return
 	_dead = true
 	_hp -= 1
 	remove_from_group("huntable")
-	_grant_hunt_reward()
+	var loot := _roll_hunt_loot()
+	var carcass := CarcassScript.attach(self, species, loot)
+	carcass.harvested.connect(_on_carcass_harvested)
+	_toast_hunt_down()
 	_collapse()
 
-func _grant_hunt_reward() -> void:
-	var inventory := InteractionManager.get_inventory()
-	if inventory == null:
-		return
+## Calcule le butin et enregistre la chasse (statistique, expérience).
+func _roll_hunt_loot() -> Dictionary:
 	var drops: int = {"deer": 2, "rabbit": 1}.get(species, 1)
 	var progression := InteractionManager.get_progression()
 	if progression != null:
@@ -199,12 +205,28 @@ func _grant_hunt_reward() -> void:
 				drops += 1
 				break
 		progression.call("add_xp_for", "hunt")
-	inventory.add_item("item_raw_meat", drops)
-	var hud := get_tree().get_first_node_in_group("hud") as Node
-	if hud != null and hud.has_method("show_toast"):
-		hud.show_toast(tr("TOAST_HUNT_SUCCESS") % tr("ITEM_ITEM_RAW_MEAT"))
+	var loot := {"item_raw_meat": drops}
+	if species == "deer":
+		loot["item_pelt"] = 1
+	return loot
 
-## L'animal bascule sur le flanc, reste un instant, puis s'efface.
+func _toast_hunt_down() -> void:
+	var hud := get_tree().get_first_node_in_group("hud") as Node if is_inside_tree() else null
+	if hud != null and hud.has_method("show_toast"):
+		hud.show_toast(tr("TOAST_HUNT_DOWN"))
+
+## Dépouille dépecée : elle s'efface sans attendre.
+func _on_carcass_harvested() -> void:
+	if _corpse_tween != null and _corpse_tween.is_valid():
+		_corpse_tween.kill()
+	if _model == null or not is_inside_tree():
+		_vanish()
+		return
+	_corpse_tween = create_tween()
+	_corpse_tween.tween_property(_model, "scale", Vector3.ONE * 0.01, 0.5)
+	_corpse_tween.tween_callback(_vanish)
+
+## L'animal bascule sur le flanc et reste là (dépouille), puis finit par s'effacer.
 func _collapse() -> void:
 	_down = true
 	_fleeing = false
@@ -214,17 +236,20 @@ func _collapse() -> void:
 		return
 	if DisplayServer.get_name() != "headless" and get_parent() is Node3D:
 		VfxParticles.dust_puff(get_parent() as Node3D, global_position + Vector3(0.0, 0.2, 0.0), Color(0.74, 0.6, 0.42, 0.5), 12)
-	var tween := create_tween()
+	_corpse_tween = create_tween()
 	if _rig != null:
 		# Le modèle animé joue sa propre chute.
-		tween.tween_interval(maxf(_rig.play_death(), 0.4) + 1.6)
+		_corpse_tween.tween_interval(maxf(_rig.play_death(), 0.4) + CORPSE_SECONDS)
 	else:
-		tween.tween_property(_model, "rotation:z", PI * 0.5, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		tween.tween_interval(2.2)
-	tween.tween_property(_model, "scale", Vector3.ONE * 0.01, 0.4)
-	tween.tween_callback(_vanish)
+		_corpse_tween.tween_property(_model, "rotation:z", PI * 0.5, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		_corpse_tween.tween_interval(CORPSE_SECONDS)
+	_corpse_tween.tween_property(_model, "scale", Vector3.ONE * 0.01, 0.4)
+	_corpse_tween.tween_callback(_vanish)
 
 func _vanish() -> void:
+	var carcass := get_node_or_null("Carcass")
+	if carcass != null:
+		carcass.queue_free()
 	visible = false
 	collision_mask = 0
 	set_physics_process(false)

@@ -215,26 +215,34 @@ func hit(damage: int, from_position: Vector3) -> void:
 func _die() -> void:
 	_dead = true
 	remove_from_group("predators")
-	var inventory := InteractionManager.get_inventory()
-	if inventory != null:
-		inventory.add_item("item_pelt", int(_stats["pelts"]))
-		inventory.add_item("item_raw_meat", 1)
 	var progression := InteractionManager.get_progression()
 	if progression != null:
 		progression.call("add_stat", "stat_predators", 1)
 		progression.call("add_xp_for", "hunt")
+	# Peau et viande se récupèrent en dépeçant la dépouille.
+	var carcass := CarcassScript.attach(self, species, {"item_pelt": int(_stats["pelts"]), "item_raw_meat": 1})
+	carcass.harvested.connect(_on_carcass_harvested)
 	_toast(tr("TOAST_PREDATOR_KILLED") % tr("ANIMAL_" + species.to_upper()))
 	collision_layer = 0
 	collision_mask = 0
 	set_physics_process(false)
-	var tween := create_tween()
+	_corpse_tween = create_tween()
 	if _rig != null:
-		# Chute animée, puis le corps disparaît.
-		tween.tween_interval(maxf(_rig.play_death(), 0.4) + 1.2)
-		tween.tween_property(self, "scale", Vector3.ONE * 0.01, 0.4)
+		# Chute animée, la dépouille reste le temps de la dépecer.
+		_corpse_tween.tween_interval(maxf(_rig.play_death(), 0.4) + CORPSE_SECONDS)
+		_corpse_tween.tween_property(self, "scale", Vector3.ONE * 0.01, 0.4)
 	else:
-		tween.tween_property(self, "scale", Vector3(1.0, 0.05, 1.0), 0.5)
-	tween.tween_callback(queue_free)
+		_corpse_tween.tween_property(self, "scale", Vector3(1.0, 0.05, 1.0), 0.5)
+		_corpse_tween.tween_interval(CORPSE_SECONDS)
+	_corpse_tween.tween_callback(queue_free)
+
+## Dépouille dépecée : elle s'efface sans attendre.
+func _on_carcass_harvested() -> void:
+	if _corpse_tween != null and _corpse_tween.is_valid():
+		_corpse_tween.kill()
+	_corpse_tween = create_tween()
+	_corpse_tween.tween_property(self, "scale", Vector3.ONE * 0.01, 0.5)
+	_corpse_tween.tween_callback(queue_free)
 
 func _toast(message: String) -> void:
 	var tree := get_tree()
