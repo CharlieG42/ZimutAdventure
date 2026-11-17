@@ -1,6 +1,8 @@
 extends Node
 ## Surveille la fluidité : si la moyenne des images par seconde reste basse, la qualité baisse
-## d'un cran (moins de précipitations, puis ombres coupées et rendu 3D réduit). Un compteur
+## d'un cran (moins de précipitations, puis ombres allégées et rendu 3D réduit).
+## Les ombres ne sont jamais coupées : en rendu Compatibility, un soleil sans ombre éclaire
+## par un autre chemin et toute la scène devient plus sombre et plus terne (≈ -10 %). Un compteur
 ## (FPS, appels de dessin, mémoire) s'affiche par 5 appuis rapides en haut au centre de l'écran,
 ## ou avec F3, et l'état est écrit dans user://perf.log pour mesurer sur un appareil réel.
 
@@ -20,7 +22,11 @@ var _label: Label
 var _layer: CanvasLayer
 var _taps: Array = []
 var _log_timer: float = 0.0
-var _shadowless: Array = []
+## Réglages d'origine des soleils allégés : lumière -> [mode, portée, fondu des cascades].
+var _light_defaults: Dictionary = {}
+## Ombres allégées : une seule cascade, portée courte, atlas réduit, bords nets.
+const LOW_SHADOW_DISTANCE := 45.0
+const LOW_SHADOW_ATLAS := 1024
 
 func _ready() -> void:
 	set_process(enabled)
@@ -64,19 +70,35 @@ func set_level(new_level: int) -> void:
 	var weather := InteractionManager.get_weather()
 	if weather != null and weather.has_method("set_low_quality"):
 		weather.call("set_low_quality", level >= 1)
-	if level >= 2:
-		for light in get_tree().root.find_children("*", "DirectionalLight3D", true, false):
-			if (light as DirectionalLight3D).shadow_enabled:
-				(light as DirectionalLight3D).shadow_enabled = false
-				_shadowless.append(light)
-		get_viewport().scaling_3d_scale = 0.8
-	else:
-		for light in _shadowless:
-			if is_instance_valid(light):
-				(light as DirectionalLight3D).shadow_enabled = true
-		_shadowless.clear()
-		get_viewport().scaling_3d_scale = 1.0
+	_apply_shadow_quality(level >= 2)
+	get_viewport().scaling_3d_scale = 0.8 if level >= 2 else 1.0
 	print("PerformanceGuard: qualité niveau %d" % level)
+
+func _apply_shadow_quality(low: bool) -> void:
+	# Valeurs normales : celles du projet (avec les surcharges .mobile sur Android).
+	var atlas := int(ProjectSettings.get_setting_with_override("rendering/lights_and_shadows/directional_shadow/size"))
+	var soft := int(ProjectSettings.get_setting_with_override("rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality"))
+	RenderingServer.directional_shadow_atlas_set_size(mini(LOW_SHADOW_ATLAS, atlas) if low else atlas, true)
+	RenderingServer.directional_soft_shadow_filter_set_quality(
+			RenderingServer.SHADOW_QUALITY_HARD if low else soft as RenderingServer.ShadowQuality)
+	for node in get_tree().root.find_children("*", "DirectionalLight3D", true, false):
+		var light := node as DirectionalLight3D
+		if not light.shadow_enabled:
+			continue
+		if low:
+			if not _light_defaults.has(light):
+				_light_defaults[light] = [light.directional_shadow_mode, light.directional_shadow_max_distance,
+						light.directional_shadow_blend_splits]
+			light.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+			light.directional_shadow_max_distance = minf(LOW_SHADOW_DISTANCE, light.directional_shadow_max_distance)
+			light.directional_shadow_blend_splits = false
+		elif _light_defaults.has(light):
+			var saved: Array = _light_defaults[light]
+			light.directional_shadow_mode = saved[0]
+			light.directional_shadow_max_distance = saved[1]
+			light.directional_shadow_blend_splits = saved[2]
+	if not low:
+		_light_defaults.clear()
 
 func report() -> String:
 	return "%d FPS | q%d | %d draws | %.0f Mo" % [
