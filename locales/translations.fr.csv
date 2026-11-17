@@ -464,3 +464,18 @@ NOTE_PLATEAU_HINT,"Grimpez sur les mesas, au sud-est."
 NOTE_SOURCE,Lac de la Source
 NOTE_SOURCE_DESC,D'ici naît la rivière.
 NOTE_SOURCE_HINT,Remontez la rivière vers l'ouest.
+TUTO_TITLE,Premiers pas — %d / %d
+TUTO_SKIP,Passer
+TUTO_DONE,"Vous voilà prêt. Suivez les objectifs en haut de l'écran, et bonne exploration !"
+TUTO_MOVE_TOUCH,Posez le pouce gauche en bas à gauche et faites glisser pour [b]marcher[/b].
+TUTO_MOVE_KEYS,[b]Marchez[/b] avec Z Q S D (ou W A S D). Maj pour courir.
+TUTO_LOOK_TOUCH,Faites glisser le pouce droit sur l'écran pour [b]regarder autour[/b] de vous.
+TUTO_LOOK_KEYS,Bougez la souris pour [b]regarder autour[/b] de vous.
+TUTO_PICKUP_TOUCH,Approchez-vous d'une pierre ou d'une branche au sol et touchez le bouton [b]cible[/b] qui apparaît à droite pour la ramasser.
+TUTO_PICKUP_KEYS,Approchez-vous d'une pierre ou d'une branche au sol et appuyez sur [b]E[/b] pour la ramasser.
+TUTO_JOURNAL_TOUCH,"Ouvrez le [b]Journal[/b] (bouton en bas) : quêtes, fabrication, sac, carnet et réglages."
+TUTO_JOURNAL_KEYS,"Ouvrez le [b]Journal[/b] avec la touche C : quêtes, fabrication, sac, carnet et réglages."
+TUTO_MAP_TOUCH,Touchez la [b]mini-carte[/b] en haut à droite pour ouvrir la carte. Touchez un endroit pour y poser un repère.
+TUTO_MAP_KEYS,Ouvrez la [b]carte[/b] avec M. Cliquez un endroit pour y poser un repère.
+TUTO_COMPASS,"La [b]boussole[/b] en haut indique votre cap. Pour votre première quête, cherchez des pierres, puis suivez le cap 180° (plein sud) jusqu'à la rivière."
+SETTING_TUTORIAL,Revoir le tutoriel

@@ -31,6 +31,8 @@ const BASE_MARGIN := 16
 @onready var journal_panel: Control = $InventoryCenter/JournalPanel
 @onready var map_panel: Control = $MapPanel
 @onready var quest_tracker: Label = $Overlay/QuestTracker
+## Consignes des premières minutes (créées en code, voir TutorialPanel).
+var tutorial_panel: TutorialPanel
 @onready var camera_joystick: Control = $CameraJoystick
 @onready var touch_look: Control = $TouchLook
 @onready var fx_grain: TextureRect = $FxLayer/Grain
@@ -147,6 +149,7 @@ func _ready() -> void:
 		if minimap != null:
 			minimap.set_context(landscape, _player)
 	_setup_quest_tracker()
+	_setup_tutorial()
 	if _player != null:
 		joystick.moved.connect(_player.set_joystick_vector)
 		touch_look.look_delta.connect(_player.apply_touch_look)
@@ -156,6 +159,25 @@ func _ready() -> void:
 		if _player.has_signal("stamina_changed"):
 			_player.connect("stamina_changed", _on_stamina_changed)
 		_on_view_changed(_player.call("is_first_person"))
+
+func _setup_tutorial() -> void:
+	tutorial_panel = TutorialPanel.new()
+	tutorial_panel.name = "TutorialPanel"
+	$Overlay.add_child(tutorial_panel)
+	tutorial_panel.set_context(_player, journal_panel, map_panel)
+	_layout_tutorial(get_viewport().get_visible_rect().size)
+
+## Consigne en haut au centre, entre les jauges (à gauche) et la mini-carte (à droite).
+func _layout_tutorial(vp: Vector2) -> void:
+	if tutorial_panel == null:
+		return
+	var compact := vp.x < 700.0 or vp.y < 800.0
+	var left := 180.0 if compact else 340.0
+	var right := 150.0 if compact else 220.0
+	var width := clampf(vp.x - left - right, 280.0, 640.0)
+	var x := clampf((vp.x - width) * 0.5, left, vp.x - right - width)
+	var top := 116.0 if compact else 120.0
+	_set_offsets(tutorial_panel, Vector4(x, top, x + width, top + 90.0))
 
 ## Rappel discret de l'objectif en cours (sous le cap), mis à jour par QuestManager.
 func _setup_quest_tracker() -> void:
@@ -645,6 +667,7 @@ func _fit_to_viewport(vp_override: Vector2 = Vector2.ZERO) -> void:
 		_set_offsets(hotbar, _base_offsets[hotbar])
 		_set_offsets(quest_tracker, _base_offsets[quest_tracker])
 		level_badge.visible = true
+	_layout_tutorial(vp)
 
 func _set_offsets(c: Control, v: Vector4) -> void:
 	c.offset_left = v.x
