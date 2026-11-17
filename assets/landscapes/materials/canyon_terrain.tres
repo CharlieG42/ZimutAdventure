@@ -1,7 +1,9 @@
-[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://zimutcanyonterrain"]
+[gd_resource type="ShaderMaterial" load_steps=3 format=3 uid="uid://zimutcanyonterrain"]
 
 [ext_resource type="Shader" path="res://assets/landscapes/shaders/canyon_terrain.gdshader" id="1_shader"]
+[ext_resource type="Texture2D" path="res://assets/landscapes/textures/terrain_noise.png" id="2_noise"]
 
 [resource]
 render_priority = 0
 shader = ExtResource("1_shader")
+shader_parameter/noise_tex = ExtResource("2_noise")
