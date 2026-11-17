@@ -48,7 +48,14 @@ func _ready() -> void:
 	_decorate()
 
 func _decorate() -> void:
-	if _head == null:
+	var anchor: Node3D = _head
+	var eye_scale := 1.0
+	var eye_offset := Vector3.ZERO
+	if _rig != null:
+		anchor = _rig.head_attachment()
+		# Repère de l'os de la tête : en unités du modèle (mis à l'échelle), Y vers le museau.
+		eye_scale = 1.0 / maxf(_rig.model.scale.x * float(_config["scale"]), 0.001)
+	if anchor == null:
 		return
 	# Yeux rougeoyants : on les repère dans le noir.
 	var eye_mat := StandardMaterial3D.new()
@@ -59,14 +66,14 @@ func _decorate() -> void:
 	for side in [-1.0, 1.0]:
 		var eye := MeshInstance3D.new()
 		var sphere := SphereMesh.new()
-		sphere.radius = 0.03
-		sphere.height = 0.06
+		sphere.radius = 0.03 * eye_scale
+		sphere.height = 0.06 * eye_scale
 		sphere.radial_segments = 6
 		sphere.rings = 3
 		sphere.material = eye_mat
 		eye.mesh = sphere
-		eye.position = Vector3(0.06 * side, 0.05, 0.17)
-		_head.add_child(eye)
+		eye.position = Vector3(0.06 * side, 0.05, 0.17) if _rig == null else Vector3(0.055 * side, 0.12, 0.12) * eye_scale
+		anchor.add_child(eye)
 
 # --- Comportement ---------------------------------------------------------------------
 
@@ -151,6 +158,8 @@ func _bite() -> void:
 	if _attack_cd > 0.0:
 		return
 	_attack_cd = BITE_COOLDOWN
+	if _rig != null:
+		_rig.play_attack()
 	var survival := InteractionManager.get_survival()
 	if survival != null:
 		survival.call("damage", float(_stats["damage"]))
@@ -219,7 +228,12 @@ func _die() -> void:
 	collision_mask = 0
 	set_physics_process(false)
 	var tween := create_tween()
-	tween.tween_property(self, "scale", Vector3(1.0, 0.05, 1.0), 0.5)
+	if _rig != null:
+		# Chute animée, puis le corps disparaît.
+		tween.tween_interval(maxf(_rig.play_death(), 0.4) + 1.2)
+		tween.tween_property(self, "scale", Vector3.ONE * 0.01, 0.4)
+	else:
+		tween.tween_property(self, "scale", Vector3(1.0, 0.05, 1.0), 0.5)
 	tween.tween_callback(queue_free)
 
 func _toast(message: String) -> void:

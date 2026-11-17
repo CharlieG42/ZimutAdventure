@@ -329,6 +329,10 @@ func _refresh_tamed_state() -> void:
 			_tail_amp = 0.6
 	wander_radius = (12.0 if species == "horse" else 8.0)
 
+## Il mange aussi ce qu'on vient de lui tendre.
+func _is_grazing() -> bool:
+	return super._is_grazing() or _eat_left > 0.0
+
 # --- Monture ----------------------------------------------------------------------------
 
 func mount(rider: Node3D) -> void:
@@ -363,6 +367,10 @@ func _physics_process(delta: float) -> void:
 		var flat := Vector3(rider_velocity.x, 0.0, rider_velocity.z)
 		if flat.length() > 0.4:
 			rotation.y = lerp_angle(rotation.y, atan2(flat.x, flat.z), minf(1.0, 10.0 * delta))
+		else:
+			# À l'arrêt, le cheval s'aligne sur le regard du cavalier (qui regarde vers -Z) :
+			# sinon on resterait assis en travers après être monté.
+			rotation.y = lerp_angle(rotation.y, _player.rotation.y + PI, minf(1.0, 8.0 * delta))
 		velocity = flat
 		_fleeing = flat.length() > 6.5
 		_animate(delta)
@@ -554,7 +562,9 @@ func _build_model() -> void:
 		_build_chicken()
 		return
 	super._build_model()
-	_decorate()
+	# Les vrais modèles animés ont déjà cornes, crinière, laine…
+	if _rig == null:
+		_decorate()
 
 ## Détails propres à chaque espèce, ajoutés au modèle de base à quatre pattes.
 func _decorate() -> void:

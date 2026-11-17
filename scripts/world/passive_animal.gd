@@ -51,6 +51,8 @@ var _legs: Array[Node3D] = []
 var _neck: Node3D
 var _head: Node3D
 var _model: Node3D
+## Modèle animé (espèces disposant d'un vrai modèle) ; null pour les modèles construits en code.
+var _rig: AnimalRig
 var _tail: Node3D
 var _anim_time: float = 0.0
 ## Mouvement de queue : vitesse et amplitude (le chien apprivoisé remue vite).
@@ -76,7 +78,8 @@ func _ready() -> void:
 	_bake_model.call_deferred()
 
 func _bake_model() -> void:
-	if _model != null and is_instance_valid(_model):
+	# Un modèle animé (squelette) ne se fusionne pas.
+	if _rig == null and _model != null and is_instance_valid(_model):
 		MeshBaker.bake(_model)
 
 ## Cible valable pour l'arc (les animaux domestiques ne se chassent pas).
@@ -212,8 +215,12 @@ func _collapse() -> void:
 	if DisplayServer.get_name() != "headless" and get_parent() is Node3D:
 		VfxParticles.dust_puff(get_parent() as Node3D, global_position + Vector3(0.0, 0.2, 0.0), Color(0.74, 0.6, 0.42, 0.5), 12)
 	var tween := create_tween()
-	tween.tween_property(_model, "rotation:z", PI * 0.5, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tween.tween_interval(2.2)
+	if _rig != null:
+		# Le modèle animé joue sa propre chute.
+		tween.tween_interval(maxf(_rig.play_death(), 0.4) + 1.6)
+	else:
+		tween.tween_property(_model, "rotation:z", PI * 0.5, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tween.tween_interval(2.2)
 	tween.tween_property(_model, "scale", Vector3.ONE * 0.01, 0.4)
 	tween.tween_callback(_vanish)
 
@@ -237,6 +244,8 @@ func _respawn() -> void:
 	if _model != null:
 		_model.rotation.z = 0.0
 		_model.scale = Vector3.ONE * float(_config.get("scale", 1.0))
+	if _rig != null:
+		_rig.revive()
 	collision_layer = _base_layer
 	collision_mask = _base_mask
 	visible = true
@@ -257,6 +266,10 @@ func _start_graze() -> void:
 	_mode_left = _rng.randf_range(2.0, 5.0)
 	_stuck_time = 0.0
 
+## Vrai quand l'animal broute (animation de repas).
+func _is_grazing() -> bool:
+	return _mode == Mode.GRAZE
+
 func _face_direction(direction: Vector3, delta: float) -> void:
 	var yaw := atan2(direction.x, direction.z)
 	rotation.y = lerp_angle(rotation.y, yaw, TURN_SPEED * delta)
@@ -274,7 +287,27 @@ func _resize_collision() -> void:
 	shape_node.shape = capsule
 	shape_node.position.y = capsule.height * 0.5
 
+## Vrai modèle animé si l'espèce en a un (voir AnimalRig). Retourne true s'il est en place.
+func _build_rig() -> bool:
+	if not AnimalRig.has_model(species):
+		return false
+	var s: float = _config["scale"]
+	_model = Node3D.new()
+	_model.name = "Model"
+	_model.scale = Vector3.ONE * s
+	add_child(_model)
+	_rig = AnimalRig.create(species, s, 0.9 + _rng.randf() * 0.2, _rng.randi())
+	if _rig == null:
+		_model.queue_free()
+		_model = null
+		return false
+	_model.add_child(_rig)
+	_add_ground_shadow(s)
+	return true
+
 func _build_model() -> void:
+	if _build_rig():
+		return
 	var s: float = _config["scale"]
 	var fur := _material(_config["fur"])
 	var belly := _material(_config["belly"])
@@ -379,6 +412,10 @@ func _add_ground_shadow(model_scale: float) -> void:
 
 func _animate(delta: float) -> void:
 	if _model == null:
+		return
+	if _rig != null:
+		var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+		_rig.update_motion(horizontal_speed, _is_grazing() and horizontal_speed < 0.15, delta)
 		return
 	_anim_time += delta
 	if _tail != null:
