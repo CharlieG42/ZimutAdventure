@@ -24,6 +24,7 @@ const XP := {
 	"cook": 10,
 	"fish": 12,
 	"discover": 25,
+	"observe": 8,
 	"treasure": 20,
 	"water": 3,
 	"build": 20,

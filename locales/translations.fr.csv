@@ -382,3 +382,85 @@ TOAST_MARKERS_FULL,Huit repères au plus : retirez-en un d'abord.
 SETTING_MINIMAP,Mini-carte (désactiver : mode explorateur)
 VITAL_WARMTH,Chaleur
 TOAST_COLD_HINT,"Vous avez froid : approchez-vous d'un feu allumé, d'un abri, ou portez une cape de fourrure. Mouillé, on se refroidit plus vite."
+JOURNAL_NOTEBOOK,Carnet
+NOTEBOOK_INTRO,Regardez de près ce que vous croisez : il se note tout seul. %d / %d observations.
+NOTEBOOK_NEXT,Prochain palier : %d observations — %s
+NOTEBOOK_FAUNA,Faune
+NOTEBOOK_FLORA,Flore
+NOTEBOOK_LANDSCAPE,Paysages
+TOAST_OBSERVED,Carnet : %s (%d/%d)
+TOAST_NOTEBOOK_REWARD,Palier atteint : %s
+QUEST_NATURALIST_TITLE,Carnet de naturaliste
+QUEST_NATURALIST_DESC,"Regardez de près animaux, plantes et paysages : chacun se note dans le Carnet (Journal). Faites 8 observations."
+NOTE_DEER,Cerf
+NOTE_DEER_DESC,Broute en bordure des bois et file au moindre bruit.
+NOTE_DEER_HINT,"Un grand herbivore des plaines, prudent."
+NOTE_RABBIT,Lièvre
+NOTE_RABBIT_DESC,Bondit entre les buissons ; ses grandes oreilles le trahissent.
+NOTE_RABBIT_HINT,"Petit et rapide, il se cache dans les herbes."
+NOTE_COYOTE,Coyote
+NOTE_COYOTE_DESC,Rôde au crépuscule. Un feu bien nourri le tient à distance.
+NOTE_COYOTE_HINT,"Un chasseur des soirs, prudent mais effronté."
+NOTE_WOLF,Loup
+NOTE_WOLF_DESC,Plus fort et plus tenace que le coyote : évitez-le de nuit.
+NOTE_WOLF_HINT,Il ne se montre qu'aux voyageurs aguerris.
+NOTE_COW,Vache
+NOTE_COW_DESC,Donne du lait si on la nourrit et l'apprivoise.
+NOTE_COW_HINT,"Un animal de la ferme, paisible."
+NOTE_SHEEP,Mouton
+NOTE_SHEEP_DESC,Sa laine sert aux lits et aux capes.
+NOTE_SHEEP_HINT,Un animal de la ferme à la toison épaisse.
+NOTE_GOAT,Chèvre
+NOTE_GOAT_DESC,Grimpe partout et donne du lait.
+NOTE_GOAT_HINT,Un animal de la ferme agile.
+NOTE_CHICKEN,Poule
+NOTE_CHICKEN_DESC,Pond des œufs chaque jour une fois apprivoisée.
+NOTE_CHICKEN_HINT,Un petit animal de la ferme.
+NOTE_HORSE,Cheval
+NOTE_HORSE_DESC,"Une fois apprivoisé, il porte le voyageur bien plus vite."
+NOTE_HORSE_HINT,Un compagnon pour les longues distances.
+NOTE_DOG,Chien
+NOTE_DOG_DESC,"Fidèle, il accompagne le voyageur partout."
+NOTE_DOG_HINT,Un compagnon à quatre pattes.
+NOTE_FISH,Poisson
+NOTE_FISH_DESC,"Mord mieux à l'aube, au crépuscule et sous la pluie."
+NOTE_FISH_HINT,Il faut une canne à pêche pour le rencontrer.
+NOTE_PINE,Pin
+NOTE_PINE_DESC,Le bois de la pinède : on le coupe à la hache.
+NOTE_PINE_HINT,Pousse en nombre au nord-ouest du canyon.
+NOTE_CACTUS,Cactus
+NOTE_CACTUS_DESC,Stocke l'eau dans ses tiges ; ses épines piquent.
+NOTE_CACTUS_HINT,Typique de la plaine sèche.
+NOTE_AGAVE,Agave
+NOTE_AGAVE_DESC,"Rosette aux feuilles charnues, fleurit une seule fois."
+NOTE_AGAVE_HINT,Une plante grasse de la plaine.
+NOTE_SHRUB,Buisson du désert
+NOTE_SHRUB_DESC,Petit arbuste qui tient le sable.
+NOTE_SHRUB_HINT,"Un buisson discret, partout dans le canyon."
+NOTE_FLOWERS,Fleurs sauvages
+NOTE_FLOWERS_DESC,Elles colorent les berges au printemps.
+NOTE_FLOWERS_HINT,Cherchez près de l'eau.
+NOTE_BERRIES,Buisson à baies
+NOTE_BERRIES_DESC,Ses baies calment la faim ; elles repoussent.
+NOTE_BERRIES_HINT,"Un buisson nourricier, souvent près de l'eau."
+NOTE_HOODOO,Cheminée de fée
+NOTE_HOODOO_DESC,Colonne de grès sculptée par le vent et la pluie.
+NOTE_HOODOO_HINT,"Une drôle de colonne de roche, sur les mesas."
+NOTE_ARCH,Arche de pierre
+NOTE_ARCH_DESC,L'érosion a creusé la roche jusqu'à la percer.
+NOTE_ARCH_HINT,"Une roche percée, rare et spectaculaire."
+NOTE_BUTTE,Butte témoin
+NOTE_BUTTE_DESC,"Reste d'un ancien plateau, isolé par l'érosion."
+NOTE_BUTTE_HINT,Une grande butte de roche rouge.
+NOTE_RIVER,Rivière du Vieux Gué
+NOTE_RIVER_DESC,Elle serpente d'un lac à l'autre ; on la traverse à gué.
+NOTE_RIVER_HINT,"Au sud du départ, on entend l'eau."
+NOTE_PINEWOOD,Pinède des Geais
+NOTE_PINEWOOD_DESC,"Des collines couvertes de pins, au frais."
+NOTE_PINEWOOD_HINT,"Au nord-ouest, là où les arbres se resserrent."
+NOTE_PLATEAU,Plateau des Mesas Rouges
+NOTE_PLATEAU_DESC,"D'en haut, on voit tout le canyon."
+NOTE_PLATEAU_HINT,"Grimpez sur les mesas, au sud-est."
+NOTE_SOURCE,Lac de la Source
+NOTE_SOURCE_DESC,D'ici naît la rivière.
+NOTE_SOURCE_HINT,Remontez la rivière vers l'ouest.

@@ -38,6 +38,8 @@ const HORIZON_GROUND_Y := 14.0
 ## Transformations de toutes les instances du décor (utile aux tests : le rendu
 ## headless ne relit pas les MultiMesh).
 var prop_placements: Array[Transform3D] = []
+## Positions (x, z) de chaque sorte d'élément du décor : sert au carnet d'observation.
+var kind_positions: Dictionary = {}
 
 ## Découpage du décor en blocs et portées d'affichage (mètres).
 const CHUNK_SIZE := 64.0
@@ -337,6 +339,10 @@ func zone_name_key(zone: String) -> String:
 			return label["name"]
 	return ""
 
+## Positions (x, z) d'une sorte d'élément du décor (pin, cactus, arche...).
+func get_kind_positions(kind: String) -> PackedVector2Array:
+	return kind_positions.get(kind, PackedVector2Array())
+
 func get_zone_labels() -> Array:
 	return ZONE_LABELS
 
@@ -377,6 +383,7 @@ func terrain_height_at(world_x: float, world_z: float) -> float:
 
 func _place_props() -> void:
 	prop_placements.clear()
+	kind_positions.clear()
 	_props_root = Node3D.new()
 	_props_root.name = "Props"
 	add_child(_props_root)
@@ -515,6 +522,11 @@ func _place_multimesh(mesh: Mesh, count: int, is_large_rock: bool,
 			buckets[cell] = []
 		(buckets[cell] as Array).append(transform)
 		prop_placements.append(transform)
+		if kind != "":
+			# Tableau « packé » = valeur : on le relit, on ajoute, on le range.
+			var positions: PackedVector2Array = kind_positions.get(kind, PackedVector2Array())
+			positions.append(Vector2(pos.x, pos.z))
+			kind_positions[kind] = positions
 		if _prop_collision != null and collider_radius > 0.0:
 			var center_y := collider_center_y if collider_center_y > -1.0 else collider_height * 0.5
 			if collider_offsets.is_empty():
