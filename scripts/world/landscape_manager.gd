@@ -26,6 +26,15 @@ var _collision_body: StaticBody3D
 var _props_root: Node3D
 var _prop_collision: StaticBody3D
 var _river: Node3D
+var _horizon: Node3D
+
+# --- Horizon -------------------------------------------------------------------------------
+## Mesas lointaines tout autour de la carte (hors de portée) : elles donnent l'échelle.
+const HORIZON_MESAS := 54
+const HORIZON_RADIUS_MIN := 430.0
+const HORIZON_RADIUS_MAX := 820.0
+## Plaine lointaine sous les mesas, juste sous le sommet des falaises du bord.
+const HORIZON_GROUND_Y := 14.0
 ## Transformations de toutes les instances du décor (utile aux tests : le rendu
 ## headless ne relit pas les MultiMesh).
 var prop_placements: Array[Transform3D] = []
@@ -89,6 +98,7 @@ func _ready() -> void:
 	_generate_terrain()
 	_place_props()
 	_build_river()
+	_build_horizon()
 
 func _process(_delta: float) -> void:
 	# Position du joueur exposée aux shaders (pliure de l'herbe au passage, vent).
@@ -110,9 +120,12 @@ func regenerate(new_seed: int = -1) -> void:
 		_prop_collision.queue_free()
 	if _river:
 		_river.queue_free()
+	if _horizon:
+		_horizon.queue_free()
 	_generate_terrain()
 	_place_props()
 	_build_river()
+	_build_horizon()
 
 func _generate_terrain() -> void:
 	_terrain = MeshInstance3D.new()
@@ -655,3 +668,105 @@ func _build_river() -> void:
 	surface.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_river.add_child(surface)
 	_river.add_child(RiverWater.create(self))
+
+# --- Horizon -------------------------------------------------------------------------------
+
+## Couronne de mesas et de buttes au loin, posées sur une plaine qui prolonge le désert.
+## Un seul maillage (≈ 4 300 triangles), sans ombre ; le brouillard les fond dans le ciel.
+func _build_horizon() -> void:
+	_horizon = Node3D.new()
+	_horizon.name = "Horizon"
+	add_child(_horizon)
+	var horizon_rng := RandomNumberGenerator.new()
+	horizon_rng.seed = seed_value + 4242
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in HORIZON_MESAS:
+		# Angles répartis avec du jeu, pour qu'aucun côté ne soit vide.
+		var angle := TAU * (float(i) + horizon_rng.randf_range(-0.35, 0.35)) / float(HORIZON_MESAS)
+		var radius := horizon_rng.randf_range(HORIZON_RADIUS_MIN, HORIZON_RADIUS_MAX)
+		var centre := Vector2(cos(angle), sin(angle)) * radius
+		var spire := horizon_rng.randf() < 0.22
+		var width := horizon_rng.randf_range(10.0, 22.0) if spire else horizon_rng.randf_range(35.0, 110.0)
+		var height := horizon_rng.randf_range(45.0, 85.0) if spire else horizon_rng.randf_range(22.0, 60.0) * (0.6 + width / 160.0)
+		var tint := horizon_rng.randf_range(-1.0, 1.0)
+		_add_mesa(st, horizon_rng, centre, width, height, angle, tint)
+	_add_horizon_ground(st)
+	st.generate_normals()
+	var mesh := st.commit()
+	var material := ShaderMaterial.new()
+	material.shader = load("res://assets/landscapes/shaders/horizon_mesa.gdshader")
+	mesh.surface_set_material(0, material)
+	var instance := MeshInstance3D.new()
+	instance.name = "Mesas"
+	instance.mesh = mesh
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# Toujours visible : il ne faut jamais voir le bord du monde.
+	instance.extra_cull_margin = 200.0
+	_horizon.add_child(instance)
+
+## Une mesa : contour irrégulier, flancs en deux gradins légèrement rentrants, sommet plat.
+## Couleur de sommet : R = teinte propre (-1 à 1 ramené à 0..1), G = 1 sur le plateau.
+func _add_mesa(st: SurfaceTool, horizon_rng: RandomNumberGenerator, centre: Vector2, width: float,
+		height: float, facing: float, tint: float) -> void:
+	var sides := 11
+	var stretch := horizon_rng.randf_range(1.0, 1.9)
+	var ring: Array[Vector2] = []
+	for k in sides:
+		var a := TAU * float(k) / float(sides)
+		var r := width * 0.5 * horizon_rng.randf_range(0.75, 1.15)
+		# Étirée le long de la couronne : de longues falaises plutôt que des tours.
+		var local := Vector2(cos(a) * r * stretch, sin(a) * r)
+		ring.append(centre + local.rotated(facing + PI * 0.5))
+	var base_y := HORIZON_GROUND_Y - 2.0
+	var ledge_y := HORIZON_GROUND_Y + height * horizon_rng.randf_range(0.35, 0.6)
+	var top_y := HORIZON_GROUND_Y + height
+	var talus := 1.0 + horizon_rng.randf_range(0.18, 0.32)
+	var shrink := horizon_rng.randf_range(0.78, 0.92)
+	var color_side := Color(0.5 + 0.5 * tint, 0.0, 0.0)
+	var color_top := Color(0.5 + 0.5 * tint, 1.0, 0.0)
+	# Pied évasé (éboulis), gradin, falaise sommitale.
+	var levels := [[talus, base_y], [1.0, ledge_y - 2.0], [shrink, ledge_y + 1.0], [shrink * 0.97, top_y]]
+	for l in range(levels.size() - 1):
+		var lo: Array = levels[l]
+		var hi: Array = levels[l + 1]
+		for k in sides:
+			var a0 := centre + (ring[k] - centre) * float(lo[0])
+			var a1 := centre + (ring[(k + 1) % sides] - centre) * float(lo[0])
+			var b0 := centre + (ring[k] - centre) * float(hi[0])
+			var b1 := centre + (ring[(k + 1) % sides] - centre) * float(hi[0])
+			var p0 := Vector3(a0.x, float(lo[1]), a0.y)
+			var p1 := Vector3(a1.x, float(lo[1]), a1.y)
+			var q0 := Vector3(b0.x, float(hi[1]), b0.y)
+			var q1 := Vector3(b1.x, float(hi[1]), b1.y)
+			for v in [p0, q0, p1, p1, q0, q1]:
+				st.set_color(color_side)
+				st.add_vertex(v)
+	var top: Array = levels[levels.size() - 1]
+	var c3 := Vector3(centre.x, float(top[1]), centre.y)
+	for k in sides:
+		var a0 := centre + (ring[k] - centre) * float(top[0])
+		var a1 := centre + (ring[(k + 1) % sides] - centre) * float(top[0])
+		for v in [c3, Vector3(a1.x, float(top[1]), a1.y), Vector3(a0.x, float(top[1]), a0.y)]:
+			st.set_color(color_top)
+			st.add_vertex(v)
+
+## Anneau de plaine entre le bord de la carte et l'horizon (couleur de sommet B = 1).
+func _add_horizon_ground(st: SurfaceTool) -> void:
+	var segments := 64
+	var edge := terrain_size * 0.5 - 6.0
+	var outer := HORIZON_RADIUS_MAX + 400.0
+	var ground := Color(0.5, 0.0, 1.0)
+	for k in segments:
+		var a0 := TAU * float(k) / float(segments)
+		var a1 := TAU * float(k + 1) / float(segments)
+		var d0 := Vector3(cos(a0), 0.0, sin(a0))
+		var d1 := Vector3(cos(a1), 0.0, sin(a1))
+		# Bord intérieur sur le carré de la carte, caché sous les falaises du bord.
+		var i0 := d0 * edge / maxf(absf(d0.x), absf(d0.z))
+		var i1 := d1 * edge / maxf(absf(d1.x), absf(d1.z))
+		var o0 := d0 * outer
+		var o1 := d1 * outer
+		for v in [i0, o0, i1, i1, o0, o1]:
+			st.set_color(ground)
+			st.add_vertex(v + Vector3(0.0, HORIZON_GROUND_Y, 0.0))
