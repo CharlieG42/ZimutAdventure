@@ -19,7 +19,7 @@ func _ready() -> void:
 	max_contacts_reported = 4
 	continuous_cd = true
 	collision_layer = 0
-	collision_mask = 1 | 8  # sol/décor + hurtbox gibier (couche 8)
+	collision_mask = 1
 	# Pas de frottement de l'air : la trajectoire calculée au tir reste exacte.
 	linear_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
 	linear_damp = 0.0
@@ -47,7 +47,8 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 			look_at(global_position + velocity.normalized(), Vector3.UP)
 
 ## Détection de proximité : si la flèche passe à moins de ~1 m du point visé d'un
-## gibier/prédateur, l'impact compte (anti-traversée des cibles rapides).
+## gibier/prédateur, l'impact compte (tirs un peu décalés, cibles rapides qui traversent
+## la trajectoire entre deux pas physiques).
 const PROXIMITY_RADIUS := 1.0
 
 func _proximity_check() -> void:

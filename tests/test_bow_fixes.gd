@@ -1,7 +1,7 @@
 extends SceneTree
 ## Correctifs de retour utilisateur : visée à l'arc (viseur sans déplacer le personnage,
-## bouton Tirer/Viser), gibier réellement tuable (mêlée + hurtbox de flèche),
-## caméra plus réactive.
+## bouton Tirer/Viser), gibier réellement tuable (mêlée + détection de proximité de la
+## flèche), caméra plus réactive.
 
 func _init() -> void:
 	await process_frame
@@ -34,9 +34,17 @@ func _init() -> void:
 		errors.append("en visée, le personnage ne doit pas tourner (yaw %f -> %f)" % [yaw_before, player.rotation.y])
 	if absf(pivot.rotation.y) < 0.1:
 		errors.append("en visée, le pivot caméra doit tourner (viseur), yaw=%f" % pivot.rotation.y)
-	# Hors visée : le personnage tourne et le pivot revient à l'axe.
+	# En visée, la boussole suit le viseur.
+	var expected_heading := fposmod(-rad_to_deg(player.rotation.y + pivot.rotation.y), 360.0)
+	if absf(wrapf(float(player.call("get_heading_degrees")) - expected_heading, -180.0, 180.0)) > 1.0:
+		errors.append("en visée, la boussole indique le cap du viseur")
+	# Fin de visée : le personnage prend le cap visé, la caméra ne revient pas en arrière.
+	var aimed_yaw: float = player.rotation.y + pivot.rotation.y
 	player.call("set_aim_override", false)
 	await create_timer(0.2).timeout
+	if absf(wrapf(player.rotation.y - aimed_yaw, -PI, PI)) > 0.05 or absf(pivot.rotation.y) > 0.01:
+		errors.append("fin de visée : le personnage se tourne vers l'endroit visé (yaw %f, visé %f, pivot %f)" % [player.rotation.y, aimed_yaw, pivot.rotation.y])
+	yaw_before = player.rotation.y
 	player.call("_rotate_look", Vector2(0.8, 0.0))
 	if absf(player.rotation.y - yaw_before) < 0.1:
 		errors.append("hors visée, la souris doit tourner le personnage")
@@ -86,12 +94,6 @@ func _init() -> void:
 	if prey == null:
 		errors.append("aucun animal dans Animals")
 	else:
-		if prey.get_node_or_null("Hurtbox") == null:
-			errors.append("le gibier doit avoir une Hurtbox (couche 8)")
-		else:
-			var hb := prey.get_node("Hurtbox") as Area3D
-			if hb.collision_layer != 8:
-				errors.append("hurtbox sur la mauvaise couche (%d)" % hb.collision_layer)
 		var fwd := -camera.global_transform.basis.z
 		fwd.y = 0.0
 		fwd = fwd.normalized()
@@ -137,7 +139,7 @@ func _init() -> void:
 		for i in 6:
 			await physics_frame
 		if prey.get("_dead") != true:
-			errors.append("proximité : une flèche à 0.8 m du point visé doit tuer (hurtbox/proximity)")
+			errors.append("proximité : une flèche à 0.8 m du point visé doit tuer")
 
 	# --- C. Caméra : réglages réactifs ---
 	if float(player.get("look_smoothing")) < 25.0:
@@ -163,7 +165,13 @@ func _init() -> void:
 			await physics_frame
 		if not bool(player.call("is_aiming")):
 			errors.append("le bouton Viser doit activer la visée (set_aim_override)")
-		aim_button.button_pressed = false
+		# Ranger l'arc relâche le bouton « Viser » (et la visée).
+		aim_button.button_pressed = true
+		inventory.call("unequip")
+		hud.call("_refresh_attack_button")
+		if aim_button.button_pressed or bool(player.get("_aim_override")):
+			errors.append("ranger l'arc doit relâcher le bouton Viser")
+		inventory.call("equip", "tool_hunting_bow")
 		await create_timer(0.1).timeout
 
 	if errors.is_empty():

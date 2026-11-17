@@ -233,8 +233,9 @@ func restore_stamina() -> void:
 	stamina_changed.emit(stamina, _exhausted)
 
 ## Cap en degrés, 0 = Nord (-Z), sens horaire (90 = Est).
+## Cap affiché par la boussole : là où regarde la caméra (en visée, le viseur tourne seul).
 func get_heading_degrees() -> float:
-	return fposmod(-rad_to_deg(rotation.y), 360.0)
+	return fposmod(-rad_to_deg(rotation.y + _pivot_yaw), 360.0)
 
 func try_interact() -> void:
 	var target := InteractionManager.get_current_target()
@@ -647,6 +648,12 @@ func _physics_process(delta: float) -> void:
 	_aiming = bow_equipped and (Input.is_action_pressed("aim") or _drawing or _aim_override)
 	if _aiming != _last_aiming:
 		_last_aiming = _aiming
+		if not _aiming and absf(_pivot_yaw) > 0.0001:
+			# Fin de visée : le personnage se tourne vers l'endroit visé (la caméra ne
+			# revient pas en arrière, on garde le cap choisi au viseur).
+			rotate_y(_pivot_yaw)
+			_facing_yaw = wrapf(_facing_yaw - _pivot_yaw, -PI, PI)
+			_pivot_yaw = 0.0
 		var hud := get_tree().get_first_node_in_group("hud") if get_tree() != null else null
 		if hud != null and hud.has_method("set_aiming"):
 			hud.call("set_aiming", _aiming)
@@ -940,9 +947,9 @@ func _swing(part: String, pivot: Vector3, angle: float) -> void:
 func _update_character(delta: float, horizontal_speed: float) -> void:
 	var moving := horizontal_speed > 0.3
 	# Le personnage se tourne vers sa direction de déplacement (repère du joueur).
-	if _drawing:
-		# Arc bandé : le personnage fait face à ce que l'on vise.
-		_facing_yaw = lerp_angle(_facing_yaw, 0.0, 1.0 - exp(-14.0 * delta))
+	if _drawing or _aiming:
+		# Arc bandé ou en visée : le personnage fait face au viseur (qui peut tourner seul).
+		_facing_yaw = lerp_angle(_facing_yaw, _pivot_yaw, 1.0 - exp(-14.0 * delta))
 	elif moving:
 		var local := transform.basis.inverse() * Vector3(velocity.x, 0.0, velocity.z)
 		_facing_yaw = lerp_angle(_facing_yaw, atan2(-local.x, -local.z), 1.0 - exp(-12.0 * delta))

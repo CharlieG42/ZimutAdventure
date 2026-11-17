@@ -73,26 +73,9 @@ func _ready() -> void:
 		add_to_group("huntable")
 	_build_model()
 	_resize_collision()
-	_build_hurtbox()
 	_start_walk()
 	# Après que les sous-classes ont ajouté leurs détails : fusion des petits maillages.
 	_bake_model.call_deferred()
-
-var _hurtbox: Area3D
-
-## Zone de touche généreuse (couche 8) : les flèches qui passent à côté du corps
-## étroit de l'animal comptent quand même.
-func _build_hurtbox() -> void:
-	var scale_f: float = float(_config.get("scale", 1.0))
-	_hurtbox = AnimalHurtbox.new()
-	_hurtbox.name = "Hurtbox"
-	var shape := CollisionShape3D.new()
-	var sphere := SphereShape3D.new()
-	sphere.radius = 1.0 * scale_f
-	shape.shape = sphere
-	shape.position = Vector3(0.0, 0.55 * scale_f, 0.0)
-	_hurtbox.add_child(shape)
-	add_child(_hurtbox)
 
 func _bake_model() -> void:
 	# Un modèle animé (squelette) ne se fusionne pas.
@@ -227,8 +210,6 @@ func _collapse() -> void:
 	_fleeing = false
 	velocity = Vector3.ZERO
 	collision_layer = 0
-	if _hurtbox != null:
-		_hurtbox.monitoring = false
 	if _model == null or not is_inside_tree():
 		return
 	if DisplayServer.get_name() != "headless" and get_parent() is Node3D:
@@ -267,8 +248,6 @@ func _respawn() -> void:
 		_rig.revive()
 	collision_layer = _base_layer
 	collision_mask = _base_mask
-	if _hurtbox != null:
-		_hurtbox.monitoring = true
 	visible = true
 	set_physics_process(true)
 	add_to_group("huntable")
