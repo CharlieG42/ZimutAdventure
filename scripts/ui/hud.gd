@@ -11,6 +11,7 @@ const BASE_MARGIN := 16
 @onready var action_pad: Control = $Overlay/ActionPad
 @onready var interact_button: Button = $Overlay/ActionPad/InteractButton
 @onready var attack_button: Button = $Overlay/ActionPad/AttackButton
+@onready var aim_button: Button = $Overlay/ActionPad/AimButton
 @onready var jump_button: Button = $Overlay/ActionPad/JumpButton
 @onready var sprint_button: Button = $Overlay/ActionPad/SprintButton
 @onready var journal_button: Button = $SafeArea/VBox/BottomBar/JournalButton
@@ -90,6 +91,8 @@ func _ready() -> void:
 	# Maintenir pour bander l'arc, relâcher pour tirer (la hache frappe dès l'appui).
 	attack_button.button_down.connect(_on_attack_down)
 	attack_button.button_up.connect(_on_attack_up)
+	aim_button.toggled.connect(_on_aim_toggled)
+	aim_button.text = tr("ACTION_AIM")
 	_build_bow_overlay()
 	_build_gauge()
 	jump_button.button_down.connect(_on_jump_pressed)
@@ -408,12 +411,36 @@ func _on_item_removed(_item_id: String, _amount: int) -> void:
 	_refresh_attack_button()
 
 ## Le bouton de tir n'apparaît (tactile) que lorsque l'arc de chasse est ÉQUIPÉ.
+## Le bouton « Viser » n'apparaît que si l'arc est équipé : en visée, déplacer le
+## viseur ne fait plus tourner le personnage.
 func _refresh_attack_button() -> void:
-	if not PlatformInfo.is_touch() or _inventory == null:
+	if _inventory == null:
+		return
+	if aim_button.button_pressed and not _inventory.is_equipped("tool_hunting_bow"):
+		# Arc rangé : la visée s'arrête (sinon elle reprendrait au prochain équipement).
+		aim_button.set_pressed_no_signal(false)
+		_on_aim_toggled(false)
+	if not PlatformInfo.is_touch():
 		return
 	var ready_to_shoot: bool = _inventory.is_equipped("tool_hunting_bow") or _inventory.is_equipped("tool_stone_axe")
 	if attack_button.visible != ready_to_shoot:
 		attack_button.visible = ready_to_shoot
+	var bow: bool = _inventory.is_equipped("tool_hunting_bow")
+	if aim_button.visible != bow:
+		aim_button.visible = bow
+
+	if bow:
+		# Libellé sous l'icône (pas par-dessus).
+		attack_button.text = tr("ACTION_FIRE")
+		attack_button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		attack_button.add_theme_font_size_override("font_size", 15)
+	else:
+		attack_button.text = ""
+		attack_button.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
+
+func _on_aim_toggled(pressed: bool) -> void:
+	if _player != null and _player.has_method("set_aim_override"):
+		_player.call("set_aim_override", pressed)
 
 func _on_attack_down() -> void:
 	if _player != null and _player.has_method("begin_attack"):
@@ -579,7 +606,7 @@ func _fit_clock() -> void:
 ## _fit_to_viewport recalcule ensuite tout explicitement, à n'importe quelle taille.
 func _capture_layout() -> void:
 	var nodes: Array[Control] = [joystick, camera_joystick, action_pad, minimap, vitals, level_badge, quest_tracker, hotbar,
-		sprint_button, jump_button, interact_button, attack_button]
+		sprint_button, jump_button, interact_button, attack_button, aim_button]
 	for node: Control in nodes:
 		var rect := node.get_global_rect()
 		node.layout_mode = 0
@@ -634,6 +661,9 @@ func _fit_to_viewport(vp_override: Vector2 = Vector2.ZERO) -> void:
 			var y := 8.0 + i * 88.0
 			_set_offsets(pad_buttons[i], Vector4(4.0, y, 84.0, y + 80.0))
 		_set_offsets(action_pad, Vector4(vp.x - 96.0, 236.0, vp.x - 16.0, 244.0 + pad_buttons.size() * 88.0))
+		# « Viser » à gauche de « Tirer » (la colonne ne tiendrait pas en hauteur).
+		var fire_y := 8.0 + 3.0 * 88.0
+		_set_offsets(aim_button, Vector4(-84.0, fire_y, -4.0, fire_y + 80.0))
 		# Suivi de quête en haut à gauche (sous la boussole).
 		_set_offsets(quest_tracker, Vector4(16.0, 64.0, vp.x - 16.0, 108.0))
 		# Jauges sous la quête, réduites.
@@ -656,7 +686,7 @@ func _fit_to_viewport(vp_override: Vector2 = Vector2.ZERO) -> void:
 		_set_offsets(camera_joystick, _base_offsets[camera_joystick])
 		# Pad d'actions : boutons restaurés, pad remonté au-dessus du stick caméra.
 		action_pad.scale = Vector2.ONE
-		for b: Control in [sprint_button, jump_button, interact_button, attack_button]:
+		for b: Control in [sprint_button, jump_button, interact_button, attack_button, aim_button]:
 			_set_offsets(b, _base_offsets[b])
 		var pb: Vector4 = _base_offsets[action_pad]
 		var pad_bottom := vp.y - 320.0 - 12.0
