@@ -1,6 +1,7 @@
 class_name VitalsPanel
 extends Control
-## Trois jauges verticales toujours visibles sur le côté de l'écran : faim, soif, énergie.
+## Jauges verticales toujours visibles sur le côté de l'écran : santé, faim, soif, chaleur,
+## énergie.
 ## Chaque jauge a sa couleur, son icône dessinée et son nom, et clignote en rouge
 ## quand elle est presque vide, pour être identifiable d'un coup d'œil.
 
@@ -8,19 +9,20 @@ const GAUGE_WIDTH := 52.0
 const GAUGE_HEIGHT := 150.0
 const GAP := 10.0
 const LOW_LEVEL := 0.2
-const KINDS := ["health", "hunger", "thirst", "energy"]
-const LABELS := {"health": "VITAL_HEALTH", "hunger": "VITAL_HUNGER", "thirst": "VITAL_THIRST", "energy": "VITAL_ENERGY"}
+const KINDS := ["health", "hunger", "thirst", "warmth", "energy"]
+const LABELS := {"health": "VITAL_HEALTH", "hunger": "VITAL_HUNGER", "thirst": "VITAL_THIRST", "warmth": "VITAL_WARMTH", "energy": "VITAL_ENERGY"}
 const COLORS := {
 	"health": Color(0.9, 0.2, 0.28),
 	"hunger": Color(0.96, 0.58, 0.18),
 	"thirst": Color(0.28, 0.66, 1.0),
+	"warmth": Color(0.93, 0.42, 0.72),
 	"energy": Color(0.62, 0.86, 0.26),
 }
 const OUTLINE := Color(0.08, 0.05, 0.03, 0.92)
 const BACK := Color(0.06, 0.04, 0.03, 0.62)
 const ALERT := Color(1.0, 0.25, 0.2)
 
-var values: Dictionary = {"health": 1.0, "hunger": 1.0, "thirst": 1.0, "energy": 1.0}
+var values: Dictionary = {"health": 1.0, "hunger": 1.0, "thirst": 1.0, "warmth": 1.0, "energy": 1.0}
 var _time: float = 0.0
 
 func _ready() -> void:
@@ -100,6 +102,12 @@ func _draw_icon(kind: String, c: Vector2, color: Color) -> void:
 			# Goutte d'eau.
 			draw_colored_polygon(PackedVector2Array([c + Vector2(0, -12), c + Vector2(8, 2), c + Vector2(-8, 2)]), color)
 			draw_circle(c + Vector2(0, 4), 8.0, color)
+		"warmth":
+			# Thermomètre : tube et réservoir.
+			draw_line(c + Vector2(0, -11), c + Vector2(0, 4), color, 6.0)
+			draw_circle(c + Vector2(0, 7), 6.0, color)
+			for k in 3:
+				draw_line(c + Vector2(4, -8 + k * 5), c + Vector2(8, -8 + k * 5), color, 2.0)
 		"energy":
 			# Éclair.
 			draw_colored_polygon(PackedVector2Array([

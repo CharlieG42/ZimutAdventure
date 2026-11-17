@@ -47,6 +47,8 @@ var _survival: Node
 var _camera_joystick_vector: Vector2 = Vector2.ZERO
 var _base_offsets: Dictionary = {}
 var _last_clock_minute: int = -1
+## Température ressentie affichée à côté de l'heure (arrondie au degré).
+var _shown_temperature: int = 9999
 var _last_health: float = 1.0
 var _damage_flash: ColorRect
 var _last_heading: int = -1
@@ -110,6 +112,8 @@ func _ready() -> void:
 		_survival.connect("health_changed", _on_health_changed)
 		_on_health_changed(float(_survival.call("get_health")))
 		_on_needs_changed(float(_survival.call("get_hunger")), float(_survival.call("get_thirst")))
+		if _survival.has_signal("warmth_changed"):
+			_survival.connect("warmth_changed", _on_warmth_changed)
 	if _day_night != null:
 		_day_night.connect("time_changed", _on_time_changed)
 		_day_night.connect("phase_changed", _on_phase_changed)
@@ -470,6 +474,14 @@ func _on_needs_changed(hunger: float, thirst: float) -> void:
 	vitals.call("set_value", "hunger", hunger)
 	vitals.call("set_value", "thirst", thirst)
 
+func _on_warmth_changed(warmth: float, felt: float) -> void:
+	vitals.call("set_value", "warmth", warmth)
+	var rounded := int(roundf(felt))
+	if rounded != _shown_temperature:
+		_shown_temperature = rounded
+		if _day_night != null:
+			_refresh_clock(float(_day_night.get("hour")))
+
 func _on_health_changed(value: float) -> void:
 	vitals.call("set_value", "health", value)
 	# Un coup reçu fait flasher l'écran en rouge.
@@ -521,7 +533,23 @@ func _refresh_clock(hour: float) -> void:
 	var weather := InteractionManager.get_weather()
 	if weather != null and bool(weather.call("effects_active")):
 		calendar = "  ·  %s, %s" % [tr("SEASON_" + String(weather.call("get_season")).to_upper()), tr("WEATHER_" + String(weather.call("get_weather")).to_upper())]
-	clock_label.text = "%02d:%02d  %s%s" % [int(hour) % 24, int(fmod(hour, 1.0) * 60.0), phase_text, calendar]
+	if _shown_temperature != 9999:
+		calendar += "  ·  %d °C" % _shown_temperature
+		# L'heure suffit à dire jour ou nuit : on garde la place pour la température.
+		phase_text = ""
+	clock_label.text = "%02d:%02d%s%s" % [int(hour) % 24, int(fmod(hour, 1.0) * 60.0), "  " + phase_text if phase_text != "" else "", calendar]
+	_fit_clock()
+
+## Réduit la taille du texte de l'horloge s'il déborderait sur le ruban de boussole.
+func _fit_clock() -> void:
+	if compass_strip == null or not is_inside_tree():
+		return
+	var available := get_viewport().get_visible_rect().size.x * 0.5 - compass_strip.size.x * 0.5 - 28.0
+	var font := clock_label.get_theme_font("font")
+	var font_size := 28
+	while font_size > 18 and font.get_string_size(clock_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > available:
+		font_size -= 2
+	clock_label.add_theme_font_size_override("font_size", font_size)
 
 # --- Zone sûre (encoches, coins arrondis) ---------------------------------------
 
@@ -589,7 +617,8 @@ func _fit_to_viewport(vp_override: Vector2 = Vector2.ZERO) -> void:
 		# Jauges sous la quête, réduites.
 		vitals.scale = Vector2(0.5, 0.5)
 		vitals.pivot_offset = Vector2.ZERO
-		_set_offsets(vitals, Vector4(16.0, 116.0, 16.0 + 238.0, 116.0 + 212.0))
+		var vitals_size := VitalsPanel.panel_size()
+		_set_offsets(vitals, Vector4(16.0, 116.0, 16.0 + vitals_size.x, 116.0 + vitals_size.y))
 		# Mini-carte en haut à droite, réduite.
 		_set_offsets(minimap, Vector4(vp.x - 136.0, 116.0, vp.x - 16.0, 236.0))
 		# Hotbar au-dessus du stick de déplacement, à gauche.
