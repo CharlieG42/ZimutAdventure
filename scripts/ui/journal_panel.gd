@@ -109,6 +109,17 @@ func _build_settings(list: VBoxContainer) -> void:
 	volume.value_changed.connect(func(v): settings.call("set_volume", v))
 	list.add_child(volume)
 
+	_add_label(list, tr("SETTING_LOOK"), 20, ACCENT)
+	var look := HSlider.new()
+	look.min_value = float(settings.get("LOOK_SENSITIVITY_MIN"))
+	look.max_value = float(settings.get("LOOK_SENSITIVITY_MAX"))
+	look.step = 0.1
+	look.value = float(settings.get("look_sensitivity"))
+	look.custom_minimum_size = Vector2(0, 44)
+	look.focus_mode = Control.FOCUS_NONE
+	look.value_changed.connect(func(v): settings.call("set_look_sensitivity", v))
+	list.add_child(look)
+
 	_add_label(list, tr("SETTING_QUALITY"), 20, ACCENT)
 	var quality := OptionButton.new()
 	quality.custom_minimum_size = Vector2(0, BUTTON_HEIGHT)

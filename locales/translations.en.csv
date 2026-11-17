@@ -339,6 +339,7 @@ BLESSING_FORTUNE,Fortune (more loot)
 JOURNAL_SETTINGS,Settings
 SETTING_MUSIC,Music
 SETTING_VOLUME,Master volume
+SETTING_LOOK,Camera sensitivity
 SETTING_QUALITY,Graphics quality
 SETTING_QUALITY_AUTO,Automatic
 SETTING_QUALITY_HIGH,High
@@ -469,7 +470,7 @@ NOTE_SOURCE_HINT,Follow the river west.
 TUTO_TITLE,First steps — %d / %d
 TUTO_SKIP,Skip
 TUTO_DONE,"You are ready. Follow the goals at the top of the screen, and enjoy exploring!"
-TUTO_MOVE_TOUCH,Place your left thumb at the bottom left and drag to [b]walk[/b].
+TUTO_MOVE_TOUCH,Place your left thumb anywhere on the left half of the screen and drag to [b]walk[/b].
 TUTO_MOVE_KEYS,[b]Walk[/b] with W A S D (or Z Q S D). Hold Shift to run.
 TUTO_LOOK_TOUCH,Drag your right thumb across the screen to [b]look around[/b].
 TUTO_LOOK_KEYS,Move the mouse to [b]look around[/b].
