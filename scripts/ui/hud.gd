@@ -184,7 +184,8 @@ func _process(delta: float) -> void:
 	if panel_open != _panels_open:
 		_panels_open = panel_open
 		_sync_mouse_mode()
-	minimap.visible = not panel_open
+	var settings := get_tree().root.get_node_or_null("GameSettings")
+	minimap.visible = not panel_open and (settings == null or bool(settings.get("minimap")))
 	vitals.visible = not panel_open
 	if panel_open and interact_button.visible:
 		_on_focus_changed(null)
@@ -205,6 +206,10 @@ func _process(delta: float) -> void:
 		if rounded != _last_heading:
 			_last_heading = rounded
 			compass_label.text = "%s %03d°" % [tr(CompassStrip.cardinal_key(heading)), rounded]
+		# Repère suivi : la boussole en montre le cap.
+		var exploration := InteractionManager.get_exploration()
+		if exploration != null and exploration.has_method("tracked_bearing"):
+			compass_strip.marker_bearing = float(exploration.call("tracked_bearing", (_player as Node3D).global_position))
 	# Grain film animé : petit décalage aléatoire du tile toutes les ~90 ms.
 	_grain_timer += delta
 	if _grain_timer >= 0.09 and fx_grain != null:

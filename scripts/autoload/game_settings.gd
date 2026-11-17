@@ -1,6 +1,6 @@
 extends Node
 ## Réglages du joueur (user://settings.cfg) : musique, volume général, qualité graphique,
-## compteur d'images. Appliqués au démarrage et à chaque changement.
+## compteur d'images, mini-carte. Appliqués au démarrage et à chaque changement.
 
 signal changed
 
@@ -11,6 +11,8 @@ var music: bool = true
 var volume: float = 1.0
 var quality: String = "auto"
 var show_fps: bool = false
+## Mini-carte du HUD. Désactivée = mode explorateur : on s'oriente à la boussole et à la carte.
+var minimap: bool = true
 var _persist: bool = DisplayServer.get_name() != "headless"
 
 func _ready() -> void:
@@ -31,6 +33,10 @@ func set_quality(value: String) -> void:
 
 func set_show_fps(value: bool) -> void:
 	show_fps = value
+	_commit()
+
+func set_minimap(value: bool) -> void:
+	minimap = value
 	_commit()
 
 func _commit() -> void:
@@ -66,6 +72,7 @@ func _load() -> void:
 	if not QUALITIES.has(quality):
 		quality = "auto"
 	show_fps = bool(config.get_value("video", "show_fps", false))
+	minimap = bool(config.get_value("hud", "minimap", true))
 
 func _save() -> void:
 	if not _persist:
@@ -75,4 +82,5 @@ func _save() -> void:
 	config.set_value("audio", "volume", volume)
 	config.set_value("video", "quality", quality)
 	config.set_value("video", "show_fps", show_fps)
+	config.set_value("hud", "minimap", minimap)
 	config.save(SAVE_PATH)

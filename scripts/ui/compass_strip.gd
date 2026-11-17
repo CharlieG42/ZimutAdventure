@@ -24,6 +24,15 @@ var heading: float = 0.0:
 		heading = wrapped
 		queue_redraw()
 
+## Cap du repère suivi (degrés), -1 = aucun : un fanion glisse sur le ruban.
+var marker_bearing: float = -1.0:
+	set(value):
+		if absf(value - marker_bearing) < 0.2:
+			return
+		marker_bearing = value
+		queue_redraw()
+@export var marker_color: Color = Color(1.0, 0.82, 0.2, 1.0)
+
 var _names: Array[String] = []
 var _background: StyleBoxFlat
 
@@ -88,6 +97,25 @@ func _draw() -> void:
 		else:
 			var tick_color := Color(text_color, 0.35 * fade)
 			draw_line(Vector2(x, size.y - 13.0), Vector2(x, size.y - 8.0), tick_color, 1.5)
+
+	# Repère suivi : fanion au bon cap, ou flèche au bord du ruban s'il est hors champ.
+	if marker_bearing >= 0.0:
+		var offset := wrapf(marker_bearing - heading, -180.0, 180.0)
+		var dark := Color(0.08, 0.05, 0.03, 0.95)
+		if absf(offset) <= half_span - 6.0:
+			var mx := offset * pixels_per_degree + mid_x
+			draw_colored_polygon(PackedVector2Array([
+				Vector2(mx, size.y - 3.0), Vector2(mx - 9.0, size.y - 17.0), Vector2(mx + 9.0, size.y - 17.0)]), dark)
+			draw_colored_polygon(PackedVector2Array([
+				Vector2(mx, size.y - 6.0), Vector2(mx - 6.0, size.y - 15.5), Vector2(mx + 6.0, size.y - 15.5)]), marker_color)
+		else:
+			var side := signf(offset)
+			var ex := mid_x + side * (size.x * 0.5 - 12.0)
+			var cy := size.y * 0.5
+			draw_colored_polygon(PackedVector2Array([
+				Vector2(ex + side * 8.0, cy), Vector2(ex - side * 5.0, cy - 9.0), Vector2(ex - side * 5.0, cy + 9.0)]), dark)
+			draw_colored_polygon(PackedVector2Array([
+				Vector2(ex + side * 5.0, cy), Vector2(ex - side * 3.0, cy - 6.0), Vector2(ex - side * 3.0, cy + 6.0)]), marker_color)
 
 	# Repère central (cap actuel).
 	draw_colored_polygon(PackedVector2Array([
