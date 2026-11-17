@@ -339,6 +339,7 @@ BLESSING_FORTUNE,Fortune (plus de butin)
 JOURNAL_SETTINGS,Réglages
 SETTING_MUSIC,Musique
 SETTING_VOLUME,Volume général
+SETTING_LOOK,Sensibilité de la caméra
 SETTING_QUALITY,Qualité graphique
 SETTING_QUALITY_AUTO,Automatique
 SETTING_QUALITY_HIGH,Haute
@@ -469,7 +470,7 @@ NOTE_SOURCE_HINT,Remontez la rivière vers l'ouest.
 TUTO_TITLE,Premiers pas — %d / %d
 TUTO_SKIP,Passer
 TUTO_DONE,"Vous voilà prêt. Suivez les objectifs en haut de l'écran, et bonne exploration !"
-TUTO_MOVE_TOUCH,Posez le pouce gauche en bas à gauche et faites glisser pour [b]marcher[/b].
+TUTO_MOVE_TOUCH,Posez le pouce gauche n'importe où sur la moitié gauche de l'écran et faites glisser pour [b]marcher[/b].
 TUTO_MOVE_KEYS,[b]Marchez[/b] avec Z Q S D (ou W A S D). Maj pour courir.
 TUTO_LOOK_TOUCH,Faites glisser le pouce droit sur l'écran pour [b]regarder autour[/b] de vous.
 TUTO_LOOK_KEYS,Bougez la souris pour [b]regarder autour[/b] de vous.

@@ -192,13 +192,18 @@ func set_joystick_vector(vector: Vector2) -> void:
 	_joystick_vector = vector if vector.length() <= 1.0 else vector.normalized()
 
 func apply_touch_look(delta: Vector2) -> void:
-	_rotate_look(delta * touch_sensitivity * 240.0)
+	_rotate_look(delta * touch_sensitivity * 240.0 * _look_gain())
+
+## Réglage « sensibilité caméra » du joueur (1.0 sans autoload, ex. tests).
+func _look_gain() -> float:
+	var settings := get_node_or_null("/root/GameSettings")
+	return float(settings.get("look_sensitivity")) if settings != null else 1.0
 
 func apply_camera_joystick(vector: Vector2, delta: float) -> void:
 	var shaped := shape_stick(vector, camera_stick_deadzone, camera_stick_curve)
 	# Le mouvement vertical est un peu plus lent : moins de vertige, visée plus fine.
 	shaped.y *= 0.7
-	_rotate_look(shaped * camera_joystick_speed * delta)
+	_rotate_look(shaped * camera_joystick_speed * delta * _look_gain())
 
 func is_first_person() -> bool:
 	return _view_mode == ViewMode.FIRST_PERSON

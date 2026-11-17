@@ -48,6 +48,8 @@ var _inventory: Node
 var _day_night: Node
 var _survival: Node
 var _camera_joystick_vector: Vector2 = Vector2.ZERO
+var _move_fixed: Vector2 = Vector2.ZERO
+var _move_float: Vector2 = Vector2.ZERO
 var _base_offsets: Dictionary = {}
 var _last_clock_minute: int = -1
 ## Température ressentie affichée à côté de l'heure (arrondie au degré).
@@ -154,7 +156,8 @@ func _ready() -> void:
 	_setup_quest_tracker()
 	_setup_tutorial()
 	if _player != null:
-		joystick.moved.connect(_player.set_joystick_vector)
+		joystick.moved.connect(_on_fixed_move)
+		touch_look.move_changed.connect(_on_float_move)
 		touch_look.look_delta.connect(_player.apply_touch_look)
 		camera_joystick.moved.connect(_on_camera_joystick_moved)
 		if _player.has_signal("view_changed"):
@@ -302,6 +305,21 @@ func _on_map_pressed() -> void:
 			journal_panel.close()
 	else:
 		show_toast(tr("TOAST_SOON"))
+
+## Deux sources de déplacement : le stick fixe et le stick flottant (zone gauche).
+## Le plus incliné l'emporte, pour qu'un relâchement de l'un n'annule pas l'autre.
+func _on_fixed_move(vector: Vector2) -> void:
+	_move_fixed = vector
+	_push_move()
+
+func _on_float_move(vector: Vector2) -> void:
+	_move_float = vector
+	_push_move()
+
+func _push_move() -> void:
+	if _player == null:
+		return
+	_player.set_joystick_vector(_move_float if _move_float.length() > _move_fixed.length() else _move_fixed)
 
 func _on_camera_joystick_moved(vector: Vector2) -> void:
 	_camera_joystick_vector = vector
