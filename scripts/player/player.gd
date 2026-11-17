@@ -243,6 +243,11 @@ func get_heading_degrees() -> float:
 	return fposmod(-rad_to_deg(rotation.y + _pivot_yaw), 360.0)
 
 func try_interact() -> void:
+	# Pendant le déplacement d'une construction, « interagir » la repose.
+	var spawner := get_tree().get_first_node_in_group("structure_spawner") if is_inside_tree() else null
+	if spawner != null and bool(spawner.call("is_moving")):
+		spawner.call("confirm_move")
+		return
 	var target := InteractionManager.get_current_target()
 	if target != null and target is Interactable:
 		(target as Interactable).interact(self)

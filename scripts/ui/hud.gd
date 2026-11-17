@@ -34,6 +34,7 @@ const BASE_MARGIN := 16
 @onready var quest_tracker: Label = $Overlay/QuestTracker
 ## Consignes des premières minutes (créées en code, voir TutorialPanel).
 var tutorial_panel: TutorialPanel
+var build_panel: BuildPanel
 @onready var camera_joystick: Control = $CameraJoystick
 @onready var touch_look: Control = $TouchLook
 @onready var fx_grain: TextureRect = $FxLayer/Grain
@@ -155,6 +156,7 @@ func _ready() -> void:
 			minimap.set_context(landscape, _player)
 	_setup_quest_tracker()
 	_setup_tutorial()
+	_setup_build_panel()
 	if _player != null:
 		joystick.moved.connect(_on_fixed_move)
 		touch_look.move_changed.connect(_on_float_move)
@@ -165,6 +167,13 @@ func _ready() -> void:
 		if _player.has_signal("stamina_changed"):
 			_player.connect("stamina_changed", _on_stamina_changed)
 		_on_view_changed(_player.call("is_first_person"))
+
+func _setup_build_panel() -> void:
+	build_panel = BuildPanel.new()
+	build_panel.name = "BuildPanel"
+	build_panel.theme = load("res://assets/ui/hud_theme.tres") as Theme
+	$Overlay.add_child(build_panel)
+	build_panel.set_context(_player)
 
 func _setup_tutorial() -> void:
 	tutorial_panel = TutorialPanel.new()

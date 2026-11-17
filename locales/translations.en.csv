@@ -94,6 +94,13 @@ MAP_HINT,Press M or the Close button
 ACTION_PLACE,Place
 ACTION_REST_BED,Rest on the bed
 ACTION_SLEEP,Sleep
+ACTION_MOVE,Move
+ACTION_ROTATE,Rotate
+ACTION_DROP,Place here
+ACTION_CANCEL,Cancel
+TOAST_MOVED,Structure moved.
+TOAST_MOVE_CANCELLED,Move cancelled.
+TOAST_MOVE_HINT,Walk to choose the spot (green = valid) then place it.
 TOAST_PLACED,Placed: %s
 TOAST_TOO_STEEP,Ground too steep to build here.
 TOAST_CANNOT_PLACE,You can't place that here.

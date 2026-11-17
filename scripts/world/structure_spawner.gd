@@ -5,6 +5,16 @@ extends Node3D
 const SAVE_PATH := "user://structures.cfg"
 const MAX_SLOPE := 1.2
 const MAX_STRUCTURES := 40
+## Constructions que l'on peut déplacer (pas l'enclos ni le potager, qui portent bétail et cultures).
+const MOVABLE_KINDS := ["camp_bed", "wool_bed", "chest", "campfire", "shelter"]
+const MOVE_MIN_SPACING := 1.4
+const MOVE_TINT_OK := Color(0.3, 1.0, 0.4, 0.38)
+const MOVE_TINT_BAD := Color(1.0, 0.25, 0.2, 0.42)
+
+## Une construction est soulevée (true) ou reposée / annulée (false).
+signal move_changed(active: bool)
+## Fin d'un déplacement : clé de message à afficher (TOAST_MOVED, ou l'erreur).
+signal move_finished(ok: bool, message_key: String)
 
 ## id d'objet de l'inventaire -> type de construction.
 const PLACEABLE := {
@@ -22,6 +32,14 @@ var _landscape: Node3D
 # Les tests headless ne lisent ni n'écrivent la sauvegarde du joueur.
 var _autosave: bool = DisplayServer.get_name() != "headless"
 var _records: Array = []
+# Déplacement en cours
+var _moving: Node3D
+var _move_record: Dictionary = {}
+var _move_from: Dictionary = {}
+var _move_yaw: float = 0.0
+var _move_valid: bool = false
+var _move_layers: Array = []
+var _move_meshes: Array = []
 
 func _ready() -> void:
 	add_to_group("structure_spawner")
@@ -38,19 +56,10 @@ func place(item_id: String, origin: Vector3, yaw: float) -> String:
 		return "TOAST_CANNOT_PLACE"
 	if get_child_count() >= MAX_STRUCTURES:
 		return "TOAST_TOO_MANY"
+	var site_error := _site_error(PLACEABLE[item_id], origin)
+	if site_error != "":
+		return site_error
 	var ground := _ground_height(origin.x, origin.z)
-	if ground < -50.0:
-		return "TOAST_CANNOT_PLACE"
-	if _landscape != null and _landscape.has_method("is_water") and bool(_landscape.call("is_water", origin.x, origin.z, 2.5)):
-		return "TOAST_CANNOT_PLACE"
-	for offset in [Vector2(1.5, 0), Vector2(-1.5, 0), Vector2(0, 1.5), Vector2(0, -1.5)]:
-		var h := _ground_height(origin.x + offset.x, origin.z + offset.y)
-		if absf(h - ground) > MAX_SLOPE:
-			return "TOAST_TOO_STEEP"
-	if PLACEABLE[item_id] == "pen":
-		for offset in [Vector2(4.5, 4.5), Vector2(-4.5, 4.5), Vector2(4.5, -4.5), Vector2(-4.5, -4.5)]:
-			if absf(_ground_height(origin.x + offset.x, origin.z + offset.y) - ground) > MAX_SLOPE * 1.6:
-				return "TOAST_TOO_STEEP"
 	var position := Vector3(origin.x, ground, origin.z)
 	var node := _spawn(PLACEABLE[item_id], position, yaw)
 	_records.append({"item": item_id, "pos": position, "yaw": yaw, "node": node})
@@ -63,6 +72,152 @@ func place(item_id: String, origin: Vector3, yaw: float) -> String:
 	if node is Pen:
 		(node as Pen).gather_nearby()
 	return ""
+
+## Le terrain permet-il d'installer `kind` en `origin` ? "" si oui, sinon la clé de l'erreur.
+func _site_error(kind: String, origin: Vector3) -> String:
+	var ground := _ground_height(origin.x, origin.z)
+	if ground < -50.0:
+		return "TOAST_CANNOT_PLACE"
+	if _landscape != null and _landscape.has_method("is_water") and bool(_landscape.call("is_water", origin.x, origin.z, 2.5)):
+		return "TOAST_CANNOT_PLACE"
+	for offset in [Vector2(1.5, 0), Vector2(-1.5, 0), Vector2(0, 1.5), Vector2(0, -1.5)]:
+		var h := _ground_height(origin.x + offset.x, origin.z + offset.y)
+		if absf(h - ground) > MAX_SLOPE:
+			return "TOAST_TOO_STEEP"
+	if kind == "pen":
+		for offset in [Vector2(4.5, 4.5), Vector2(-4.5, 4.5), Vector2(4.5, -4.5), Vector2(-4.5, -4.5)]:
+			if absf(_ground_height(origin.x + offset.x, origin.z + offset.y) - ground) > MAX_SLOPE * 1.6:
+				return "TOAST_TOO_STEEP"
+	return ""
+
+# --- Déplacement ----------------------------------------------------------------------
+
+## La construction déplaçable qui correspond à `target` (cible d'interaction), ou null.
+func movable_for(target: Node) -> Node3D:
+	if _moving != null or target == null:
+		return null
+	for record in _records:
+		var node := record.get("node") as Node3D
+		if node == null or not is_instance_valid(node):
+			continue
+		if node != target and not node.is_ancestor_of(target):
+			continue
+		if MOVABLE_KINDS.has(PLACEABLE.get(String(record["item"]), "")):
+			return node
+	return null
+
+func is_moving() -> bool:
+	return _moving != null
+
+func is_move_valid() -> bool:
+	return _moving != null and _move_valid
+
+## Soulève la construction : elle devient un fantôme sans collision que l'on repose ailleurs.
+func begin_move(node: Node3D) -> bool:
+	if _moving != null or node == null:
+		return false
+	for record in _records:
+		if record.get("node") == node:
+			_move_record = record
+	if _move_record.is_empty():
+		return false
+	_moving = node
+	_move_from = {"pos": node.position, "yaw": node.rotation.y}
+	_move_yaw = node.rotation.y
+	_move_layers.clear()
+	_move_meshes.clear()
+	_collect_for_ghost(node)
+	for entry in _move_layers:
+		(entry[0] as CollisionObject3D).collision_layer = 0
+	move_changed.emit(true)
+	_tint_ghost(true)
+	return true
+
+func _collect_for_ghost(node: Node) -> void:
+	if node is CollisionObject3D:
+		_move_layers.append([node, (node as CollisionObject3D).collision_layer])
+	if node is MeshInstance3D:
+		_move_meshes.append(node)
+	for child in node.get_children():
+		_collect_for_ghost(child)
+
+## Place le fantôme sous `origin` (le sol suit le relief) et met à jour sa validité.
+func update_move(origin: Vector3, player_position: Vector3 = Vector3.INF) -> void:
+	if _moving == null:
+		return
+	var ground := _ground_height(origin.x, origin.z)
+	_moving.position = Vector3(origin.x, ground, origin.z)
+	_moving.rotation.y = _move_yaw
+	var kind: String = PLACEABLE.get(String(_move_record["item"]), "")
+	var valid := _site_error(kind, origin) == ""
+	if valid:
+		for record in _records:
+			var other := record.get("node") as Node3D
+			if other == null or other == _moving or not is_instance_valid(other):
+				continue
+			if other.global_position.distance_to(_moving.global_position) < MOVE_MIN_SPACING:
+				valid = false
+				break
+	if valid and player_position != Vector3.INF:
+		var flat := Vector2(origin.x - player_position.x, origin.z - player_position.z)
+		valid = flat.length() > 1.8
+	if valid != _move_valid:
+		_move_valid = valid
+		_tint_ghost(false)
+
+func rotate_move(step_degrees: float = 45.0) -> void:
+	if _moving == null:
+		return
+	_move_yaw = wrapf(_move_yaw + deg_to_rad(step_degrees), -PI, PI)
+	_moving.rotation.y = _move_yaw
+
+## Repose la construction. Renvoie "" si réussi, sinon la clé de l'erreur (elle reste soulevée).
+func confirm_move() -> String:
+	if _moving == null:
+		return ""
+	if not _move_valid:
+		move_finished.emit(false, "TOAST_CANNOT_PLACE")
+		return "TOAST_CANNOT_PLACE"
+	_move_record["pos"] = _moving.position
+	_move_record["yaw"] = _move_yaw
+	_end_move()
+	_save()
+	move_finished.emit(true, "TOAST_MOVED")
+	return ""
+
+## Remet la construction à son emplacement d'origine.
+func cancel_move() -> void:
+	if _moving == null:
+		return
+	_moving.position = _move_from["pos"]
+	_moving.rotation.y = _move_from["yaw"]
+	_end_move()
+	move_finished.emit(true, "TOAST_MOVE_CANCELLED")
+
+func _end_move() -> void:
+	for entry in _move_layers:
+		if is_instance_valid(entry[0]):
+			(entry[0] as CollisionObject3D).collision_layer = int(entry[1])
+	for mesh in _move_meshes:
+		if is_instance_valid(mesh):
+			(mesh as MeshInstance3D).material_overlay = null
+	_moving = null
+	_move_record = {}
+	_move_valid = false
+	_move_layers.clear()
+	_move_meshes.clear()
+	move_changed.emit(false)
+
+func _tint_ghost(reset_validity: bool) -> void:
+	if reset_validity:
+		_move_valid = false
+	var material := StandardMaterial3D.new()
+	material.albedo_color = MOVE_TINT_OK if _move_valid else MOVE_TINT_BAD
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	for mesh in _move_meshes:
+		if is_instance_valid(mesh):
+			(mesh as MeshInstance3D).material_overlay = material
 
 func _spawn(kind: String, position: Vector3, yaw: float) -> Node3D:
 	var structure: Node3D
