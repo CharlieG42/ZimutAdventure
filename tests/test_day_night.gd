@@ -36,8 +36,27 @@ func _init() -> void:
 		errors.append("at 23h phase should be night, got %s" % cycle.get_phase())
 	# La nuit reste lisible (lueur lunaire) mais nettement plus sombre que le jour.
 	var night_light := env.ambient_light_energy * env.ambient_light_color.get_luminance()
-	if night_light > 0.4 or night_light < 0.1:
+	if night_light > 0.5 or night_light < 0.1:
 		errors.append("at night ambient light should be dim but visible, got %.2f" % night_light)
+
+	# Lune : lumière bleutée qui éclaire la nuit et s'éteint le jour.
+	await process_frame
+	var moon := root.get_node_or_null("Moon") as DirectionalLight3D
+	if moon == null:
+		errors.append("la lune est créée avec le soleil")
+	else:
+		if not moon.visible or moon.light_energy < 0.5 or moon.light_color.b <= moon.light_color.r:
+			errors.append("la nuit, la lune éclaire en bleu")
+		cycle.set_hour(12.0)
+		if moon.visible:
+			errors.append("la lune est éteinte en plein jour")
+		cycle.set_hour(23.0)
+
+	# Soleil bas : lumière dorée (plus rouge que bleue), plus chaude qu'à midi.
+	cycle.set_hour(17.0)
+	if sun.light_color.r - sun.light_color.b < 0.35:
+		errors.append("soleil bas : lumière dorée attendue, got %s" % str(sun.light_color))
+	cycle.set_hour(23.0)
 
 	cycle.set_hour(18.0)
 	if cycle.get_phase() != "dusk":
