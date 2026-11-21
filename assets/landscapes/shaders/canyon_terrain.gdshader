@@ -33,17 +33,20 @@ uniform float ledge_dust : hint_range(0.0, 1.0) = 0.45;
 uniform float grain_detail : hint_range(0.0, 1.0) = 0.5;
 
 // Détail du sol proche (fondu avec la distance : pas de scintillement au loin).
-uniform float ground_detail : hint_range(0.0, 1.0) = 0.85;
+uniform float ground_detail : hint_range(0.0, 1.0) = 0.4;
 uniform float detail_fade_start = 35.0;
 uniform float detail_fade_end = 110.0;
-uniform float bump_strength : hint_range(0.0, 1.0) = 0.35;
+// Variation par facette (voir fragment) : valeur, teinte chaude/froide, taille de cellule (m).
+uniform float facet_contrast : hint_range(0.0, 0.5) = 0.3;
+uniform float facet_tint : hint_range(0.0, 1.0) = 0.5;
+uniform float facet_cell_inv = 0.5;
+uniform float bump_strength : hint_range(0.0, 1.0) = 0.1;
 
 // Réglés par Weather : couverture de neige et sol détrempé (0 à 1).
 global uniform float snow_amount;
 global uniform float wetness;
 
 varying vec3 v_world_pos;
-varying float v_slope;
 varying float v_height;
 varying vec4 v_zone;
 
@@ -78,12 +81,16 @@ float bump_height(vec2 p) {
 
 void vertex() {
 	v_world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
-	v_slope = 1.0 - abs(dot(NORMAL, vec3(0.0, 1.0, 0.0)));
 	v_height = v_world_pos.y;
 	v_zone = COLOR * zone_tint;
 }
 
 void fragment() {
+	// Style « low-poly » : chaque triangle du relief a sa propre normale (ombrage facetté),
+	// et c'est cette pente par facette qui décide du roc, de la poussière et des strates.
+	NORMAL = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));
+	vec3 face_world = normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
+	float v_slope = 1.0 - abs(face_world.y);
 	vec2 w = v_world_pos.xz;
 	vec2 uv_world = w * 0.5;
 	float view_dist = length(VERTEX);
@@ -112,7 +119,7 @@ void fragment() {
 	float ripple = noise_b(vec2(w.x * 0.9 + w.y * 0.25, w.y * 6.0));
 	dust *= 1.0 + (ripple - 0.5) * 0.12 * near;
 	// Cailloux épars.
-	dust = mix(dust, pebble_dark.rgb, smoothstep(0.76, 0.9, pebble_cell) * 0.6 * near);
+	dust = mix(dust, pebble_dark.rgb, smoothstep(0.76, 0.9, pebble_cell) * 0.3 * near);
 
 	// --- Falaises : strates sédimentaires (calculées seulement sur les pentes) ---
 	float rock_factor = smoothstep(0.1, 0.45, v_slope * (0.5 + slope_rock_blend));
@@ -132,6 +139,22 @@ void fragment() {
 		rock = mix(rock, strata_accent.rgb, vein * 0.6);
 		albedo = mix(dust, rock, rock_factor);
 	}
+
+	// Facettes : chaque triangle (cellules de 2 m, deux triangles par cellule) reçoit une
+	// légère variation de valeur et de teinte, pour que le relief lise « low-poly » même
+	// sur le plat. S'estompe au loin (facettes sous le pixel : scintillement).
+	vec2 cell = v_world_pos.xz * facet_cell_inv;
+	vec2 cell_id = floor(cell);
+	vec2 cell_f = fract(cell);
+	float tri = step(1.0, cell_f.x + cell_f.y);
+	// Hasard de facette : un texel de la texture de bruit (deux bruits indépendants R et B).
+	ivec2 facet_id = (ivec2(cell_id) + ivec2(int(tri) * 37, int(tri) * 61)) & ivec2(255);
+	vec4 facet_rand = texelFetch(noise_tex, facet_id, 0);
+	float h1 = facet_rand.r;
+	float h2 = facet_rand.b;
+	float facet_fade = 1.0 - smoothstep(70.0, 260.0, view_dist);
+	albedo *= 1.0 + (h1 - 0.5) * facet_contrast * facet_fade;
+	albedo = mix(albedo, albedo * vec3(1.07, 0.98, 0.9), (h2 - 0.5) * facet_tint * facet_fade + 0.0);
 
 	// Poussière accumulée sur les replats et sommets (faces vers le haut).
 	float flatness = 1.0 - clamp(v_slope * 2.0, 0.0, 1.0);

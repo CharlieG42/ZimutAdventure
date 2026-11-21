@@ -21,6 +21,8 @@ var weather_dim: float = 0.0
 var weather_fog: float = 0.0
 var season_tint: Color = Color.WHITE
 var sun: DirectionalLight3D
+## Lune : lumière froide et bleutée qui éclaire la nuit (sans ombres, pour rester légère).
+var moon: DirectionalLight3D
 var environment: Environment
 
 var _phase: String = PHASE_DAY
@@ -35,7 +37,22 @@ func bind_world(sun_light: DirectionalLight3D, env: Environment) -> void:
 		sun.add_to_group("sun")  # lu par le flare solaire (scripts/vfx/sun_flare.gd)
 	environment = env
 	_base_sun_rotation = sun.rotation
+	_ensure_moon()
 	_apply()
+
+func _ensure_moon() -> void:
+	if moon != null and is_instance_valid(moon):
+		return
+	if sun == null or sun.get_parent() == null:
+		return
+	moon = DirectionalLight3D.new()
+	moon.name = "Moon"
+	moon.shadow_enabled = false
+	moon.light_color = Color(0.45, 0.62, 1.0)
+	moon.light_energy = 0.0
+	moon.visible = false
+	moon.rotation_degrees = Vector3(-42.0, 205.0, 0.0)
+	sun.get_parent().add_child.call_deferred(moon)
 
 func _process(delta: float) -> void:
 	if not enabled:
@@ -67,17 +84,21 @@ func _apply() -> void:
 	sun.rotation.x = _base_sun_rotation.x + (hour - 12.0) / 24.0 * TAU
 	sun.visible = day_factor > 0.02
 	var cloud := 1.0 - 0.55 * weather_dim
-	sun.light_energy = lerp(0.0, 1.55, day_factor) * cloud
-	sun.light_color = (Color(0.55, 0.50, 0.60).lerp(Color(1.0, 0.90, 0.75), day_factor) * season_tint).clamp()
+	# Soleil bas = lumière dorée, plus orangée et plus rasante ; midi = blanc chaud.
+	var low_sun := 1.0 - smoothstep(0.12, 0.7, day_factor)
+	sun.light_energy = lerp(0.0, 1.55, pow(day_factor, 0.55)) * cloud
+	sun.light_color = (Color(1.0, 0.93, 0.80).lerp(Color(1.0, 0.64, 0.36), low_sun * 0.85) * season_tint).clamp()
+	if moon != null and is_instance_valid(moon):
+		moon.light_energy = lerp(1.1, 0.0, smoothstep(0.0, 0.25, day_factor)) * (1.0 - 0.5 * weather_dim)
+		moon.visible = moon.light_energy > 0.01
 	if environment != null:
 		var sky: Sky = environment.sky
 		if sky != null and sky.sky_material is ProceduralSkyMaterial:
 			var sky_mat: ProceduralSkyMaterial = sky.sky_material
-			sky_mat.sky_top_color = Color(0.06, 0.09, 0.22).lerp(Color(0.2, 0.45, 0.86), day_factor)
+			sky_mat.sky_top_color = Color(0.09, 0.09, 0.27).lerp(Color(0.2, 0.45, 0.86), day_factor)
 			# Horizon : plus orangé quand le soleil est bas (aube, crépuscule).
-			var low_sun := 1.0 - smoothstep(0.15, 0.7, day_factor)
 			var horizon_day := Color(0.98, 0.80, 0.58).lerp(Color(1.0, 0.5, 0.24), low_sun)
-			sky_mat.sky_horizon_color = Color(0.04, 0.05, 0.10).lerp(horizon_day, smoothstep(0.0, 0.3, day_factor))
+			sky_mat.sky_horizon_color = Color(0.20, 0.12, 0.30).lerp(horizon_day, smoothstep(0.0, 0.3, day_factor))
 			sky_mat.ground_bottom_color = Color(0.02, 0.02, 0.05).lerp(Color(0.35, 0.22, 0.14), day_factor)
 			sky_mat.ground_horizon_color = sky_mat.sky_horizon_color.lerp(Color(0.6, 0.4, 0.25), 0.35)
 			var night_factor := 1.0 - day_factor
@@ -85,15 +106,18 @@ func _apply() -> void:
 			sky_mat.sky_energy_multiplier = lerp(0.3, 1.0, day_factor) * (1.0 - 0.35 * weather_dim)
 			sky_mat.ground_energy_multiplier = lerp(0.2, 1.0, day_factor)
 		if environment.background_mode == Environment.BG_SKY:
-			environment.ambient_light_color = Color(0.38, 0.48, 0.75).lerp(Color(0.75, 0.65, 0.55), day_factor)
-			environment.ambient_light_energy = lerp(0.6, 0.6, day_factor) * (1.0 - 0.2 * weather_dim)
+			# Ombres froides (violet-bleu) sous une lumière chaude : le contraste de la direction artistique.
+			var ambient_day := Color(0.60, 0.56, 0.82).lerp(Color(0.50, 0.42, 0.88), low_sun)
+			environment.ambient_light_color = Color(0.36, 0.46, 0.80).lerp(ambient_day, smoothstep(0.0, 0.3, day_factor))
+			environment.ambient_light_energy = lerp(0.95, 0.65, day_factor) * (1.0 - 0.2 * weather_dim)
 			var nf := 1.0 - day_factor
-			environment.fog_light_color = (Color(0.08, 0.09, 0.14).lerp(Color(0.86, 0.66, 0.5), day_factor) * season_tint).clamp()
+			var fog_day := Color(0.86, 0.66, 0.5).lerp(Color(1.0, 0.5, 0.3), low_sun * 0.75)
+			environment.fog_light_color = (Color(0.12, 0.10, 0.26).lerp(fog_day, day_factor) * season_tint).clamp()
 			environment.fog_light_color = environment.fog_light_color.lerp(Color(0.62, 0.66, 0.72) * lerp(0.25, 1.0, day_factor), weather_fog * 0.6)
-			environment.fog_light_energy = lerp(0.15, 0.6, day_factor)
-			environment.fog_density = lerp(0.0009, 0.0018, day_factor) + weather_fog * 0.004
+			environment.fog_light_energy = lerp(0.25, 0.65, day_factor)
+			environment.fog_density = lerp(0.0012, 0.0024, day_factor) + weather_fog * 0.004
 			environment.glow_enabled = true
-			environment.glow_intensity = lerp(0.4, 0.8, day_factor)
+			environment.glow_intensity = lerp(0.6, 0.9, day_factor)
 			environment.glow_bloom = lerp(0.05, 0.15, day_factor)
 	_update_phase()
 
