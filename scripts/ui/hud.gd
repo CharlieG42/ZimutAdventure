@@ -36,6 +36,7 @@ const BASE_MARGIN := 16
 var tutorial_panel: TutorialPanel
 var build_panel: BuildPanel
 var whistle_button: Button
+var character_creator: CharacterCreator
 var _whistle_check: float = 0.0
 @onready var camera_joystick: Control = $CameraJoystick
 @onready var touch_look: Control = $TouchLook
@@ -160,6 +161,7 @@ func _ready() -> void:
 	_setup_tutorial()
 	_setup_build_panel()
 	_setup_whistle_button()
+	_setup_character_creator()
 	if _player != null:
 		joystick.moved.connect(_on_fixed_move)
 		touch_look.move_changed.connect(_on_float_move)
@@ -196,6 +198,25 @@ func _refresh_whistle_button() -> void:
 				break
 	if whistle_button.visible != available:
 		whistle_button.visible = available
+
+## Écran de personnalisation du personnage (premier lancement, puis journal > réglages).
+func _setup_character_creator() -> void:
+	character_creator = CharacterCreator.new()
+	character_creator.name = "CharacterCreator"
+	character_creator.theme = load("res://assets/ui/hud_theme.tres") as Theme
+	character_creator.confirmed.connect(_on_character_confirmed)
+	add_child(character_creator)
+	# Premier lancement : le joueur crée son personnage avant de jouer (jamais en test sans écran).
+	if _player != null and not CharacterProfile.exists() and DisplayServer.get_name() != "headless":
+		character_creator.open.call_deferred(CharacterProfile.load_saved(), true)
+
+func open_character_creator() -> void:
+	if character_creator != null:
+		character_creator.open(CharacterProfile.load_saved(), false)
+
+func _on_character_confirmed(profile: CharacterProfile) -> void:
+	if _player != null and _player.has_method("apply_character_profile"):
+		_player.call("apply_character_profile", profile)
 
 func _setup_build_panel() -> void:
 	build_panel = BuildPanel.new()
@@ -254,7 +275,8 @@ func _process(delta: float) -> void:
 		_whistle_check = 0.5
 		_refresh_whistle_button()
 	# La mini-carte s'efface quand un panneau plein écran est ouvert.
-	var panel_open := (map_panel != null and map_panel.visible) or (journal_panel != null and journal_panel.visible)
+	var panel_open := (map_panel != null and map_panel.visible) or (journal_panel != null and journal_panel.visible) \
+			or (character_creator != null and character_creator.visible)
 	if panel_open != _panels_open:
 		_panels_open = panel_open
 		_sync_mouse_mode()
