@@ -8,6 +8,8 @@ extends HBoxContainer
 ## Distance du fantôme devant le joueur.
 const HOLD_DISTANCE := 3.6
 const BUTTON_SIZE := Vector2(150.0, 72.0)
+## Dégagement sous le panneau : on laisse la barre du bas (Journal, 1P/3P) libre.
+const BOTTOM_CLEARANCE := 112.0
 
 var _spawner: Node
 var _player: Node3D
@@ -22,7 +24,6 @@ var _cancel: Button
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_theme_constant_override("separation", 14)
-	set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 24)
 	grow_horizontal = Control.GROW_DIRECTION_BOTH
 	grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_grab = _make_button("ACTION_MOVE", _on_grab)
@@ -34,7 +35,24 @@ func _ready() -> void:
 	_drop = _make_button("ACTION_DROP", _on_drop)
 	_cancel = _make_button("ACTION_CANCEL", func(): _spawner_call("cancel_move"))
 	_refresh()
+	fit(get_viewport().get_visible_rect().size)
+	get_viewport().size_changed.connect(func(): fit(get_viewport().get_visible_rect().size))
 	InteractionManager.focus_changed.connect(_on_focus_changed)
+
+## Place le panneau au centre, AU-DESSUS de la barre du bas ; boutons réduits sur petit écran.
+func fit(vp: Vector2) -> void:
+	var compact := vp.x < 900.0
+	var size := Vector2(110.0, 64.0) if compact else BUTTON_SIZE
+	var font := 20 if compact else 24
+	add_theme_constant_override("separation", 8 if compact else 14)
+	for b: Button in [_grab, _rotate, _drop, _cancel]:
+		b.custom_minimum_size = size
+		b.add_theme_font_size_override("font_size", font)
+	_upgrade.custom_minimum_size = Vector2(240.0 if compact else 300.0, size.y)
+	_upgrade.add_theme_font_size_override("font_size", 16 if compact else 20)
+	# Écran étroit (portrait) : au-dessus aussi du stick et de la hotbar.
+	var clearance := 330.0 if vp.x < 700.0 else BOTTOM_CLEARANCE
+	set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, int(clearance))
 
 func set_context(player: Node3D) -> void:
 	_player = player

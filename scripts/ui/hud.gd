@@ -462,8 +462,10 @@ func _refresh_attack_button() -> void:
 		attack_button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 		attack_button.add_theme_font_size_override("font_size", 15)
 	else:
-		attack_button.text = ""
-		attack_button.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
+		# Hache : libellé « Frapper » pour ne pas confondre avec le bouton Action.
+		attack_button.text = tr("ACTION_STRIKE")
+		attack_button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		attack_button.add_theme_font_size_override("font_size", 15)
 
 func _on_aim_toggled(pressed: bool) -> void:
 	if _player != null and _player.has_method("set_aim_override"):
@@ -725,6 +727,8 @@ func _fit_to_viewport(vp_override: Vector2 = Vector2.ZERO) -> void:
 		_set_offsets(quest_tracker, _base_offsets[quest_tracker])
 		level_badge.visible = true
 	_layout_tutorial(vp)
+	if build_panel != null:
+		build_panel.fit(vp)
 
 func _set_offsets(c: Control, v: Vector4) -> void:
 	c.offset_left = v.x
