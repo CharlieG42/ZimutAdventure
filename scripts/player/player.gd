@@ -412,7 +412,27 @@ func try_melee() -> bool:
 		if sfx != null and sfx.has_method("play_event"):
 			sfx.call("play_event", "hit", -4.0, randf_range(0.9, 1.1))
 		return true
+	# Pas de gibier à portée : le coup de hache abat l'arbre visé (même effet que « Action »).
+	var tree := _choppable_in_reach(forward)
+	if tree != null:
+		tree.call("interact", self)
+		return true
 	return false
+
+## Arbre (ou autre objet « choppable ») à portée et devant le joueur.
+func _choppable_in_reach(forward: Vector3) -> Node3D:
+	var best: Node3D = null
+	var best_distance := MELEE_RANGE + 1.2
+	for node in get_tree().get_nodes_in_group("choppable"):
+		if not is_instance_valid(node) or not node.has_method("can_interact") or not node.call("can_interact"):
+			continue
+		var offset: Vector3 = node.global_position - global_position
+		offset.y = 0.0
+		var distance := offset.length()
+		if distance < best_distance and (distance < 1.6 or forward.dot(offset / maxf(distance, 0.001)) > 0.3):
+			best = node
+			best_distance = distance
+	return best
 
 func _swing_arm() -> void:
 	_attack_anim = ATTACK_ANIM_TIME

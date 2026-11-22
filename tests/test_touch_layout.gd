@@ -116,6 +116,22 @@ func _init() -> void:
 	hud._fit_to_viewport()
 	await process_frame
 
+	# Panneau de déplacement : ne doit pas recouvrir Journal / 1P-3P.
+	var panel: Control = hud.get("build_panel")
+	if panel == null:
+		errors.append("build_panel absent")
+	else:
+		panel.visible = true
+		for child in panel.get_children():
+			(child as Control).visible = true
+		await process_frame
+		await process_frame
+		var pr := panel.get_global_rect()
+		for bn in ["JournalButton", "ViewButton"]:
+			var bb: Control = hud.find_child(bn, true, false)
+			if bb != null and bb.is_visible_in_tree() and pr.intersects(bb.get_global_rect()):
+				errors.append("BuildPanel chevauche %s : %s ∩ %s" % [bn, str(pr), str(bb.get_global_rect())])
+
 	if errors.is_empty():
 		print("TEST_TOUCH_LAYOUT: PASS (look idx=%d, move joy idx=%d, cam joy idx=%d, sizes %s/%s)" % [look_idx, joy_idx, cam_idx, joystick.size, camera_joystick.size])
 		quit(0)

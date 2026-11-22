@@ -6,6 +6,9 @@ extends Control
 
 signal pressed
 
+const PRESS_DEBOUNCE_MSEC := 350
+var _last_press_msec: int = -10000
+
 ## Taille par défaut ; le HUD peut la réduire sur les petits écrans (anchors).
 const SIZE_PX := 170.0
 ## Rayon du monde affiché (mètres) : les repères proches restent lisibles.
@@ -36,6 +39,12 @@ func _gui_input(event: InputEvent) -> void:
 		is_press = event.pressed
 	if is_press:
 		accept_event()
+		# Sur téléphone, un même appui arrive deux fois (toucher + souris émulée) : le
+		# 2ᵉ « appui » refermait aussitôt la carte. On ignore les appuis rapprochés.
+		var now := Time.get_ticks_msec()
+		if now - _last_press_msec < PRESS_DEBOUNCE_MSEC:
+			return
+		_last_press_msec = now
 		pressed.emit()
 
 func set_context(landscape: Node3D, player: Node3D) -> void:
