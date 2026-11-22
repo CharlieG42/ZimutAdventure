@@ -938,10 +938,17 @@ func _setup_hero() -> void:
 	_held_axe = visuals.get_node_or_null("Torso/ArmR/HeldAxe") as Node3D
 	var hero := Node3D.new()
 	hero.name = "Hero"
-	# Personnage low-poly (homme / femme, personnalisable) ; le modèle Mixamo reste en secours.
-	hero.set_script(load("res://scripts/player/lowpoly_hero.gd"))
-	hero.set("profile", CharacterProfile.load_saved())
-	if use_legacy_hero or not hero.call("load_model"):
+	# Personnage GLB modulaire (V5), sinon personnage procédural, sinon modèle Mixamo.
+	var profile := CharacterProfile.load_saved()
+	var loaded := false
+	if not use_legacy_hero:
+		for script_path in ["res://scripts/player/glb_hero.gd", "res://scripts/player/lowpoly_hero.gd"]:
+			hero.set_script(load(script_path))
+			hero.set("profile", profile)
+			if bool(hero.call("load_model")):
+				loaded = true
+				break
+	if not loaded:
 		hero.set_script(load("res://scripts/player/hero_model.gd"))
 		if not hero.call("load_model"):
 			hero.free()
