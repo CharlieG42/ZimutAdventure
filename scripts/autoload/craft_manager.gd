@@ -12,6 +12,12 @@ const RECIPES := {
 		"ingredients": {"item_stone": 2, "item_wood": 1},
 		"level": 1,
 	},
+	"tool_knife": {
+		"name": "CRAFT_KNIFE",
+		"category": "tools",
+		"ingredients": {"item_stone": 2, "item_wood": 1},
+		"level": 1,
+	},
 	"tool_sickle": {
 		"name": "CRAFT_SICKLE",
 		"category": "tools",

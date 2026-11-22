@@ -497,3 +497,12 @@ TUTO_MAP_TOUCH,Tap the [b]minimap[/b] at the top right to open the map. Tap a sp
 TUTO_MAP_KEYS,Open the [b]map[/b] with M. Click a spot to place a marker there.
 TUTO_COMPASS,"The [b]compass[/b] at the top shows your heading. For your first quest, gather stones, then follow bearing 180° (due south) to the river."
 SETTING_TUTORIAL,Replay the tutorial
+HINT_TOOL_KNIFE,Knife equipped: butcher a carcass to get more meat.
+CRAFT_KNIFE,Knife
+ITEM_TOOL_KNIFE,knife
+ACTION_FENCE,Palisade
+TOAST_FENCE_HINT,Tap "Move" to reposition this palisade.
+ACTION_WHISTLE,Whistle
+TOAST_WHISTLE,You whistle: your horse is coming!
+TOAST_WHISTLE_NONE,No tamed horse to call.
+TOAST_WHISTLE_FAR,Your horse is too far away to hear you.

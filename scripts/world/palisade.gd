@@ -52,3 +52,19 @@ func _ready() -> void:
 	shape.shape = box
 	body.add_child(shape)
 	add_child(body)
+	_add_handle()
+
+## Zone de visée (couche 4) : permet de viser le tronçon pour le déplacer (bouton « Déplacer »).
+func _add_handle() -> void:
+	var handle := Area3D.new()
+	handle.set_script(load("res://scripts/world/palisade_handle.gd"))
+	handle.name = "Handle"
+	handle.collision_layer = 4
+	handle.collision_mask = 0
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(LENGTH + 0.4, HEIGHT, 1.2)
+	shape.shape = box
+	shape.position = Vector3(0.0, HEIGHT * 0.5, 0.0)
+	handle.add_child(shape)
+	add_child(handle)

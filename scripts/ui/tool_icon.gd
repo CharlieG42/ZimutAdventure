@@ -17,6 +17,11 @@ func _draw() -> void:
 			var head := PackedVector2Array([c + Vector2(4, -26) * u, c + Vector2(24, -8) * u, c + Vector2(14, -2) * u, c + Vector2(-2, -14) * u])
 			draw_colored_polygon(_grow(head, c, 1.15), DARK)
 			draw_colored_polygon(head, METAL)
+		"tool_knife":
+			_line(c + Vector2(-20, 22) * u, c + Vector2(-6, 6) * u, WOOD, 7.0 * u)
+			var blade_k := PackedVector2Array([c + Vector2(-6, 8) * u, c + Vector2(-2, 0) * u, c + Vector2(22, -24) * u, c + Vector2(8, 2) * u])
+			draw_colored_polygon(_grow(blade_k, c, 1.15), DARK)
+			draw_colored_polygon(blade_k, METAL)
 		"tool_sickle":
 			_line(c + Vector2(-18, 22) * u, c + Vector2(-4, 4) * u, WOOD, 6.0 * u)
 			draw_arc(c + Vector2(4, -4) * u, 20.0 * u, deg_to_rad(110.0), deg_to_rad(330.0), 20, DARK, 9.0 * u, true)

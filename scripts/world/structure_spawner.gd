@@ -6,7 +6,7 @@ const SAVE_PATH := "user://structures.cfg"
 const MAX_SLOPE := 1.2
 const MAX_STRUCTURES := 40
 ## Constructions que l'on peut déplacer (pas l'enclos ni le potager, qui portent bétail et cultures).
-const MOVABLE_KINDS := ["camp_bed", "wool_bed", "chest", "campfire", "shelter"]
+const MOVABLE_KINDS := ["camp_bed", "wool_bed", "chest", "campfire", "shelter", "palisade"]
 const MOVE_MIN_SPACING := 1.4
 const MOVE_TINT_OK := Color(0.3, 1.0, 0.4, 0.38)
 const MOVE_TINT_BAD := Color(1.0, 0.25, 0.2, 0.42)

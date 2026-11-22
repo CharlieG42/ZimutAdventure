@@ -69,6 +69,11 @@ var trust: int = 0
 var spawn_key: String = ""
 var following: bool = true
 var mounted: bool = false
+## Appelé au sifflet : le cheval galope vers le joueur, puis reprend sa vie normale.
+var summoned: bool = false
+var _summon_left: float = 0.0
+const SUMMON_SECONDS := 40.0
+const SUMMON_MAX_DISTANCE := 120.0
 var ready_at: float = 0.0
 
 var _interaction: Area3D
@@ -446,6 +451,16 @@ func _update_behavior(delta: float) -> void:
 	if species == "dog" and tamed and following and _player != null and is_instance_valid(_player):
 		_follow_player(delta)
 		return
+	if summoned and tamed and not mounted and _player != null and is_instance_valid(_player):
+		_summon_left -= delta
+		var gap := _player.global_position - global_position
+		gap.y = 0.0
+		if gap.length() <= 3.2 or _summon_left <= 0.0:
+			summoned = false
+			_center = global_position
+		else:
+			_follow_player(delta)
+			return
 	if not tamed and (_curious or _eat_left > 0.0) and _scare_direction() == Vector3.ZERO and _player != null and is_instance_valid(_player):
 		_wait_for_player(delta)
 		return
@@ -467,7 +482,7 @@ func _follow_player(delta: float) -> void:
 	var to_player := _player.global_position - global_position
 	to_player.y = 0.0
 	var distance := to_player.length()
-	if distance > 45.0:
+	if distance > 45.0 and species != "horse":
 		global_position = _player.global_position + Vector3(2.0, 1.0, 2.0)
 		return
 	var wanted := Vector3.ZERO
@@ -659,3 +674,18 @@ func _build_chicken() -> void:
 		_add_mesh(hip, _cylinder(0.014, 0.018, 0.3), orange, Vector3(0.0, -0.15, 0.0), Vector3.ZERO)
 		_add_mesh(hip, _sphere(0.04), orange, Vector3(0.0, -0.3, 0.04), Vector3.ZERO, Vector3(1.0, 0.4, 1.6))
 		_legs.append(hip)
+
+## Sifflet du joueur : un cheval apprivoisé (et non monté) accourt. Renvoie vrai s'il entend.
+func call_to_player(player: Node3D) -> bool:
+	if species != "horse" or not tamed or mounted or player == null:
+		return false
+	var gap := player.global_position - global_position
+	gap.y = 0.0
+	if gap.length() > SUMMON_MAX_DISTANCE:
+		return false
+	_player = player
+	summoned = true
+	_summon_left = SUMMON_SECONDS
+	_stuck_time = 0.0
+	_voice()
+	return true
