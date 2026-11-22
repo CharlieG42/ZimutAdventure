@@ -11,7 +11,7 @@ signal health_changed(health: float)
 signal died
 signal warmth_changed(warmth: float, felt_temperature: float)
 
-const SAVE_PATH := "user://survival.cfg"
+const SAVE_NAME := "survival.cfg"
 ## Plein -> vide, en minutes réelles de jeu.
 const HUNGER_EMPTY_MINUTES := 30.0
 const THIRST_EMPTY_MINUTES := 20.0
@@ -72,6 +72,11 @@ func _ready() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if player != null and player.has_signal("stamina_changed"):
 		_connect_player(player)
+	_reemit()
+	health_changed.emit(_health)
+
+func reload_from_disk() -> void:
+	_load()
 	_reemit()
 	health_changed.emit(_health)
 
@@ -292,7 +297,7 @@ func _on_stamina(_value: float, _exhausted: bool) -> void:
 
 func _load() -> void:
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(SaveSlots.file(SAVE_NAME)) != OK:
 		return
 	_hunger = clampf(float(config.get_value("needs", "hunger", 1.0)), 0.0, 1.0)
 	_thirst = clampf(float(config.get_value("needs", "thirst", 1.0)), 0.0, 1.0)
@@ -309,7 +314,7 @@ func _save() -> void:
 	config.set_value("needs", "health", _health)
 	config.set_value("needs", "warmth", _warmth)
 	config.set_value("hints", "cold", _cold_hint_shown)
-	config.save(SAVE_PATH)
+	config.save(SaveSlots.file(SAVE_NAME))
 
 ## API de test : repart de zéro, sans écrire sur le disque.
 func clear_for_test() -> void:

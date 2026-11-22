@@ -522,7 +522,7 @@ CHAR_TUNIC,Tunique
 CHAR_PANTS,Pantalon
 CHAR_START,Commencer l'aventure
 CHAR_DONE,Valider
-SETTING_APPEARANCE,Modifier l'apparence
+SETTING_APPEARANCE,Modifier mon personnage (nom, apparence)
 CAT_CLOTHES,Vêtements
 CRAFT_STRAW_HAT,Chapeau de paille
 CRAFT_HIDE_BOOTS,Bottes de peau
@@ -538,3 +538,17 @@ CHAR_BEARD_STUBBLE,Mal rasé
 CHAR_BEARD_SHORT,Courte
 CHAR_BEARD_FULL,Fournie
 CHAR_EYES,Couleur des yeux
+MENU_TITLE,ZimutAdventure
+MENU_SUBTITLE,Aventure et exploration en monde ouvert
+MENU_SLOT,Partie %d
+MENU_EMPTY,Emplacement libre
+MENU_NEW,Nouvelle partie
+MENU_PLAY,Jouer
+MENU_DELETE,Supprimer
+MENU_CANCEL,Annuler
+MENU_BACK,Retour
+MENU_LAST_PLAYED,Dernière partie : %s
+MENU_DELETE_CONFIRM,Supprimer définitivement la partie de %s ? Cette action est irréversible.
+CHAR_NAME,Nom
+CHAR_NAME_HINT,Nom de votre personnage
+CHAR_DEFAULT_NAME,Aventurier

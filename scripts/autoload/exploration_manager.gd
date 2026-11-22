@@ -9,7 +9,7 @@ signal blessing_gained(count: int)
 signal markers_changed
 signal landmark_reached(landmark_id: String)
 
-const SAVE_PATH := "user://exploration.cfg"
+const SAVE_NAME := "exploration.cfg"
 const GRID := 32
 const REVEAL_RADIUS := 42.0
 const DISCOVER_DISTANCE := 14.0
@@ -52,6 +52,10 @@ var _reached: Array = []
 
 func _ready() -> void:
 	_cells.resize(GRID * GRID)
+	_load()
+
+func reload_from_disk() -> void:
+	_cells.fill(0)
 	_load()
 
 # --- Brouillard ----------------------------------------------------------------------------
@@ -356,7 +360,7 @@ func _load() -> void:
 	if not _autosave:
 		return
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(SaveSlots.file(SAVE_NAME)) != OK:
 		return
 	var saved: PackedByteArray = config.get_value("fog", "cells", PackedByteArray())
 	if saved.size() == GRID * GRID:
@@ -402,7 +406,7 @@ func _save() -> void:
 	config.set_value("markers", "list", _markers)
 	config.set_value("markers", "tracked", _tracked)
 	config.set_value("landmarks", "reached", _reached)
-	config.save(SAVE_PATH)
+	config.save(SaveSlots.file(SAVE_NAME))
 	_dirty = false
 
 ## API de test : repart de zéro, sans disque ni brouillard dévoilé.
