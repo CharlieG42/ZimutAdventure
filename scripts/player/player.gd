@@ -151,6 +151,8 @@ var _rest: Dictionary = {}
 var _hero: Node3D
 var _held_bow: Node3D
 var _held_axe: Node3D
+## Pour les tests : garde l'ancien personnage Mixamo à la place du personnage low-poly.
+var use_legacy_hero: bool = false
 
 # Placement de l'arc et de la hache dans la main du personnage rigué.
 # L'os de la main pointe vers les doigts (vers le bas, bras ballant) : demi-tour autour
@@ -936,10 +938,21 @@ func _setup_hero() -> void:
 	_held_axe = visuals.get_node_or_null("Torso/ArmR/HeldAxe") as Node3D
 	var hero := Node3D.new()
 	hero.name = "Hero"
-	hero.set_script(load("res://scripts/player/hero_model.gd"))
-	if not hero.call("load_model"):
-		hero.free()
-		return
+	# Personnage low-poly (homme / femme, personnalisable) ; le modèle Mixamo reste en secours.
+	hero.set_script(load("res://scripts/player/lowpoly_hero.gd"))
+	hero.set("profile", CharacterProfile.load_saved())
+	if use_legacy_hero or not hero.call("load_model"):
+		hero.set_script(load("res://scripts/player/hero_model.gd"))
+		if not hero.call("load_model"):
+			hero.free()
+			return
+	if hero.has_method("owns_tools"):
+		# Le personnage low-poly porte ses propres outils : les anciens accessoires restent cachés.
+		for old_tool: Node3D in [_held_bow, _held_axe]:
+			if old_tool != null:
+				old_tool.visible = false
+		_held_bow = null
+		_held_axe = null
 	_hide_rigid_body(visuals)
 	visuals.add_child(hero)
 	_hero = hero
@@ -961,6 +974,11 @@ func _update_hero(delta: float, horizontal_speed: float, moving: bool) -> void:
 	_hero.call("set_vertical_speed", velocity.y)
 	_hero.call("update_motion", horizontal_speed, moving, is_on_floor())
 	_hero.call("advance_poses", delta)
+	if _hero.has_method("owns_tools"):
+		_update_hero_gear()
+		if _attack_anim > 0.0:
+			_attack_anim = maxf(0.0, _attack_anim - delta)
+		return
 	var hand: Transform3D = _hero.call("hand_transform")
 	if _held_bow != null:
 		var bow_transform := hand * held_bow_offset
@@ -975,6 +993,23 @@ func _update_hero(delta: float, horizontal_speed: float, moving: bool) -> void:
 		_held_axe.global_transform = hand * held_axe_offset
 	if _attack_anim > 0.0:
 		_attack_anim = maxf(0.0, _attack_anim - delta)
+
+## Outil tenu et vêtements portés, d'après le sac (le personnage low-poly les dessine lui-même).
+func _update_hero_gear() -> void:
+	var inventory := InteractionManager.get_inventory()
+	if inventory == null:
+		return
+	_hero.call("set_held_tool", String(inventory.call("get_equipped")))
+	var worn: Array = []
+	for id in _hero.get("GEAR_IDS"):
+		if bool(inventory.call("has_item", id, 1)):
+			worn.append(id)
+	_hero.call("set_gear", worn)
+
+## Applique une nouvelle apparence (écran de personnalisation).
+func apply_character_profile(profile: CharacterProfile) -> void:
+	if _hero != null and _hero.has_method("set_profile"):
+		_hero.call("set_profile", profile)
 
 func _cache_rest_pose() -> void:
 	for part in ["LegL", "LegR", "Torso/ArmL", "Torso/ArmR"]:

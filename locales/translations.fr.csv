@@ -506,3 +506,27 @@ ACTION_WHISTLE,Siffler
 TOAST_WHISTLE,Vous sifflez : le cheval arrive !
 TOAST_WHISTLE_NONE,Aucun cheval apprivoisé à appeler.
 TOAST_WHISTLE_FAR,Votre cheval est trop loin pour vous entendre.
+CHAR_TITLE,Votre personnage
+CHAR_GENDER,Genre
+CHAR_MALE,Homme
+CHAR_FEMALE,Femme
+CHAR_SKIN,Teint
+CHAR_HAIR_STYLE,Coiffure
+CHAR_HAIR_SHORT,Courts
+CHAR_HAIR_LONG,Longs
+CHAR_HAIR_PONYTAIL,Queue de cheval
+CHAR_HAIR_BUN,Chignon
+CHAR_HAIR_BALD,Chauve
+CHAR_HAIR_COLOR,Couleur des cheveux
+CHAR_TUNIC,Tunique
+CHAR_PANTS,Pantalon
+CHAR_START,Commencer l'aventure
+CHAR_DONE,Valider
+SETTING_APPEARANCE,Modifier l'apparence
+CAT_CLOTHES,Vêtements
+CRAFT_STRAW_HAT,Chapeau de paille
+CRAFT_HIDE_BOOTS,Bottes de peau
+CRAFT_BACKPACK,Sac à dos
+ITEM_GEAR_STRAW_HAT,chapeau de paille
+ITEM_GEAR_HIDE_BOOTS,bottes de peau
+ITEM_GEAR_BACKPACK,sac à dos

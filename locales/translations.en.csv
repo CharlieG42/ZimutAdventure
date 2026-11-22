@@ -506,3 +506,27 @@ ACTION_WHISTLE,Whistle
 TOAST_WHISTLE,You whistle: your horse is coming!
 TOAST_WHISTLE_NONE,No tamed horse to call.
 TOAST_WHISTLE_FAR,Your horse is too far away to hear you.
+CHAR_TITLE,Your character
+CHAR_GENDER,Gender
+CHAR_MALE,Man
+CHAR_FEMALE,Woman
+CHAR_SKIN,Skin tone
+CHAR_HAIR_STYLE,Hairstyle
+CHAR_HAIR_SHORT,Short
+CHAR_HAIR_LONG,Long
+CHAR_HAIR_PONYTAIL,Ponytail
+CHAR_HAIR_BUN,Bun
+CHAR_HAIR_BALD,Bald
+CHAR_HAIR_COLOR,Hair colour
+CHAR_TUNIC,Tunic
+CHAR_PANTS,Trousers
+CHAR_START,Start the adventure
+CHAR_DONE,Done
+SETTING_APPEARANCE,Change appearance
+CAT_CLOTHES,Clothing
+CRAFT_STRAW_HAT,Straw hat
+CRAFT_HIDE_BOOTS,Hide boots
+CRAFT_BACKPACK,Backpack
+ITEM_GEAR_STRAW_HAT,straw hat
+ITEM_GEAR_HIDE_BOOTS,hide boots
+ITEM_GEAR_BACKPACK,backpack

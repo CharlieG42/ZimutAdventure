@@ -5,7 +5,7 @@ extends Interactable
 
 signal changed(chest)
 
-const NEVER_STORED := ["arrow", "armor_fur_cloak"]
+const NEVER_STORED := ["arrow", "armor_fur_cloak", "gear_straw_hat", "gear_hide_boots", "gear_backpack"]
 const SOLID_LAYER := 1
 
 var stock: Dictionary = {}

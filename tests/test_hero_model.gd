@@ -12,6 +12,7 @@ func _init() -> void:
 	await process_frame
 	var player_scene := load("res://scenes/player/player.tscn") as PackedScene
 	var player := player_scene.instantiate() as CharacterBody3D
+	player.set("use_legacy_hero", true)
 	root.add_child(player)
 	await process_frame
 

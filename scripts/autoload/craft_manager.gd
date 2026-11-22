@@ -50,7 +50,7 @@ const RECIPES := {
 	},
 	"armor_fur_cloak": {
 		"name": "CRAFT_FUR_CLOAK",
-		"category": "weapons",
+		"category": "clothes",
 		"ingredients": {"item_pelt": 3, "item_wool": 1},
 		"level": 3,
 	},
@@ -60,6 +60,24 @@ const RECIPES := {
 		"ingredients": {"item_wood": 1, "item_stone": 1},
 		"batch": 4,
 		"level": 2,
+	},
+	"gear_straw_hat": {
+		"name": "CRAFT_STRAW_HAT",
+		"category": "clothes",
+		"ingredients": {"item_wheat": 4},
+		"level": 2,
+	},
+	"gear_hide_boots": {
+		"name": "CRAFT_HIDE_BOOTS",
+		"category": "clothes",
+		"ingredients": {"item_pelt": 2, "item_wool": 1},
+		"level": 3,
+	},
+	"gear_backpack": {
+		"name": "CRAFT_BACKPACK",
+		"category": "clothes",
+		"ingredients": {"item_pelt": 2, "item_wood": 2},
+		"level": 3,
 	},
 	"furniture_camp_bed": {
 		"name": "CRAFT_CAMP_BED",
@@ -112,7 +130,7 @@ const RECIPES := {
 }
 
 ## Catégories affichées dans le menu de fabrication.
-const CATEGORIES := ["tools", "weapons", "furniture", "buildings"]
+const CATEGORIES := ["tools", "weapons", "clothes", "furniture", "buildings"]
 
 func get_recipe_name(recipe_id: String) -> String:
 	if RECIPES.has(recipe_id):

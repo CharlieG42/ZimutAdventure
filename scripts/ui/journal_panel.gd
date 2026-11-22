@@ -120,6 +120,18 @@ func _build_settings(list: VBoxContainer) -> void:
 	look.value_changed.connect(func(v): settings.call("set_look_sensitivity", v))
 	list.add_child(look)
 
+	var appearance := Button.new()
+	appearance.text = tr("SETTING_APPEARANCE")
+	appearance.custom_minimum_size = Vector2(0, BUTTON_HEIGHT)
+	appearance.focus_mode = Control.FOCUS_NONE
+	appearance.add_theme_font_size_override("font_size", 20)
+	appearance.pressed.connect(func():
+		var hud := get_tree().get_first_node_in_group("hud")
+		if hud != null and hud.has_method("open_character_creator"):
+			close()
+			hud.call("open_character_creator"))
+	list.add_child(appearance)
+
 	_add_label(list, tr("SETTING_QUALITY"), 20, ACCENT)
 	var quality := OptionButton.new()
 	quality.custom_minimum_size = Vector2(0, BUTTON_HEIGHT)

@@ -21,12 +21,21 @@ func _init() -> void:
 	# Outil tenu en main : l'arc équipé est visible dans la main droite.
 	for i in 5:
 		await physics_frame
-	var bow_node := player.visuals.get_node_or_null("Torso/ArmR/HeldBow") as Node3D
-	var axe_node := player.visuals.get_node_or_null("Torso/ArmR/HeldAxe") as Node3D
-	if bow_node == null or not bow_node.visible:
-		errors.append("l'arc équipé devrait être visible en main")
-	if axe_node != null and axe_node.visible:
-		errors.append("la hache ne devrait pas être visible quand l'arc est équipé")
+	player.set("_view_mode", player.ViewMode.THIRD_PERSON)
+	for i in 3:
+		await physics_frame
+	var hero := player.get("_hero") as Node3D
+	if hero == null or String(hero.get("held_tool")) != "tool_hunting_bow":
+		errors.append("l'arc équipé devrait être tenu en main par le personnage")
+	inventory.call("add_item", "tool_stone_axe", 1)
+	inventory.call("equip", "tool_stone_axe")
+	for i in 5:
+		await physics_frame
+	if hero != null and String(hero.get("held_tool")) != "tool_stone_axe":
+		errors.append("la hache équipée devrait remplacer l'arc en main")
+	inventory.call("equip", "tool_hunting_bow")
+	for i in 5:
+		await physics_frame
 
 	# Visée maintenue (clic droit) : flag + FOV réduit.
 	Input.action_press("aim")
