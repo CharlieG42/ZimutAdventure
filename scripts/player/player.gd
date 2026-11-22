@@ -434,6 +434,22 @@ func _choppable_in_reach(forward: Vector3) -> Node3D:
 			best_distance = distance
 	return best
 
+## Siffler : appelle le cheval apprivoisé le plus proche. Renvoie vrai si un cheval répond.
+func whistle() -> bool:
+	var horses: Array = []
+	for node in get_tree().get_nodes_in_group("domestic"):
+		if is_instance_valid(node) and node.get("species") == "horse" and bool(node.get("tamed")) and not bool(node.get("mounted")):
+			horses.append(node)
+	if horses.is_empty():
+		_hud_toast(tr("TOAST_WHISTLE_NONE"))
+		return false
+	horses.sort_custom(func(a, b): return a.global_position.distance_to(global_position) < b.global_position.distance_to(global_position))
+	if bool(horses[0].call("call_to_player", self)):
+		_hud_toast(tr("TOAST_WHISTLE"))
+		return true
+	_hud_toast(tr("TOAST_WHISTLE_FAR"))
+	return false
+
 func _swing_arm() -> void:
 	_attack_anim = ATTACK_ANIM_TIME
 	if _hero != null:

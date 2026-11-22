@@ -42,8 +42,12 @@ func harvest() -> bool:
 	enabled = false
 	var inventory := InteractionManager.get_inventory()
 	var parts: Array[String] = []
+	# Couteau équipé : dépeçage plus soigné, un morceau de viande de plus.
+	var with_knife: bool = inventory != null and bool(inventory.call("is_equipped", "tool_knife"))
 	for item_id in loot:
 		var amount: int = int(loot[item_id])
+		if with_knife and item_id == "item_raw_meat" and amount > 0:
+			amount += 1
 		if amount <= 0:
 			continue
 		if inventory != null:

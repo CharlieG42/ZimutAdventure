@@ -61,7 +61,7 @@ func _init() -> void:
 		"item_fish", "item_fish_big", "item_grilled_fish", "item_grilled_fish_big", "item_seeds", "item_grain_seeds",
 		"item_raw_meat", "item_cooked_meat", "item_bread", "item_soup", "item_milk", "item_pelt", "item_relic",
 		"item_vegetables", "item_roast_vegetables", "item_wool",
-		"tool_stone_axe", "tool_sickle", "tool_hoe", "tool_watering_can", "tool_hunting_bow", "tool_fishing_rod"]
+		"tool_stone_axe", "tool_sickle", "tool_hoe", "tool_watering_can", "tool_hunting_bow", "tool_fishing_rod", "tool_knife"]
 	for id in expected:
 		var t: Texture2D = load("res://assets/ui/icons/items/%s.png" % id)
 		if t == null:

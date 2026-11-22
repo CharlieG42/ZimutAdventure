@@ -497,3 +497,12 @@ TUTO_MAP_TOUCH,Touchez la [b]mini-carte[/b] en haut à droite pour ouvrir la car
 TUTO_MAP_KEYS,Ouvrez la [b]carte[/b] avec M. Cliquez un endroit pour y poser un repère.
 TUTO_COMPASS,"La [b]boussole[/b] en haut indique votre cap. Pour votre première quête, cherchez des pierres, puis suivez le cap 180° (plein sud) jusqu'à la rivière."
 SETTING_TUTORIAL,Revoir le tutoriel
+HINT_TOOL_KNIFE,Couteau équipé : dépecez une proie pour récupérer plus de viande.
+CRAFT_KNIFE,Couteau
+ITEM_TOOL_KNIFE,couteau
+ACTION_FENCE,Palissade
+TOAST_FENCE_HINT,Touchez « Déplacer » pour repositionner cette palissade.
+ACTION_WHISTLE,Siffler
+TOAST_WHISTLE,Vous sifflez : le cheval arrive !
+TOAST_WHISTLE_NONE,Aucun cheval apprivoisé à appeler.
+TOAST_WHISTLE_FAR,Votre cheval est trop loin pour vous entendre.

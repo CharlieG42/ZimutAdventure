@@ -35,6 +35,8 @@ const BASE_MARGIN := 16
 ## Consignes des premières minutes (créées en code, voir TutorialPanel).
 var tutorial_panel: TutorialPanel
 var build_panel: BuildPanel
+var whistle_button: Button
+var _whistle_check: float = 0.0
 @onready var camera_joystick: Control = $CameraJoystick
 @onready var touch_look: Control = $TouchLook
 @onready var fx_grain: TextureRect = $FxLayer/Grain
@@ -157,6 +159,7 @@ func _ready() -> void:
 	_setup_quest_tracker()
 	_setup_tutorial()
 	_setup_build_panel()
+	_setup_whistle_button()
 	if _player != null:
 		joystick.moved.connect(_on_fixed_move)
 		touch_look.move_changed.connect(_on_float_move)
@@ -167,6 +170,32 @@ func _ready() -> void:
 		if _player.has_signal("stamina_changed"):
 			_player.connect("stamina_changed", _on_stamina_changed)
 		_on_view_changed(_player.call("is_first_person"))
+
+## Bouton « Siffler » (barre du bas) : visible seulement si un cheval apprivoisé existe.
+func _setup_whistle_button() -> void:
+	whistle_button = Button.new()
+	whistle_button.name = "WhistleButton"
+	whistle_button.text = tr("ACTION_WHISTLE")
+	whistle_button.custom_minimum_size = Vector2(0.0, 56.0)
+	whistle_button.focus_mode = Control.FOCUS_NONE
+	whistle_button.visible = false
+	whistle_button.pressed.connect(_on_whistle_pressed)
+	view_button.get_parent().add_child(whistle_button)
+
+func _on_whistle_pressed() -> void:
+	if _player != null and _player.has_method("whistle"):
+		_player.call("whistle")
+
+func _refresh_whistle_button() -> void:
+	var available := false
+	for node in get_tree().get_nodes_in_group("domestic"):
+		if is_instance_valid(node) and node.get("species") == "horse" and bool(node.get("tamed")):
+			available = true
+			if bool(node.get("mounted")):
+				available = false
+				break
+	if whistle_button.visible != available:
+		whistle_button.visible = available
 
 func _setup_build_panel() -> void:
 	build_panel = BuildPanel.new()
@@ -220,6 +249,10 @@ func _update_quest_tracker() -> void:
 
 func _process(delta: float) -> void:
 	_hide_stale_prompt()
+	_whistle_check -= delta
+	if _whistle_check <= 0.0:
+		_whistle_check = 0.5
+		_refresh_whistle_button()
 	# La mini-carte s'efface quand un panneau plein écran est ouvert.
 	var panel_open := (map_panel != null and map_panel.visible) or (journal_panel != null and journal_panel.visible)
 	if panel_open != _panels_open:
@@ -263,6 +296,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if minimap != null and minimap.visible and minimap.get_global_rect().has_point(event.position):
 			_on_map_pressed()
+			get_viewport().set_input_as_handled()
+			return
+	if event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).physical_keycode == KEY_H:
+		if whistle_button != null and whistle_button.visible:
+			_on_whistle_pressed()
 			get_viewport().set_input_as_handled()
 			return
 	if event is InputEventKey and event.pressed and not event.echo:
