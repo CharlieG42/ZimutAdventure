@@ -22,6 +22,11 @@ var _head: Node3D
 var _arm := {}   # "l"/"r" -> {"shoulder", "elbow", "hand"}
 var _leg := {}   # "l"/"r" -> {"hip", "knee"}
 var _held: Node3D
+var _skirt: Node3D
+var _eyelids: Array = []
+var _sway: Array = []
+var _blink_left: float = 0.0
+var _next_blink: float = 2.5
 var _hip_height: float = 0.9
 var _materials := {}
 
@@ -132,10 +137,14 @@ func rebuild() -> void:
 	_arm.clear()
 	_leg.clear()
 	_held = null
+	_skirt = null
+	_eyelids.clear()
+	_sway.clear()
 	var d := _dims()
 	var female := profile.gender == "female"
 	var skin := profile.skin_color()
 	var tunic := profile.tunic_color()
+	var trim := tunic.lightened(0.35)
 	var pants := profile.pants_color()
 	var leather := Color(0.32, 0.21, 0.12)
 	_hip_height = float(d["leg"])
@@ -145,99 +154,204 @@ func rebuild() -> void:
 	_hips = Node3D.new()
 	_hips.position = Vector3(0.0, _hip_height, 0.0)
 	_rig.add_child(_hips)
-	# Bassin.
-	_part(_hips, _box(Vector3(float(d["hip"]) * 2.0 + 0.05, 0.17, 0.25)), pants, Vector3(0, -0.02, 0))
-	# Jupe (femme) ou pan de tunique (homme).
+	var hip_w: float = d["hip"]
+	# Bassin (la hanche de la femme est plus large).
+	_part(_hips, _box(Vector3(hip_w * 2.0 + (0.09 if female else 0.05), 0.17, 0.26)), pants, Vector3(0, -0.02, 0))
+	# Jupe (femme, pivot propre pour qu'elle ondule) ou pan de tunique (homme).
+	_skirt = Node3D.new()
+	_skirt.position = Vector3(0, 0.02, 0)
+	_hips.add_child(_skirt)
 	if female:
-		_part(_hips, _prism(8, 0.3, 0.17, 0.5), tunic, Vector3(0, -0.2, 0), Vector3.ZERO, Vector3(1.0, 1.0, 0.85))
+		_part(_skirt, _prism(8, 0.31, 0.17, 0.5), tunic, Vector3(0, -0.22, 0), Vector3.ZERO, Vector3(1.0, 1.0, 0.85))
+		_part(_skirt, _prism(8, 0.325, 0.31, 0.05), trim, Vector3(0, -0.47, 0), Vector3.ZERO, Vector3(1.0, 1.0, 0.85))
 	else:
-		_part(_hips, _prism(8, 0.25, 0.2, 0.34), tunic, Vector3(0, -0.12, 0), Vector3.ZERO, Vector3(1.0, 1.0, 0.75))
+		_part(_skirt, _prism(8, 0.255, 0.2, 0.34), tunic, Vector3(0, -0.14, 0), Vector3.ZERO, Vector3(1.0, 1.0, 0.75))
+		_part(_skirt, _prism(8, 0.262, 0.255, 0.04), trim, Vector3(0, -0.3, 0), Vector3.ZERO, Vector3(1.0, 1.0, 0.75))
 	# Torse.
 	_torso = Node3D.new()
 	_torso.position = Vector3(0, 0.05, 0)
 	_hips.add_child(_torso)
 	var torso_len: float = d["torso"]
-	_part(_torso, _prism(8, float(d["waist"]), float(d["chest"]), torso_len), tunic, Vector3(0, torso_len * 0.5, 0), Vector3.ZERO, Vector3(1.0, 1.0, 0.68))
-	_part(_torso, _prism(8, float(d["waist"]) + 0.012, float(d["waist"]) + 0.012, 0.07), leather, Vector3(0, 0.03, 0), Vector3.ZERO, Vector3(1.0, 1.0, 0.7))
-	_part(_torso, _prism(6, 0.04, 0.045, 0.1), skin, Vector3(0, torso_len + 0.02, 0))
+	var chest: float = d["chest"]
+	var waist: float = d["waist"]
+	_part(_torso, _prism(8, waist, chest, torso_len), tunic, Vector3(0, torso_len * 0.5, 0), Vector3.ZERO, Vector3(1.0, 1.0, 0.68))
+	# Poitrine (femme) : léger volume à l'avant.
+	if female:
+		for sx in [-1.0, 1.0]:
+			_part(_torso, _ball(0.06, 6, 3), tunic, Vector3(sx * 0.06, torso_len * 0.72, 0.1))
+	# Ceinture, boucle et bourse.
+	_part(_torso, _prism(8, waist + 0.012, waist + 0.012, 0.07), leather, Vector3(0, 0.03, 0), Vector3.ZERO, Vector3(1.0, 1.0, 0.7))
+	_part(_torso, _box(Vector3(0.05, 0.05, 0.02)), Color(0.9, 0.75, 0.3), Vector3(0, 0.03, waist * 0.7 + 0.015))
+	_part(_torso, _box(Vector3(0.09, 0.1, 0.06)), leather.lightened(0.1), Vector3(hip_w + 0.07, -0.04, 0.02))
+	# Col et cou.
+	_part(_torso, _prism(6, 0.045, 0.05, 0.1), skin, Vector3(0, torso_len + 0.02, 0))
+	_part(_torso, _prism(8, 0.085, 0.075, 0.045), trim, Vector3(0, torso_len - 0.005, 0))
 	# Tête.
 	_head = Node3D.new()
 	_head.position = Vector3(0, torso_len + 0.05, 0)
 	_torso.add_child(_head)
 	_build_head(d, skin)
-	# Bras.
+	# Bras : manche longue jusqu'au coude, poignet clair, main avec pouce.
 	for side in ["l", "r"]:
 		var sx: float = float(d["sw"]) * (1.0 if side == "l" else -1.0)
 		var shoulder := Node3D.new()
 		shoulder.position = Vector3(sx, torso_len - 0.07, 0)
 		_torso.add_child(shoulder)
 		var limb: float = d["limb"]
-		_part(shoulder, _ball(limb * 1.45, 6, 3), tunic, Vector3.ZERO)
-		_part(shoulder, _prism(6, limb, limb * 0.85, float(d["upper"])), tunic, Vector3(0, -float(d["upper"]) * 0.5, 0))
+		var upper: float = d["upper"]
+		var fore: float = d["fore"]
+		_part(shoulder, _ball(limb * 1.5, 6, 3), tunic, Vector3.ZERO)
+		_part(shoulder, _prism(6, limb * 1.05, limb * 0.9, upper), tunic, Vector3(0, -upper * 0.5, 0))
 		var elbow := Node3D.new()
-		elbow.position = Vector3(0, -float(d["upper"]), 0)
+		elbow.position = Vector3(0, -upper, 0)
 		shoulder.add_child(elbow)
-		_part(elbow, _prism(6, limb * 0.85, limb * 0.7, float(d["fore"])), skin, Vector3(0, -float(d["fore"]) * 0.5, 0))
+		_part(elbow, _ball(limb * 0.92, 6, 3), tunic, Vector3.ZERO)
+		_part(elbow, _prism(6, limb * 0.9, limb * 0.75, fore * 0.45), tunic, Vector3(0, -fore * 0.22, 0))
+		_part(elbow, _prism(6, limb * 0.95, limb * 0.95, 0.035), trim, Vector3(0, -fore * 0.45, 0))
+		_part(elbow, _prism(6, limb * 0.74, limb * 0.64, fore * 0.55), skin, Vector3(0, -fore * 0.73, 0))
 		var hand := Node3D.new()
-		hand.position = Vector3(0, -float(d["fore"]) - 0.01, 0)
+		hand.position = Vector3(0, -fore - 0.01, 0)
 		elbow.add_child(hand)
-		_part(hand, _ball(limb * 0.95, 6, 3), skin, Vector3(0, -0.02, 0))
+		_part(hand, _box(Vector3(limb * 1.5, 0.085, limb * 1.0)), skin, Vector3(0, -0.04, 0))
+		_part(hand, _box(Vector3(limb * 1.4, 0.05, limb * 0.9)), skin, Vector3(0, -0.095, 0.004))
+		var thumb_dir := -1.0 if side == "l" else 1.0
+		_part(hand, _box(Vector3(limb * 0.4, 0.05, limb * 0.45)), skin, Vector3(thumb_dir * limb * 0.85, -0.04, limb * 0.45), Vector3(0.4, 0, 0))
 		_arm[side] = {"shoulder": shoulder, "elbow": elbow, "hand": hand}
-	# Jambes.
+	# Jambes : pantalon, genouillères, revers, chaussures articulées.
 	for side in ["l", "r"]:
-		var hx: float = float(d["hip"]) * (1.0 if side == "l" else -1.0)
+		var hx: float = hip_w * (1.0 if side == "l" else -1.0)
 		var hip := Node3D.new()
 		hip.position = Vector3(hx, -0.04, 0)
 		_hips.add_child(hip)
 		var thigh: float = d["thigh"]
 		var shin: float = d["shin"]
 		var radius: float = float(d["limb"]) * 1.3
-		_part(hip, _prism(6, radius, radius * 0.8, thigh), pants, Vector3(0, -thigh * 0.5, 0))
+		_part(hip, _prism(6, radius * 1.05, radius * 0.85, thigh), pants, Vector3(0, -thigh * 0.5, 0))
 		var knee := Node3D.new()
 		knee.position = Vector3(0, -thigh, 0)
 		hip.add_child(knee)
-		_part(knee, _prism(6, radius * 0.8, radius * 0.62, shin), pants, Vector3(0, -shin * 0.5, 0))
-		_part(knee, _box(Vector3(0.12, 0.09, 0.27)), leather, Vector3(0, -shin + 0.0, 0.05))
-		_leg[side] = {"hip": hip, "knee": knee}
+		_part(knee, _ball(radius * 0.86, 6, 3), pants, Vector3.ZERO)
+		_part(knee, _box(Vector3(radius * 1.0, 0.08, 0.025)), pants.darkened(0.2), Vector3(0, 0.0, radius * 0.78))
+		_part(knee, _prism(6, radius * 0.85, radius * 0.66, shin), pants, Vector3(0, -shin * 0.5, 0))
+		_part(knee, _prism(6, radius * 0.74, radius * 0.74, 0.05), pants.darkened(0.15), Vector3(0, -shin + 0.05, 0))
+		# Pied : pivot à la cheville, semelle, chaussure et bout arrondi.
+		var foot := Node3D.new()
+		foot.position = Vector3(0, -shin, 0)
+		knee.add_child(foot)
+		_part(foot, _box(Vector3(0.115, 0.075, 0.2)), leather, Vector3(0, -0.015, 0.045))
+		_part(foot, _box(Vector3(0.105, 0.06, 0.09)), leather.lightened(0.08), Vector3(0, -0.025, 0.15))
+		_part(foot, _box(Vector3(0.12, 0.022, 0.3)), Color(0.14, 0.1, 0.07), Vector3(0, -0.062, 0.07))
+		_leg[side] = {"hip": hip, "knee": knee, "foot": foot}
 		if gear.has("gear_hide_boots"):
 			var boot := Color(0.55, 0.38, 0.2)
-			_part(knee, _prism(6, radius * 0.95, radius * 0.85, shin * 0.55), boot, Vector3(0, -shin * 0.72, 0))
-			_part(knee, _prism(6, radius * 1.05, radius * 1.05, 0.05), Color(0.86, 0.8, 0.66), Vector3(0, -shin * 0.45, 0))
+			_part(knee, _prism(6, radius * 0.95, radius * 0.85, shin * 0.5), boot, Vector3(0, -shin * 0.75, 0))
+			_part(knee, _prism(6, radius * 1.08, radius * 1.08, 0.05), Color(0.86, 0.8, 0.66), Vector3(0, -shin * 0.48, 0))
+			_part(foot, _box(Vector3(0.125, 0.085, 0.21)), boot, Vector3(0, -0.012, 0.045))
 	_build_gear(d)
 	_build_held()
 
 func _build_head(d: Dictionary, skin: Color) -> void:
 	var r: float = d["head"]
+	var female := profile.gender == "female"
+	# Crâne et mâchoire.
 	_part(_head, _ball(r, 8, 5), skin, Vector3(0, r + 0.02, 0), Vector3.ZERO, Vector3(0.95, 1.08, 1.0))
-	var dark := Color(0.08, 0.06, 0.05)
-	for ex in [-0.04, 0.04]:
-		_part(_head, _box(Vector3(0.03, 0.034, 0.012)), dark, Vector3(ex * (r / 0.115), r + 0.04, r * 0.92))
-	_part(_head, _box(Vector3(0.02, 0.03, 0.025)), skin.darkened(0.12), Vector3(0, r + 0.0, r * 0.98))
+	_part(_head, _box(Vector3(r * (1.15 if female else 1.35), r * 0.55, r * 1.3)), skin, Vector3(0, r * 0.62, r * 0.18))
+	# Oreilles.
+	for sx in [-1.0, 1.0]:
+		_part(_head, _box(Vector3(0.018, 0.05, 0.035)), skin.darkened(0.06), Vector3(sx * r * 0.97, r + 0.02, 0.0))
+	# Yeux : blanc, iris, paupière (clignement), sourcils.
 	var hair := profile.hair_color_value()
+	var eye_color := profile.eye_color()
+	for sx in [-1.0, 1.0]:
+		var ex: float = sx * r * 0.4
+		var ey: float = r + 0.045
+		var ez: float = r * 0.9
+		_part(_head, _box(Vector3(0.036, 0.03, 0.012)), Color(0.96, 0.96, 0.94), Vector3(ex, ey, ez))
+		_part(_head, _box(Vector3(0.02, 0.026, 0.014)), eye_color, Vector3(ex, ey, ez + 0.002))
+		_part(_head, _box(Vector3(0.01, 0.014, 0.016)), Color(0.04, 0.03, 0.03), Vector3(ex, ey, ez + 0.003))
+		var lid := _part(_head, _box(Vector3(0.04, 0.034, 0.016)), skin, Vector3(ex, ey + 0.002, ez + 0.006))
+		lid.scale.y = 0.001
+		_eyelids.append(lid)
+		var brow_w := 0.045 if not female else 0.04
+		_part(_head, _box(Vector3(brow_w, 0.012, 0.014)), hair.darkened(0.15), Vector3(ex, ey + 0.032, ez + 0.002), Vector3(0, 0, sx * -0.12))
+	# Nez, bouche, joues.
+	_part(_head, _box(Vector3(0.022, 0.04, 0.03)), skin.darkened(0.1), Vector3(0, r + 0.0, r * 1.0))
+	_part(_head, _box(Vector3(0.012, 0.012, 0.02)), skin.darkened(0.22), Vector3(0, r - 0.022, r * 1.03))
+	_part(_head, _box(Vector3(0.05, 0.012, 0.012)), Color(0.62, 0.28, 0.26) if female else Color(0.5, 0.26, 0.22), Vector3(0, r * 0.62, r * 0.92))
+	for sx in [-1.0, 1.0]:
+		_part(_head, _box(Vector3(0.03, 0.025, 0.01)), Color(0.95, 0.5, 0.45, 1.0).lerp(skin, 0.7), Vector3(sx * r * 0.58, r * 0.78, r * 0.88))
+	_build_hair(r, hair)
+	_build_beard(r, hair)
+
+func _build_hair(r: float, hair: Color) -> void:
 	var style := profile.hair_style_name()
-	if style != "bald":
-		# Calotte : demi-sphère posée au-dessus du front, frange devant.
-		var cap := SphereMesh.new()
-		cap.radius = r * 1.1
-		cap.height = r * 1.1
-		cap.radial_segments = 8
-		cap.rings = 3
-		cap.is_hemisphere = true
-		_part(_head, flatten(cap), hair, Vector3(0, r + 0.08, -0.01), Vector3.ZERO, Vector3(1.0, 0.95, 1.05))
-		_part(_head, _box(Vector3(r * 1.7, 0.03, 0.03)), hair, Vector3(0, r + 0.085, r * 0.93))
+	var dark := hair.darkened(0.15)
+	if style == "bald":
+		return
+	var cap := SphereMesh.new()
+	cap.radius = r * 1.1
+	cap.height = r * 1.1
+	cap.radial_segments = 8
+	cap.rings = 3
+	cap.is_hemisphere = true
+	_part(_head, flatten(cap), hair, Vector3(0, r + 0.075, -0.01), Vector3.ZERO, Vector3(1.0, 1.0, 1.05))
+	# Frange et pattes.
+	_part(_head, _box(Vector3(r * 1.7, 0.035, 0.035)), hair, Vector3(0, r + 0.085, r * 0.93))
+	_part(_head, _box(Vector3(r * 0.55, 0.05, 0.04)), dark, Vector3(-r * 0.45, r + 0.065, r * 0.95), Vector3(0, 0, 0.35))
+	for sx in [-1.0, 1.0]:
+		_part(_head, _box(Vector3(0.025, 0.1, 0.06)), hair, Vector3(sx * r * 0.99, r + 0.0, r * 0.1))
 	match style:
 		"short":
-			_part(_head, _box(Vector3(r * 1.95, 0.2, 0.07)), hair, Vector3(0, r + 0.0, -r * 0.95))
+			_part(_head, _box(Vector3(r * 1.95, 0.22, 0.07)), hair, Vector3(0, r + 0.0, -r * 0.95))
+			for i in 3:
+				_part(_head, _box(Vector3(0.05, 0.05, 0.06)), dark, Vector3((i - 1) * 0.06, r * 2.15, 0.03 * (i - 1)), Vector3(0.2 * (i - 1), 0, 0.3 * (i - 1)))
 		"long":
-			_part(_head, _box(Vector3(r * 2.05, 0.46, 0.09)), hair, Vector3(0, -0.04, -r * 0.95))
-			_part(_head, _box(Vector3(0.05, 0.3, 0.1)), hair, Vector3(r * 0.98, 0.04, -r * 0.4))
-			_part(_head, _box(Vector3(0.05, 0.3, 0.1)), hair, Vector3(-r * 0.98, 0.04, -r * 0.4))
+			var back := _part(_head, _box(Vector3(r * 2.05, 0.48, 0.09)), hair, Vector3(0, -0.06, -r * 0.95))
+			_sway.append({"node": back, "base": back.rotation, "amp": 0.1, "axis": Vector3.RIGHT})
+			for sx in [-1.0, 1.0]:
+				_part(_head, _box(Vector3(0.05, 0.3, 0.1)), hair, Vector3(sx * r * 0.98, 0.0, -r * 0.35))
+				_part(_head, _box(Vector3(0.04, 0.16, 0.05)), dark, Vector3(sx * r * 0.95, -0.15, -r * 0.1))
 		"ponytail":
-			_part(_head, _ball(0.05, 6, 3), hair, Vector3(0, r + 0.0, -r * 1.05))
-			_part(_head, _prism(6, 0.045, 0.02, 0.3), hair, Vector3(0, r - 0.17, -r * 1.2), Vector3(0.2, 0, 0))
+			_part(_head, _prism(6, 0.058, 0.058, 0.03), Color(0.8, 0.25, 0.2), Vector3(0, r + 0.02, -r * 1.12), Vector3(1.2, 0, 0))
+			var tail := Node3D.new()
+			tail.position = Vector3(0, r + 0.02, -r * 1.15)
+			_head.add_child(tail)
+			_part(tail, _prism(6, 0.05, 0.015, 0.34), hair, Vector3(0, -0.17, -0.02))
+			_sway.append({"node": tail, "base": tail.rotation, "amp": 0.2, "axis": Vector3.RIGHT})
 		"bun":
-			_part(_head, _ball(0.07, 6, 3), hair, Vector3(0, r * 2.1, -0.02))
-			_part(_head, _box(Vector3(r * 1.9, 0.1, 0.06)), hair, Vector3(0, r + 0.0, -r * 0.95))
+			_part(_head, _ball(0.075, 6, 3), hair, Vector3(0, r * 2.15, -0.025))
+			_part(_head, _prism(6, 0.05, 0.05, 0.02), Color(0.8, 0.25, 0.2), Vector3(0, r * 2.0, -0.025))
+			_part(_head, _box(Vector3(r * 1.95, 0.16, 0.06)), hair, Vector3(0, r + 0.03, -r * 0.95))
+		"curly":
+			for i in 9:
+				var a := float(i) / 9.0 * TAU
+				_part(_head, _ball(0.06, 6, 3), hair, Vector3(cos(a) * r * 0.95, r + 0.1 + sin(a * 2.0) * 0.015, sin(a) * r * 0.95 - 0.01))
+			for i in 4:
+				_part(_head, _ball(0.07, 6, 3), hair, Vector3(sin(float(i) * 1.7) * 0.07, r * 2.15, cos(float(i) * 1.7) * 0.06))
+		"braid":
+			_part(_head, _box(Vector3(r * 1.95, 0.2, 0.07)), hair, Vector3(0, r + 0.0, -r * 0.95))
+			var braid := Node3D.new()
+			braid.position = Vector3(0, r - 0.02, -r * 1.1)
+			_head.add_child(braid)
+			for i in 5:
+				_part(braid, _ball(0.05 - i * 0.004, 6, 3), hair if i % 2 == 0 else dark, Vector3(0, -0.09 * i - 0.05, -0.03 - i * 0.01))
+			_part(braid, _prism(6, 0.025, 0.025, 0.03), Color(0.8, 0.25, 0.2), Vector3(0, -0.5, -0.07))
+			_sway.append({"node": braid, "base": braid.rotation, "amp": 0.18, "axis": Vector3.RIGHT})
+
+func _build_beard(r: float, hair: Color) -> void:
+	if profile.gender == "female":
+		return
+	var beard := hair.darkened(0.05)
+	match profile.beard_name():
+		"stubble":
+			_part(_head, _box(Vector3(r * 1.3, r * 0.5, r * 0.3)), hair.lerp(profile.skin_color(), 0.65), Vector3(0, r * 0.6, r * 0.78))
+		"short":
+			_part(_head, _box(Vector3(r * 1.5, r * 0.55, r * 0.35)), beard, Vector3(0, r * 0.58, r * 0.82))
+			_part(_head, _box(Vector3(r * 0.9, 0.025, 0.03)), beard.darkened(0.1), Vector3(0, r * 0.82, r * 1.0))
+		"full":
+			_part(_head, _box(Vector3(r * 1.65, r * 0.9, r * 0.5)), beard, Vector3(0, r * 0.38, r * 0.78))
+			_part(_head, _box(Vector3(r * 0.9, 0.03, 0.035)), beard.darkened(0.1), Vector3(0, r * 0.82, r * 1.02))
+			_part(_head, _box(Vector3(r * 1.3, r * 0.5, r * 0.4)), beard, Vector3(0, r * 0.0, r * 0.62), Vector3(0.3, 0, 0))
 
 func _build_gear(d: Dictionary) -> void:
 	var torso_len: float = d["torso"]
@@ -246,7 +360,12 @@ func _build_gear(d: Dictionary) -> void:
 		var sw: float = d["sw"]
 		_part(_torso, _prism(8, sw + 0.1, sw + 0.02, 0.16), fur, Vector3(0, torso_len - 0.06, 0), Vector3.ZERO, Vector3(1.0, 1.0, 0.7))
 		_part(_torso, _prism(8, sw + 0.03, sw + 0.03, 0.05), Color(0.85, 0.8, 0.7), Vector3(0, torso_len + 0.03, 0), Vector3.ZERO, Vector3(1.0, 1.0, 0.7))
-		_part(_torso, _box(Vector3(sw * 1.7, 0.6, 0.04)), fur.darkened(0.12), Vector3(0, torso_len - 0.4, -0.14), Vector3(0.05, 0, 0))
+		var cape := Node3D.new()
+		cape.position = Vector3(0, torso_len - 0.08, -0.14)
+		_torso.add_child(cape)
+		_part(cape, _box(Vector3(sw * 1.7, 0.62, 0.04)), fur.darkened(0.12), Vector3(0, -0.31, 0))
+		_part(cape, _box(Vector3(sw * 1.7, 0.05, 0.05)), Color(0.85, 0.8, 0.7), Vector3(0, -0.62, 0))
+		_sway.append({"node": cape, "base": Vector3(0.05, 0, 0), "amp": 0.22, "axis": Vector3.RIGHT})
 	if gear.has("gear_backpack"):
 		var bag := Color(0.52, 0.35, 0.18)
 		_part(_torso, _box(Vector3(0.3, 0.38, 0.15)), bag, Vector3(0, torso_len * 0.55, -0.2))
@@ -401,6 +520,10 @@ func advance_poses(delta: float) -> void:
 	if _rig == null:
 		return
 	_time += delta
+	_next_blink -= delta
+	if _next_blink <= 0.0:
+		_blink_left = 0.14
+		_next_blink = randf_range(2.0, 5.0)
 	var fast := 1.0 - exp(-12.0 * delta)
 	var riding := _ride_target > 0.5
 	_ride_w = lerpf(_ride_w, _ride_target, fast)
@@ -454,6 +577,11 @@ func _pose(chop: float) -> void:
 		knee_x = lerpf(knee_x, 1.05, _ride_w)
 		hip.rotation = Vector3(thigh_x, 0.0, lerpf(0.0, 0.42 * sign_side, _ride_w))
 		knee.rotation = Vector3(knee_x, 0.0, 0.0)
+		# Le pied reste à plat au sol (la cheville compense la jambe), la pointe se lève en fin de pas.
+		var foot := _leg[side]["foot"] as Node3D
+		var flat := -(thigh_x + knee_x) * 0.85
+		var toe_off := 0.35 * maxf(0.0, sin(_phase * sign_side + 0.6)) * w * (1.0 - air)
+		foot.rotation.x = clampf(flat + toe_off, -0.7, 0.9)
 	# Bras.
 	for side in ["l", "r"]:
 		var sign_side := 1.0 if side == "l" else -1.0
@@ -494,3 +622,20 @@ func _pose(chop: float) -> void:
 		elbow.rotation = Vector3(ex, 0.0, 0.0)
 	if chop >= 0.0:
 		_torso.rotation.x += 0.4 * sin(clampf(chop, 0.0, 1.0) * PI)
+	# Mouvements secondaires : jupe, cheveux, cape.
+	if _skirt != null:
+		_skirt.rotation = Vector3(0.12 * run * w + 0.015 * breathe, 0.0, -s * 0.05 * w)
+		_skirt.scale = Vector3(1.0 + 0.04 * absf(s) * w, 1.0, 1.0 + 0.05 * absf(s) * w)
+	for entry in _sway:
+		var node := entry["node"] as Node3D
+		if node != null and is_instance_valid(node):
+			var sway_amp: float = entry["amp"]
+			var lag := sway_amp * (0.5 * w + 1.2 * run + 0.3 * air + 0.25 * sin(_time * 2.1 + sway_amp * 9.0))
+			node.rotation = (entry["base"] as Vector3) + (entry["axis"] as Vector3) * lag
+	# Clignement des yeux et léger regard.
+	if _blink_left > 0.0:
+		_blink_left = maxf(0.0, _blink_left - 0.016)
+	for lid in _eyelids:
+		if is_instance_valid(lid):
+			(lid as Node3D).scale.y = 1.0 if _blink_left > 0.0 else 0.001
+	_head.rotation.y += sin(_time * 0.7) * 0.05 * (1.0 - w)

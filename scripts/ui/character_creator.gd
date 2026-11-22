@@ -157,8 +157,22 @@ func _fill_options() -> void:
 			_changed())
 		styles.add_child(b)
 	_options.add_child(styles)
+	if profile.gender == "male":
+		_section("CHAR_BEARD")
+		var beards := HFlowContainer.new()
+		beards.add_theme_constant_override("h_separation", 8)
+		beards.add_theme_constant_override("v_separation", 8)
+		for i in CharacterProfile.BEARDS.size():
+			var bb := _button(tr("CHAR_BEARD_" + String(CharacterProfile.BEARDS[i]).to_upper()), profile.beard == i)
+			bb.pressed.connect(func():
+				profile.beard = i
+				_changed())
+			beards.add_child(bb)
+		_options.add_child(beards)
 	_section("CHAR_HAIR_COLOR")
 	_swatches(CharacterProfile.HAIR_COLORS, profile.hair_color, func(i): profile.hair_color = i)
+	_section("CHAR_EYES")
+	_swatches(CharacterProfile.EYE_COLORS, profile.eyes, func(i): profile.eyes = i)
 	_section("CHAR_TUNIC")
 	_swatches(CharacterProfile.TUNIC_COLORS, profile.tunic, func(i): profile.tunic = i)
 	_section("CHAR_PANTS")
@@ -170,6 +184,8 @@ func _set_gender(g: String) -> void:
 	# Changer de genre propose la coiffure et la tunique par défaut du nouveau genre.
 	var fresh := CharacterProfile.default_for(g)
 	profile.gender = g
+	if g == "female":
+		profile.beard = 0
 	profile.hair_style = fresh.hair_style
 	profile.tunic = fresh.tunic
 	_changed()

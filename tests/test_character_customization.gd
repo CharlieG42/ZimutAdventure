@@ -29,11 +29,17 @@ func _init() -> void:
 	p.hair_style = 3
 	p.hair_color = 4
 	p.tunic = 2
+	p.eyes = 3
+	p.beard = 2
 	p.save()
 	if not CharacterProfile.exists():
 		errors.append("le profil doit être sauvegardé")
 	var back := CharacterProfile.load_saved()
-	if back.gender != "female" or back.skin != 3 or back.hair_style != 3 or back.hair_color != 4 or back.tunic != 2:
+	if back.gender != "female" or back.skin != 3 or back.hair_style != 3 or back.hair_color != 4 or back.tunic != 2 or back.eyes != 3:
+		errors.append("profil relu différent : %s" % str(back.to_dict()))
+	if back.beard != 0:
+		errors.append("une femme n'a pas de barbe")
+	if false:
 		errors.append("profil relu différent : %s" % str(back.to_dict()))
 	var wild := CharacterProfile.from_dict({"gender": "robot", "skin": 99, "hair_style": -4})
 	if wild.gender != "male" or wild.skin != CharacterProfile.SKIN_TONES.size() - 1 or wild.hair_style != 0:
@@ -66,6 +72,25 @@ func _init() -> void:
 	woman.call("set_profile", other)
 	if float(woman.call("body_height")) < float(man.call("body_height")) - 0.001:
 		errors.append("changer de genre change la silhouette")
+
+	# Toutes les coiffures et barbes se construisent ; les yeux clignent.
+	for style in CharacterProfile.HAIR_STYLES.size():
+		for beard in CharacterProfile.BEARDS.size():
+			var variant := CharacterProfile.default_for("male")
+			variant.hair_style = style
+			variant.beard = beard
+			var h := _make_hero(variant)
+			if _count_meshes(h) < 60:
+				errors.append("personnage trop pauvre (style %d barbe %d)" % [style, beard])
+			h.free()
+	var blinker := _make_hero(CharacterProfile.default_for("female"))
+	var lids: Array = blinker.get("_eyelids")
+	if lids.size() != 2:
+		errors.append("deux paupières attendues")
+	blinker.set("_next_blink", 0.0)
+	blinker.call("advance_poses", 0.01)
+	if (lids[0] as Node3D).scale.y < 0.5:
+		errors.append("le personnage doit cligner des yeux")
 
 	# --- Animations -------------------------------------------------------------------------
 	var hero := _make_hero(CharacterProfile.default_for("male"))
@@ -118,7 +143,7 @@ func _init() -> void:
 	for id in ["gear_straw_hat", "gear_hide_boots", "gear_backpack", "armor_fur_cloak"]:
 		if not clothes.has(id):
 			errors.append("recette de vêtement absente : %s" % id)
-	for key in ["CRAFT_STRAW_HAT", "ITEM_GEAR_BACKPACK", "CAT_CLOTHES", "CHAR_TITLE", "CHAR_HAIR_BUN"]:
+	for key in ["CHAR_BEARD_FULL", "CHAR_EYES", "CHAR_HAIR_BRAID", "CRAFT_STRAW_HAT", "ITEM_GEAR_BACKPACK", "CAT_CLOTHES", "CHAR_TITLE", "CHAR_HAIR_BUN"]:
 		if tr(key) == key:
 			errors.append("traduction manquante : %s" % key)
 
