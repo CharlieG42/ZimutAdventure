@@ -8,7 +8,7 @@ extends Node
 signal weather_changed(weather: String)
 signal season_changed(season: String)
 
-const SAVE_PATH := "user://weather.cfg"
+const SAVE_NAME := "weather.cfg"
 const SEASON_DAYS := 6
 const SEASONS := ["spring", "summer", "autumn", "winter"]
 const CLEAR := "clear"
@@ -85,6 +85,19 @@ func _ready() -> void:
 	_refresh_particles()
 	if _effects:
 		snap_surfaces()
+
+## Relit le jour de la partie choisie (menu de démarrage).
+func reload_from_disk() -> void:
+	_load()
+	var clock := _clock()
+	if clock != null:
+		_day = maxi(_day, int(clock.get("day")))
+		clock.set("day", _day)
+	_season = season_for(_day)
+	_weather = _current_target()
+	_dim = float(LOOK[_weather][0])
+	_fog = float(LOOK[_weather][1])
+	_refresh_particles()
 
 func _clock() -> Node:
 	return get_node_or_null("/root/DayNightCycle")
@@ -324,7 +337,7 @@ func _load() -> void:
 	if not _autosave:
 		return
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) == OK:
+	if config.load(SaveSlots.file(SAVE_NAME)) == OK:
 		_day = maxi(0, int(config.get_value("calendar", "day", 0)))
 
 func _save() -> void:
@@ -332,4 +345,4 @@ func _save() -> void:
 		return
 	var config := ConfigFile.new()
 	config.set_value("calendar", "day", _day)
-	config.save(SAVE_PATH)
+	config.save(SaveSlots.file(SAVE_NAME))

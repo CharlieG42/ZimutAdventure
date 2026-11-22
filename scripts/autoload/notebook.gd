@@ -6,7 +6,7 @@ extends Node
 
 signal entry_observed(entry_id: String, count: int)
 
-const SAVE_PATH := "user://notebook.cfg"
+const SAVE_NAME := "notebook.cfg"
 const CHECK_SECONDS := 0.4
 ## Cône de regard : l'objet doit être à moins de ~35° du centre de l'écran.
 const VIEW_DOT := 0.82
@@ -66,6 +66,10 @@ func _ready() -> void:
 			if String(entry["source"]) == "landmark" and bool(exploration.call("is_landmark_reached", String(entry["landmark"]))) \
 					and not _observed.has(entry_id):
 				_observed.append(entry_id)
+
+func reload_from_disk() -> void:
+	_observed.clear()
+	_load()
 
 # --- API ------------------------------------------------------------------------------
 
@@ -223,7 +227,7 @@ func _load() -> void:
 	if not _autosave:
 		return
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(SaveSlots.file(SAVE_NAME)) != OK:
 		return
 	for entry_id in config.get_value("notebook", "observed", []):
 		if ENTRIES.has(entry_id) and not _observed.has(entry_id):
@@ -234,7 +238,7 @@ func _save() -> void:
 		return
 	var config := ConfigFile.new()
 	config.set_value("notebook", "observed", _observed)
-	config.save(SAVE_PATH)
+	config.save(SaveSlots.file(SAVE_NAME))
 
 ## API de test : carnet vide, sans disque.
 func clear_for_test() -> void:

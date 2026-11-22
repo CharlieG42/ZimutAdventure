@@ -11,7 +11,7 @@ signal quest_progress_changed(quest_id: String, have: int, goal: int)
 
 enum State { LOCKED, ACTIVE, COMPLETED }
 
-const SAVE_PATH := "user://quests.cfg"
+const SAVE_NAME := "quests.cfg"
 
 ## id -> titre, description, objet suivi, quantité, quête requise (optionnelle).
 ## `reward` : ressources offertes à la fin de la quête (elles aident à enchaîner les
@@ -339,6 +339,14 @@ func _ready() -> void:
 	_unlock_available()
 	_evaluate_all(false)
 
+## Relit les quêtes de la partie choisie (menu de démarrage).
+func reload_from_disk() -> void:
+	_states.clear()
+	_collected.clear()
+	_load()
+	_unlock_available()
+	_evaluate_all(false)
+
 # --- État ----------------------------------------------------------------------
 
 func set_state(quest_id: String, state: int) -> void:
@@ -483,11 +491,13 @@ func _announce(quest_id: String) -> void:
 
 func _load() -> void:
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(SaveSlots.file(SAVE_NAME)) != OK:
 		return
 	for quest_id in config.get_section_keys("states"):
 		if QUESTS.has(quest_id):
 			_states[quest_id] = int(config.get_value("states", quest_id, 0))
+	if not config.has_section("collected"):
+		return
 	for item_id in config.get_section_keys("collected"):
 		_collected[item_id] = int(config.get_value("collected", item_id, 0))
 
@@ -499,7 +509,7 @@ func _save() -> void:
 		config.set_value("states", quest_id, int(_states[quest_id]))
 	for item_id in _collected:
 		config.set_value("collected", item_id, int(_collected[item_id]))
-	config.save(SAVE_PATH)
+	config.save(SaveSlots.file(SAVE_NAME))
 
 ## API de test : active les récompenses (désactivées en headless).
 func enable_rewards_for_test() -> void:

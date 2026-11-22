@@ -7,13 +7,19 @@ signal equipped_changed(item_id: String)
 ## Outils qui peuvent être équipés (un seul à la fois, dans la barre d'outils du HUD).
 const TOOLS := ["tool_stone_axe", "tool_sickle", "tool_hoe", "tool_watering_can", "tool_hunting_bow", "tool_fishing_rod", "tool_knife"]
 
-const SAVE_PATH := "user://inventory.cfg"
+const SAVE_NAME := "inventory.cfg"
 
 var _items: Dictionary = {}
 var _autosave: bool = true
 var _equipped: String = ""
 
 func _ready() -> void:
+	_load()
+
+## Relit le sac de la partie choisie (menu de démarrage).
+func reload_from_disk() -> void:
+	_items.clear()
+	_equipped = ""
 	_load()
 
 func add_item(item_id: String, amount: int = 1) -> void:
@@ -77,7 +83,7 @@ func get_all() -> Dictionary:
 
 func _load() -> void:
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(SaveSlots.file(SAVE_NAME)) != OK:
 		return
 	for key in config.get_section_keys("items"):
 		_items[key] = config.get_value("items", key, 0)
@@ -92,7 +98,7 @@ func _save() -> void:
 	for key in _items:
 		config.set_value("items", key, int(_items[key]))
 	config.set_value("state", "equipped", _equipped)
-	config.save(SAVE_PATH)
+	config.save(SaveSlots.file(SAVE_NAME))
 
 func clear_for_test() -> void:
 	_autosave = false

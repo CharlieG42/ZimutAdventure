@@ -2,7 +2,7 @@ extends Node3D
 ## Gère les constructions posées par le joueur : placement sur le terrain, sauvegarde
 ## dans user://structures.cfg et rechargement au lancement.
 
-const SAVE_PATH := "user://structures.cfg"
+const SAVE_NAME := "structures.cfg"
 const MAX_SLOPE := 1.2
 const MAX_STRUCTURES := 40
 ## Constructions que l'on peut déplacer (pas l'enclos ni le potager, qui portent bétail et cultures).
@@ -253,7 +253,7 @@ func _load() -> void:
 	if not _autosave:
 		return
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(SaveSlots.file(SAVE_NAME)) != OK:
 		return
 	for entry in config.get_value("structures", "list", []):
 		if not (entry is Dictionary) or not PLACEABLE.has(String(entry.get("item", ""))):
@@ -280,7 +280,7 @@ func _save() -> void:
 		saved.append(entry)
 	var config := ConfigFile.new()
 	config.set_value("structures", "list", saved)
-	config.save(SAVE_PATH)
+	config.save(SaveSlots.file(SAVE_NAME))
 
 ## Sauvegarde immédiate (une construction a changé d'état).
 func save_now() -> void:

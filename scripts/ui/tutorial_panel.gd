@@ -7,7 +7,7 @@ extends PanelContainer
 
 signal finished
 
-const SAVE_PATH := "user://tutorial.cfg"
+const SAVE_NAME := "tutorial.cfg"
 const STEPS := ["move", "look", "pickup", "journal", "map", "compass"]
 ## Seuils de validation.
 const MOVE_METERS := 5.0
@@ -218,7 +218,7 @@ func _load() -> void:
 	if not _autosave:
 		return
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(SaveSlots.file(SAVE_NAME)) != OK:
 		return
 	done = bool(config.get_value("tutorial", "done", false))
 
@@ -227,7 +227,7 @@ func _save() -> void:
 		return
 	var config := ConfigFile.new()
 	config.set_value("tutorial", "done", done)
-	config.save(SAVE_PATH)
+	config.save(SaveSlots.file(SAVE_NAME))
 
 ## API de test : tutoriel neuf, sans disque.
 func clear_for_test(touch: bool = false) -> void:

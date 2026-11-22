@@ -3,7 +3,7 @@ extends Node3D
 ## groupes sur le terrain, et sauvegarde ceux que le joueur a apprivoisés
 ## (user://livestock.cfg) : au rechargement ils reprennent leur place, sans doublon sauvage.
 
-const SAVE_PATH := "user://livestock.cfg"
+const SAVE_NAME := "livestock.cfg"
 
 @export var animal_scene: PackedScene
 @export var seed_offset: int = 31337
@@ -110,7 +110,7 @@ func _load() -> void:
 	if not _autosave:
 		return
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(SaveSlots.file(SAVE_NAME)) != OK:
 		return
 	for entry in config.get_value("livestock", "list", []):
 		if entry is Dictionary and entry.has("key"):
@@ -125,7 +125,7 @@ func _save() -> void:
 			records.append(animal.call("get_state"))
 	var config := ConfigFile.new()
 	config.set_value("livestock", "list", records)
-	config.save(SAVE_PATH)
+	config.save(SaveSlots.file(SAVE_NAME))
 
 ## API de test : ne touche pas au disque.
 func disable_saving_for_test() -> void:

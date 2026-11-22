@@ -8,7 +8,7 @@ signal xp_changed(level: int, xp: int, needed: int)
 signal level_up(level: int)
 signal stat_changed(stat: String, value: int)
 
-const SAVE_PATH := "user://progression.cfg"
+const SAVE_NAME := "progression.cfg"
 const MAX_LEVEL := 20
 ## XP gagnée par action.
 const XP := {
@@ -49,6 +49,12 @@ func _ready() -> void:
 	var craft := get_node_or_null("/root/CraftManager")
 	if craft != null:
 		craft.connect("crafted", _on_crafted)
+
+func reload_from_disk() -> void:
+	level = 1
+	_xp = 0
+	_stats.clear()
+	_load()
 
 # --- Niveau --------------------------------------------------------------------------
 
@@ -145,7 +151,7 @@ func _announce_level(new_level: int) -> void:
 
 func _load() -> void:
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(SaveSlots.file(SAVE_NAME)) != OK:
 		return
 	level = clampi(int(config.get_value("progress", "level", 1)), 1, MAX_LEVEL)
 	_xp = maxi(int(config.get_value("progress", "xp", 0)), 0)
@@ -160,7 +166,7 @@ func _save() -> void:
 	config.set_value("progress", "xp", _xp)
 	for key in _stats:
 		config.set_value("stats", key, int(_stats[key]))
-	config.save(SAVE_PATH)
+	config.save(SaveSlots.file(SAVE_NAME))
 
 ## API de test : repart de zéro, sans écrire sur le disque ; `enforce` active les niveaux requis.
 func clear_for_test(enforce: bool = false) -> void:

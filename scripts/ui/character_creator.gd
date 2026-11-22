@@ -5,9 +5,10 @@ extends Control
 ## Le jeu est en pause pendant qu'il est ouvert.
 
 signal confirmed(profile: CharacterProfile)
+signal cancelled
 
 const ACCENT := Color(0.96, 0.78, 0.45)
-const HERO_SCRIPT := "res://scripts/player/lowpoly_hero.gd"
+const HERO_SCRIPTS := ["res://scripts/player/glb_hero.gd", "res://scripts/player/lowpoly_hero.gd"]
 
 var profile: CharacterProfile = CharacterProfile.default_for("male")
 var _first_time: bool = false
@@ -16,6 +17,10 @@ var _hero: Node3D
 var _options: VBoxContainer
 var _done_button: Button
 var _was_paused: bool = false
+## Faux pour une nouvelle partie : la partie n'existe pas encore, c'est le menu qui enregistre.
+var save_on_confirm: bool = true
+## Vrai : un bouton « Retour » ferme l'écran sans valider (création depuis le menu).
+var allow_cancel: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -96,6 +101,16 @@ func _build() -> void:
 	_done_button.add_theme_font_size_override("font_size", 26)
 	_done_button.pressed.connect(_on_done)
 	panel.add_child(_done_button)
+	if allow_cancel:
+		var back := Button.new()
+		back.text = tr("MENU_BACK")
+		back.custom_minimum_size = Vector2(0, 52)
+		back.focus_mode = Control.FOCUS_NONE
+		back.add_theme_font_size_override("font_size", 22)
+		back.pressed.connect(func():
+			close()
+			cancelled.emit())
+		panel.add_child(back)
 
 func _build_preview(viewport: SubViewport) -> void:
 	_preview = Node3D.new()
@@ -119,9 +134,11 @@ func _build_preview(viewport: SubViewport) -> void:
 	camera.look_at(Vector3(0.0, 0.9, 0.0))
 	camera.current = true
 	_hero = Node3D.new()
-	_hero.set_script(load(HERO_SCRIPT))
-	_hero.set("profile", profile)
-	_hero.call("load_model")
+	for script_path: String in HERO_SCRIPTS:
+		_hero.set_script(load(script_path))
+		_hero.set("profile", profile)
+		if bool(_hero.call("load_model")):
+			break
 	_preview.add_child(_hero)
 
 func _apply_to_preview() -> void:
@@ -136,6 +153,15 @@ func _process(delta: float) -> void:
 func _fill_options() -> void:
 	for child in _options.get_children():
 		child.queue_free()
+	_section("CHAR_NAME")
+	var name_field := LineEdit.new()
+	name_field.text = profile.hero_name
+	name_field.placeholder_text = tr("CHAR_NAME_HINT")
+	name_field.max_length = CharacterProfile.NAME_MAX
+	name_field.custom_minimum_size = Vector2(0, 52)
+	name_field.add_theme_font_size_override("font_size", 24)
+	name_field.text_changed.connect(func(text: String): profile.hero_name = CharacterProfile.clean_name(text))
+	_options.add_child(name_field)
 	_section("CHAR_GENDER")
 	var genders := HBoxContainer.new()
 	genders.add_theme_constant_override("separation", 10)
@@ -233,6 +259,9 @@ func _swatches(colors: Array[Color], selected: int, setter: Callable) -> void:
 	_options.add_child(row)
 
 func _on_done() -> void:
-	profile.save()
+	profile.hero_name = CharacterProfile.clean_name(profile.hero_name)
+	if save_on_confirm:
+		profile.save()
+		SaveSlots.update_active_info(profile)
 	close()
 	confirmed.emit(profile)

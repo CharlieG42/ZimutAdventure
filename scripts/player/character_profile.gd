@@ -3,7 +3,7 @@ extends RefCounted
 ## Apparence du personnage : genre, teint, coiffure, couleurs. Sauvegardée dans
 ## user://character.cfg ; `exists()` est faux tant que le joueur n'a pas validé sa création.
 
-const SAVE_PATH := "user://character.cfg"
+const SAVE_NAME := "character.cfg"
 const GENDERS := ["male", "female"]
 const SKIN_TONES: Array[Color] = [
 	Color(0.98, 0.84, 0.72), Color(0.92, 0.72, 0.56), Color(0.78, 0.55, 0.38),
@@ -26,6 +26,9 @@ const PANTS_COLORS: Array[Color] = [
 	Color(0.48, 0.36, 0.22), Color(0.26, 0.3, 0.4), Color(0.55, 0.5, 0.36), Color(0.2, 0.2, 0.2),
 ]
 
+const NAME_MAX := 16
+
+var hero_name: String = ""
 var gender: String = "male"
 var skin: int = 1
 var hair_style: int = 0
@@ -41,6 +44,15 @@ static func default_for(new_gender: String) -> CharacterProfile:
 	p.hair_style = 0 if new_gender == "male" else 1
 	p.tunic = 0 if new_gender == "male" else 1
 	return p
+
+## Nom sans espaces superflus ni retours à la ligne, limité à NAME_MAX caractères.
+static func clean_name(raw: String) -> String:
+	var cleaned := raw.replace("\n", " ").replace("\t", " ").strip_edges()
+	return cleaned.substr(0, NAME_MAX).strip_edges()
+
+## Nom affiché ; « Aventurier » tant que le joueur n'en a pas choisi.
+func display_name() -> String:
+	return hero_name if hero_name != "" else tr("CHAR_DEFAULT_NAME")
 
 func skin_color() -> Color:
 	return SKIN_TONES[clampi(skin, 0, SKIN_TONES.size() - 1)]
@@ -64,11 +76,12 @@ func hair_style_name() -> String:
 	return HAIR_STYLES[clampi(hair_style, 0, HAIR_STYLES.size() - 1)]
 
 func to_dict() -> Dictionary:
-	return {"gender": gender, "skin": skin, "hair_style": hair_style, "hair_color": hair_color,
+	return {"hero_name": hero_name, "gender": gender, "skin": skin, "hair_style": hair_style, "hair_color": hair_color,
 			"tunic": tunic, "pants": pants, "beard": beard, "eyes": eyes}
 
 static func from_dict(data: Dictionary) -> CharacterProfile:
 	var p := CharacterProfile.new()
+	p.hero_name = clean_name(String(data.get("hero_name", "")))
 	p.gender = String(data.get("gender", "male"))
 	if not GENDERS.has(p.gender):
 		p.gender = "male"
@@ -84,21 +97,21 @@ static func from_dict(data: Dictionary) -> CharacterProfile:
 	return p
 
 static func exists() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return FileAccess.file_exists(SaveSlots.file(SAVE_NAME))
 
 ## Profil sauvegardé, ou un profil par défaut (homme) si le joueur n'en a pas encore créé.
 static func load_saved() -> CharacterProfile:
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(SaveSlots.file(SAVE_NAME)) != OK:
 		return CharacterProfile.default_for("male")
 	return from_dict(config.get_value("character", "profile", {}))
 
 func save() -> void:
 	var config := ConfigFile.new()
 	config.set_value("character", "profile", to_dict())
-	config.save(SAVE_PATH)
+	config.save(SaveSlots.file(SAVE_NAME))
 
 ## Pour les tests : efface la sauvegarde.
 static func clear_saved() -> void:
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	if FileAccess.file_exists(SaveSlots.file(SAVE_NAME)):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SaveSlots.file(SAVE_NAME)))
