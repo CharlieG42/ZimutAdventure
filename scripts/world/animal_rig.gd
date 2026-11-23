@@ -17,8 +17,8 @@ const MODELS := {
 					"Grey": Color(0.55, 0.5, 0.44)}},
 	"cow": {"path": "res://assets/animals/cow.glb", "height": 1.65},
 	"sheep": {"path": "res://assets/animals/sheep.glb", "height": 1.0},
-	# Décalé de 35 cm vers l'avant : le cavalier (placé à l'origine) s'assoit derrière le garrot, au milieu du dos, pas sur la croupe.
-	"horse": {"path": "res://assets/animals/horse.glb", "height": 2.45, "offset": Vector3(0.0, 0.0, -0.35)},
+	# Décalé de 20 cm vers l'avant : le cavalier (placé à l'origine) s'assoit derrière le garrot, au milieu du dos, pas sur la croupe.
+	"horse": {"path": "res://assets/animals/horse.glb", "height": 2.45, "offset": Vector3(0.0, 0.0, -0.2)},
 	"dog": {"path": "res://assets/animals/shiba_inu.glb", "height": 0.72},
 }
 ## Rôle -> noms possibles (le premier présent est utilisé).

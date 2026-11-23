@@ -1,6 +1,6 @@
 extends SceneTree
 ## Déplacer une construction : fantôme sans collision, validité (eau, pente, voisins),
-## rotation, pose, annulation, enclos non déplaçable.
+## rotation, pose, annulation, enclos déplaçable (avec ses bêtes).
 
 var _errors: Array[String] = []
 
@@ -40,7 +40,7 @@ func _init() -> void:
 	_check(spawner.call("movable_for", shelter) == shelter, "l'abri est déplaçable")
 	var interact_area := shelter as Area3D
 	_check(spawner.call("movable_for", interact_area) == shelter, "la cible d'interaction mène à l'abri")
-	_check(pen != null and spawner.call("movable_for", pen) == null, "l'enclos n'est pas déplaçable")
+	_check(pen != null and spawner.call("movable_for", pen) == pen, "l'enclos est déplaçable")
 
 	# Soulever : les collisions sont neutralisées, la couche d'interaction aussi.
 	var solid := shelter.find_children("*", "StaticBody3D", false, false)[0] as StaticBody3D

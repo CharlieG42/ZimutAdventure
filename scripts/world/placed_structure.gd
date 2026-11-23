@@ -241,9 +241,25 @@ func interior_area() -> float:
 
 ## Un point du monde est-il sous le toit de l'abri ?
 func contains_point(point: Vector3) -> bool:
+	if kind != "shelter":
+		return false
 	var size := shelter_size()
 	var local := to_local(point)
 	return absf(local.x) < size.x * 0.5 - WALL and local.z < FRONT_Z + 0.2 and local.z > FRONT_Z - size.z
+
+## Volume invisible : les animaux (cheval compris) ne peuvent pas entrer dans l'abri, le joueur si.
+func _add_animal_block(size: Vector3, position: Vector3) -> void:
+	var body := StaticBody3D.new()
+	body.name = "AnimalBlock"
+	body.collision_layer = 128
+	body.collision_mask = 0
+	body.position = position
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	add_child(body)
 
 func _build_shelter() -> void:
 	var size := shelter_size()
@@ -271,6 +287,7 @@ func _build_shelter() -> void:
 	if level >= 3:
 		_build_shelter_cabin(wood, hide, size)
 	_add_trigger(Vector3(width - 0.4, height, depth - 0.2), Vector3(0.0, height * 0.5, center_z + 0.1))
+	_add_animal_block(Vector3(width, height, depth + 0.4), Vector3(0.0, height * 0.5, center_z + 0.2))
 
 ## Niveau 2 : seuil et pieux de façade, peaux tendues, étagère au fond, couchages garnis.
 func _build_shelter_reinforced(wood: Material, hide: Material, size: Vector3) -> void:
