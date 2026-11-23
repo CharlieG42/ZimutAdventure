@@ -56,6 +56,14 @@ func _ready() -> void:
 
 func reload_from_disk() -> void:
 	_cells.fill(0)
+	for site_id in _sites:
+		_sites[site_id]["found"] = false
+	_pending_found = []
+	_looted = []
+	blessings = 0
+	_markers.clear()
+	_tracked = -1
+	_reached = []
 	_load()
 
 # --- Brouillard ----------------------------------------------------------------------------

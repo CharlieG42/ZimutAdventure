@@ -257,6 +257,8 @@ func _on_quest_changed(_a = null, _b = null, _c = null) -> void:
 	_update_quest_tracker.call_deferred()
 
 func _update_quest_tracker() -> void:
+	if not is_inside_tree():
+		return
 	var quests := get_node_or_null("/root/QuestManager")
 	if quests == null or quest_tracker == null:
 		return

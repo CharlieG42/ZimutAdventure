@@ -552,3 +552,4 @@ MENU_DELETE_CONFIRM,Permanently delete %s's game? This cannot be undone.
 CHAR_NAME,Name
 CHAR_NAME_HINT,Your character's name
 CHAR_DEFAULT_NAME,Adventurer
+SETTING_MAIN_MENU,Back to main menu (saves)
