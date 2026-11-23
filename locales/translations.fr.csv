@@ -582,3 +582,7 @@ ANIMALS_UNKNOWN_HINT,Nourrissez-en un pour l'apprivoiser.
 ACTION_COLLECT_ALL,Tout collecter (%d)
 TOAST_COLLECTED,Collecté : %s.
 TOAST_COLLECT_NEED_SICKLE,(Équipez la faucille pour la laine.)
+ACTION_DOG_GUARD,Ordonner de garder les lieux
+TOAST_DOG_GUARD,Le chien monte la garde ici.
+TOAST_DOG_GUARD_PEN,Le chien va garder l'enclos.
+ANIMALS_GUARDING,garde les lieux

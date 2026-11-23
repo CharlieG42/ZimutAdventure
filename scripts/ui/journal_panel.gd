@@ -273,7 +273,7 @@ func _refresh_animals() -> void:
 			if penned > 0:
 				details.append(tr("ANIMALS_PENNED") % penned)
 			if species == "dog" and not animals.is_empty():
-				details.append(tr("ANIMALS_FOLLOWING") if bool(animals[0].get("following")) else tr("ANIMALS_STAYING"))
+				details.append(tr("ANIMALS_FOLLOWING") if bool(animals[0].get("following")) else (tr("ANIMALS_GUARDING") if bool(animals[0].get("guarding")) else tr("ANIMALS_STAYING")))
 			line.text = "[b][color=#e8c690]%s[/color][/b]  [color=#ffffffcc]%s[/color]" % [tr("ANIMAL_" + String(species).to_upper()), ", ".join(details)]
 		else:
 			line.text = "[b][color=#ffffff80]???[/color][/b]  [color=#ffffff80][i]%s[/i][/color]" % tr("ANIMALS_UNKNOWN_HINT")
