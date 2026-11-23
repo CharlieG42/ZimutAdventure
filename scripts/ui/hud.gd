@@ -175,6 +175,8 @@ func _ready() -> void:
 		_on_view_changed(_player.call("is_first_person"))
 
 var character_panel: CharacterPanel
+var ranch_panel: RanchPanel
+var ranch_button: Button
 var character_button: Button
 
 ## Fenêtre Personnage (vêtements portés, aperçu 3D) et son bouton dans la barre du bas.
@@ -190,10 +192,39 @@ func _setup_character_panel() -> void:
 	character_button.pressed.connect(open_character_panel)
 	view_button.get_parent().add_child(character_button)
 	view_button.get_parent().move_child(character_button, journal_button.get_index() + 1)
+	ranch_panel = RanchPanel.new()
+	ranch_panel.name = "RanchPanel"
+	journal_panel.get_parent().add_child(ranch_panel)
+	ranch_button = Button.new()
+	ranch_button.name = "RanchButton"
+	ranch_button.text = tr("ACTION_RANCH")
+	ranch_button.custom_minimum_size = Vector2(0.0, 56.0)
+	ranch_button.focus_mode = Control.FOCUS_NONE
+	ranch_button.visible = false
+	ranch_button.pressed.connect(open_ranch_panel)
+	view_button.get_parent().add_child(ranch_button)
+	view_button.get_parent().move_child(ranch_button, character_button.get_index() + 1)
+
+## Fenêtre Ranch (gestion des enclos) : bouton visible dès qu'un enclos existe.
+func open_ranch_panel(pen: Node3D = null) -> void:
+	for other: Control in [journal_panel, character_panel]:
+		if other != null and other.visible:
+			other.call("close")
+	if ranch_panel.visible and pen == null:
+		ranch_panel.close()
+	else:
+		ranch_panel.open(pen)
+
+func _refresh_ranch_button() -> void:
+	var available := not get_tree().get_nodes_in_group("pens").is_empty()
+	if ranch_button != null and ranch_button.visible != available:
+		ranch_button.visible = available
 
 func open_character_panel() -> void:
 	if journal_panel != null and journal_panel.visible:
 		journal_panel.close()
+	if ranch_panel != null and ranch_panel.visible:
+		ranch_panel.close()
 	character_panel.toggle()
 
 ## Bouton « Siffler » (barre du bas) : visible seulement si un cheval ou un chien apprivoisé existe.
@@ -300,9 +331,11 @@ func _process(delta: float) -> void:
 	if _whistle_check <= 0.0:
 		_whistle_check = 0.5
 		_refresh_whistle_button()
+		_refresh_ranch_button()
 	# La mini-carte s'efface quand un panneau plein écran est ouvert.
 	var panel_open := (map_panel != null and map_panel.visible) or (journal_panel != null and journal_panel.visible) \
-			or (character_creator != null and character_creator.visible)
+			or (character_creator != null and character_creator.visible) \
+			or (character_panel != null and character_panel.visible) or (ranch_panel != null and ranch_panel.visible)
 	if panel_open != _panels_open:
 		_panels_open = panel_open
 		_sync_mouse_mode()

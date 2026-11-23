@@ -79,6 +79,8 @@ var ready_at: float = 0.0
 var herd_pen: Node3D = null
 ## Chien de garde : posté près de l'enclos (ou là où on l'a laissé), il chasse les prédateurs.
 var guarding: bool = false
+## Enclos gardé (identifiant), vide si le chien garde un endroit quelconque.
+var guard_pen_id: String = ""
 ## Rentrée du soir : bête menée à l'enclos par la routine du ranch (elle ressort à l'aube).
 var auto_penned: bool = false
 var _guard_cd: float = 0.0
@@ -89,6 +91,7 @@ var _route: Array = []
 var _route_left: float = 0.0
 var _route_pen_on_arrival: bool = false
 const ROUTE_SECONDS := 90.0
+const ROUTE_STUCK_SECONDS := 1.5
 
 var _interaction: Area3D
 var _indicator: MeshInstance3D
@@ -323,38 +326,51 @@ func _collect_product() -> void:
 		return
 	harvest()
 
-## Récolte le produit de la bête (lait, œufs, laine) sans message : renvoie {"item", "amount"},
-## ou {} si rien n'est prêt ou si l'outil manque (faucille pour la laine).
 ## Ordres du chien, un clic à chaque fois : suit → reste ici → monte la garde → suit...
 func _cycle_dog_order() -> void:
 	_voice()
 	if following:
-		following = false
-		guarding = false
-		_center = global_position
+		stay_here()
 		_toast(tr("TOAST_DOG_STAY"))
 	elif not guarding:
 		order_guard()
 	else:
-		guarding = false
-		following = true
-		_route.clear()
+		follow_player()
 		_toast(tr("TOAST_DOG_FOLLOW"))
 	state_changed.emit(self)
 
+func stay_here() -> void:
+	following = false
+	guarding = false
+	guard_pen_id = ""
+	_route.clear()
+	_center = global_position
+	state_changed.emit(self)
+
+func follow_player() -> void:
+	guarding = false
+	guard_pen_id = ""
+	following = true
+	_route.clear()
+	state_changed.emit(self)
+
 ## Poste le chien de garde : à l'enclos le plus proche s'il y en a un, sinon sur place.
-func order_guard() -> void:
+func order_guard(pen: Node3D = null) -> void:
 	following = false
 	guarding = true
-	var post: Node3D = null
+	var post: Node3D = pen
 	var best := GUARD_PEN_DISTANCE
-	if is_inside_tree():
-		for pen in get_tree().get_nodes_in_group("pens"):
-			var distance := global_position.distance_to(pen.global_position)
+	if post == null and is_inside_tree():
+		for candidate in get_tree().get_nodes_in_group("pens"):
+			var distance := global_position.distance_to(candidate.global_position)
 			if distance < best:
 				best = distance
-				post = pen
+				post = candidate
 	wander_radius = 4.0
+	guard_pen_id = String(post.get("pen_id")) if post != null else ""
+	if post != null and post.global_position.distance_to(global_position) > 150.0:
+		global_position = post.call("gate_outside") + Vector3(0.0, 0.5, 0.0)
+	state_changed.emit(self)
 	if post != null:
 		_set_route([post.call("gate_outside"), post.call("gate_inside"), post.global_position], false)
 		_toast(tr("TOAST_DOG_GUARD_PEN"))
@@ -395,6 +411,8 @@ func _guard_tick(delta: float) -> bool:
 	_face_direction(wanted.normalized(), delta)
 	return true
 
+## Récolte le produit de la bête (lait, œufs, laine) sans message : renvoie {"item", "amount"},
+## ou {} si rien n'est prêt ou si l'outil manque (faucille pour la laine).
 func harvest() -> Dictionary:
 	if not tamed or not PRODUCTS.has(species) or not is_product_ready():
 		return {}
@@ -649,7 +667,7 @@ func take_arrow_hit(from_position: Vector3) -> void:
 
 func get_state() -> Dictionary:
 	return {"key": spawn_key, "species": species, "pos": _center if not mounted else global_position,
-			"ready_at": ready_at, "following": following, "penned": penned, "guarding": guarding, "auto": auto_penned}
+			"ready_at": ready_at, "following": following, "penned": penned, "guarding": guarding, "auto": auto_penned, "guard_pen": guard_pen_id}
 
 func apply_state(state: Dictionary) -> void:
 	tamed = true
@@ -657,6 +675,7 @@ func apply_state(state: Dictionary) -> void:
 	ready_at = float(state.get("ready_at", 0.0))
 	following = bool(state.get("following", true))
 	guarding = bool(state.get("guarding", false)) and not following
+	guard_pen_id = String(state.get("guard_pen", "")) if guarding else ""
 	penned = bool(state.get("penned", false))
 	auto_penned = penned and bool(state.get("auto", false))
 	if penned:
@@ -831,6 +850,7 @@ func call_to_player(player: Node3D) -> bool:
 	if species == "dog":
 		following = true
 		guarding = false
+		guard_pen_id = ""
 		state_changed.emit(self)
 	else:
 		summoned = true
@@ -842,12 +862,12 @@ func call_to_player(player: Node3D) -> bool:
 # --- Ranch : trajets vers / hors de l'enclos -----------------------------------------------------
 
 ## Mène la bête jusqu'à l'enclos : elle contourne jusqu'à la barrière, entre, puis s'installe.
-func herd_to(pen: Node3D, automatic: bool = false) -> bool:
+func herd_to(pen: Node3D, automatic: bool = false, via: Array = []) -> bool:
 	if not tamed or not is_livestock or mounted or penned or pen == null:
 		return false
 	herd_pen = pen
 	auto_penned = automatic
-	var route: Array = []
+	var route: Array = via.duplicate()
 	if not bool(pen.call("contains", global_position)):
 		route.append(pen.call("gate_outside"))
 	route.append(pen.call("gate_inside"))
@@ -899,6 +919,17 @@ func _follow_route(delta: float) -> bool:
 	var wanted: Vector3 = to_point / distance * FLEE_SPEED * 0.5 * float(_config["speed"])
 	_fleeing = false
 	_track_stuck(wanted, delta)
+	# Bloquée (un autre animal sur le point de passage, un obstacle) : on passe au point suivant
+	# s'il reste proche, sinon on contourne en glissant de côté un instant.
+	if _stuck_time > ROUTE_STUCK_SECONDS:
+		_stuck_time = 0.0
+		if distance < 3.5:
+			_route.pop_front()
+			if _route.is_empty():
+				_end_route(true)
+				return false
+			return true
+		wanted = wanted.rotated(Vector3.UP, PI * 0.5 * (1.0 if randf() < 0.5 else -1.0))
 	velocity.x = move_toward(velocity.x, wanted.x, 30.0 * delta)
 	velocity.z = move_toward(velocity.z, wanted.z, 30.0 * delta)
 	_face_direction(wanted.normalized(), delta)
