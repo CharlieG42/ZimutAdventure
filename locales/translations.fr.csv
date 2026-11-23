@@ -586,3 +586,5 @@ ACTION_DOG_GUARD,Ordonner de garder les lieux
 TOAST_DOG_GUARD,Le chien monte la garde ici.
 TOAST_DOG_GUARD_PEN,Le chien va garder l'enclos.
 ANIMALS_GUARDING,garde les lieux
+TOAST_HERD_NIGHT,La nuit tombe : %d bête(s) rentrent à l'enclos.
+TOAST_HERD_DAWN,Le jour se lève : %d bête(s) sortent de l'enclos.

@@ -35,6 +35,55 @@ static func create() -> Area3D:
 	area.name = "Pen"
 	return area
 
+## Routine du ranch : à la tombée de la nuit le bétail libre rentre à l'enclos (à l'abri des
+## prédateurs), à l'aube celui qui est rentré ainsi ressort. Les bêtes mises en enclos à la
+## main y restent.
+const NIGHT_START := 18.5
+const NIGHT_END := 5.5
+const ROUTINE_SECONDS := 2.0
+var _routine_left: float = 0.0
+var _was_night: int = -1
+
+func _process(delta: float) -> void:
+	_routine_left -= delta
+	if _routine_left > 0.0:
+		return
+	_routine_left = ROUTINE_SECONDS
+	routine_tick()
+
+func is_night_now() -> bool:
+	var clock := get_node_or_null("/root/DayNightCycle")
+	if clock == null:
+		return false
+	var hour := float(clock.get("hour"))
+	return hour >= NIGHT_START or hour < NIGHT_END
+
+## Détecte le passage jour/nuit. Renvoie "dusk", "dawn" ou "" (rien à faire).
+func routine_tick() -> String:
+	var night := 1 if is_night_now() else 0
+	if night == _was_night:
+		return ""
+	var first := _was_night == -1
+	_was_night = night
+	if night == 1:
+		var sent := start_herd(true)
+		if sent > 0 and not first:
+			_toast(tr("TOAST_HERD_NIGHT") % sent)
+		return "dusk"
+	var out := release_auto()
+	if out > 0 and not first:
+		_toast(tr("TOAST_HERD_DAWN") % out)
+	return "dawn"
+
+## À l'aube : seules les bêtes rentrées automatiquement ressortent.
+func release_auto() -> int:
+	var released := 0
+	for animal in get_occupants():
+		if bool(animal.get("auto_penned")):
+			animal.call("leave_pen", to_global(Vector3(0.0, 0.0, half() + 2.0)))
+			released += 1
+	return released
+
 func _ready() -> void:
 	add_to_group("structures")
 	add_to_group("pens")
@@ -122,7 +171,7 @@ func herdable() -> Array:
 			continue
 		if not bool(animal.get("is_livestock")) or bool(animal.get("penned")) or bool(animal.get("mounted")):
 			continue
-		if animal.get("herd_pen") == self:
+		if animal.get("herd_pen") != null:
 			continue
 		if animal.global_position.distance_to(global_position) > HERD_RADIUS:
 			continue
@@ -131,13 +180,13 @@ func herdable() -> Array:
 	return animals
 
 ## Envoie les bêtes libres vers l'enclos (autant que de places). Renvoie le nombre de bêtes parties.
-func start_herd() -> int:
+func start_herd(automatic: bool = false) -> int:
 	var sent := 0
 	var slots := free_slots()
 	for animal in herdable():
 		if sent >= slots:
 			break
-		if bool(animal.call("herd_to", self)):
+		if bool(animal.call("herd_to", self, automatic)):
 			sent += 1
 	return sent
 
