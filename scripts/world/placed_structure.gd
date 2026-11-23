@@ -41,7 +41,44 @@ func _ready() -> void:
 		prompt_text = "ACTION_SLEEP"
 	_build()
 
+## Transparence de l'abri quand la caméra s'en approche (sinon un mur remplit tout l'écran).
+const FADE_MARGIN := 2.6
+const FADE_ALPHA := 0.8
+var _fade: float = 0.0
+var _fade_meshes: Array = []
+
+func _process(delta: float) -> void:
+	if kind != "shelter" or not is_inside_tree():
+		return
+	var camera := get_viewport().get_camera_3d()
+	if camera == null:
+		return
+	var target := FADE_ALPHA if camera_is_near(camera.global_position) else 0.0
+	if is_equal_approx(_fade, target):
+		return
+	_fade = move_toward(_fade, target, delta * 4.0)
+	_apply_fade()
+
+## Vrai quand le point (la caméra) est dans ou tout contre l'abri.
+func camera_is_near(point: Vector3) -> bool:
+	var size := shelter_size()
+	var local := to_local(point)
+	return absf(local.x) < size.x * 0.5 + FADE_MARGIN \
+			and local.z < FRONT_Z + FADE_MARGIN and local.z > FRONT_Z - size.z - FADE_MARGIN \
+			and local.y < size.y + FADE_MARGIN and local.y > -1.0
+
+func fade_amount() -> float:
+	return _fade
+
+func _apply_fade() -> void:
+	if _fade_meshes.is_empty():
+		_fade_meshes = find_children("*", "MeshInstance3D", true, false)
+	for mesh in _fade_meshes:
+		if is_instance_valid(mesh):
+			(mesh as MeshInstance3D).transparency = _fade
+
 func _build() -> void:
+	_fade_meshes.clear()
 	match kind:
 		"shelter":
 			_build_shelter()
