@@ -151,7 +151,34 @@ func release_all() -> int:
 		animal.set("herd_pen", null)
 	return released
 
+## Bêtes de l'enclos dont le produit est prêt (la laine exige la faucille en main).
+func collectable() -> Array:
+	var ready: Array = []
+	for animal in get_occupants():
+		if bool(animal.call("is_product_ready")) and not bool(animal.call("needs_missing_tool")):
+			ready.append(animal)
+	return ready
+
+## Collecte tout en un clic : lait, œufs et laine de toutes les bêtes prêtes.
+## Renvoie les totaux par objet, ex. {"item_milk": 4, "item_egg": 2}.
+func collect_all() -> Dictionary:
+	var totals := {}
+	for animal in collectable():
+		var result: Dictionary = animal.call("harvest")
+		if not result.is_empty():
+			totals[result["item"]] = int(totals.get(result["item"], 0)) + int(result["amount"])
+	return totals
+
+func _blocked_by_tool() -> int:
+	var count := 0
+	for animal in get_occupants():
+		if bool(animal.call("needs_missing_tool")):
+			count += 1
+	return count
+
 func get_prompt() -> String:
+	if not collectable().is_empty():
+		return "ACTION_COLLECT_ALL"
 	if free_slots() > 0 and not herdable().is_empty():
 		return "ACTION_HERD"
 	if not get_occupants().is_empty():
@@ -160,6 +187,8 @@ func get_prompt() -> String:
 
 func get_prompt_args() -> Array:
 	var prompt := get_prompt()
+	if prompt == "ACTION_COLLECT_ALL":
+		return [collectable().size()]
 	if prompt == "ACTION_HERD":
 		return [mini(free_slots(), herdable().size())]
 	if prompt == "ACTION_RELEASE":
@@ -168,6 +197,15 @@ func get_prompt_args() -> Array:
 
 func _on_interact(_interactor: Node3D) -> void:
 	match get_prompt():
+		"ACTION_COLLECT_ALL":
+			var totals := collect_all()
+			var parts: PackedStringArray = []
+			for item_id in totals:
+				parts.append("%d %s" % [int(totals[item_id]), tr("ITEM_" + String(item_id).to_upper())])
+			var message := tr("TOAST_COLLECTED") % ", ".join(parts)
+			if _blocked_by_tool() > 0:
+				message += " " + tr("TOAST_COLLECT_NEED_SICKLE")
+			_toast(message)
 		"ACTION_HERD":
 			var sent := start_herd()
 			var left := herdable().size()

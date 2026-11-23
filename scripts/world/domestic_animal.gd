@@ -314,6 +314,20 @@ func _collect_product() -> void:
 	if tool_id != "" and not inventory.is_equipped(tool_id):
 		_toast(tr("TOAST_NEED_SICKLE_SHEAR"))
 		return
+	harvest()
+
+## Récolte le produit de la bête (lait, œufs, laine) sans message : renvoie {"item", "amount"},
+## ou {} si rien n'est prêt ou si l'outil manque (faucille pour la laine).
+func harvest() -> Dictionary:
+	if not tamed or not PRODUCTS.has(species) or not is_product_ready():
+		return {}
+	var product: Dictionary = PRODUCTS[species]
+	var tool_id := String(product["tool"])
+	var inventory := InteractionManager.get_inventory()
+	if inventory == null:
+		return {}
+	if tool_id != "" and not inventory.is_equipped(tool_id):
+		return {}
 	var amount := int(product["amount"])
 	var progression := InteractionManager.get_progression()
 	if progression != null:
@@ -324,6 +338,17 @@ func _collect_product() -> void:
 	ready_at = _now() + _production_seconds()
 	_update_indicator()
 	state_changed.emit(self)
+	return {"item": String(product["item"]), "amount": amount}
+
+## Vrai si la récolte demanderait la faucille, que le joueur n'a pas en main.
+func needs_missing_tool() -> bool:
+	if not tamed or not PRODUCTS.has(species) or not is_product_ready():
+		return false
+	var tool_id := String(PRODUCTS[species]["tool"])
+	if tool_id == "":
+		return false
+	var inventory := InteractionManager.get_inventory()
+	return inventory == null or not inventory.is_equipped(tool_id)
 
 ## Un prédateur est passé : la bête, effrayée, produit avec retard.
 func scare_by_predator() -> void:
