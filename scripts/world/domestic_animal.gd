@@ -79,6 +79,8 @@ var ready_at: float = 0.0
 var herd_pen: Node3D = null
 ## Chien de garde : posté près de l'enclos (ou là où on l'a laissé), il chasse les prédateurs.
 var guarding: bool = false
+## Rentrée du soir : bête menée à l'enclos par la routine du ranch (elle ressort à l'aube).
+var auto_penned: bool = false
 var _guard_cd: float = 0.0
 const GUARD_RADIUS := 16.0
 const GUARD_BITE_RANGE := 2.2
@@ -647,7 +649,7 @@ func take_arrow_hit(from_position: Vector3) -> void:
 
 func get_state() -> Dictionary:
 	return {"key": spawn_key, "species": species, "pos": _center if not mounted else global_position,
-			"ready_at": ready_at, "following": following, "penned": penned, "guarding": guarding}
+			"ready_at": ready_at, "following": following, "penned": penned, "guarding": guarding, "auto": auto_penned}
 
 func apply_state(state: Dictionary) -> void:
 	tamed = true
@@ -656,6 +658,7 @@ func apply_state(state: Dictionary) -> void:
 	following = bool(state.get("following", true))
 	guarding = bool(state.get("guarding", false)) and not following
 	penned = bool(state.get("penned", false))
+	auto_penned = penned and bool(state.get("auto", false))
 	if penned:
 		wander_radius = 3.0
 	spawn_key = String(state.get("key", spawn_key))
@@ -839,10 +842,11 @@ func call_to_player(player: Node3D) -> bool:
 # --- Ranch : trajets vers / hors de l'enclos -----------------------------------------------------
 
 ## Mène la bête jusqu'à l'enclos : elle contourne jusqu'à la barrière, entre, puis s'installe.
-func herd_to(pen: Node3D) -> bool:
+func herd_to(pen: Node3D, automatic: bool = false) -> bool:
 	if not tamed or not is_livestock or mounted or penned or pen == null:
 		return false
 	herd_pen = pen
+	auto_penned = automatic
 	var route: Array = []
 	if not bool(pen.call("contains", global_position)):
 		route.append(pen.call("gate_outside"))
@@ -855,6 +859,7 @@ func leave_pen(outside: Vector3) -> void:
 	if not penned:
 		return
 	penned = false
+	auto_penned = false
 	herd_pen = null
 	var gate: Vector3 = outside
 	if get_tree() != null:

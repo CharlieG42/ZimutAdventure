@@ -586,3 +586,5 @@ ACTION_DOG_GUARD,Order to guard the place
 TOAST_DOG_GUARD,The dog stands guard here.
 TOAST_DOG_GUARD_PEN,The dog goes to guard the pen.
 ANIMALS_GUARDING,guarding
+TOAST_HERD_NIGHT,Night falls: %d animal(s) head into the pen.
+TOAST_HERD_DAWN,Day breaks: %d animal(s) leave the pen.
