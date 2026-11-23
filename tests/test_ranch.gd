@@ -113,6 +113,10 @@ func _initialize() -> void:
 	_check(pen.get("level") == 2 and pen.call("capacity") == 10 and pen.call("half") > 6.0, "niveau 2 : 10 places, plus grand")
 	_check(int(inventory.call("count_of", "item_wood")) == 30 and int(inventory.call("count_of", "item_stone")) == 8, "coût du niveau 2")
 	_check(pen.call("upgrade") == "", "enclos niveau 3")
+	var penned_animal = crowd[7]
+	penned_animal.call("_end_route", false)
+	pen.call("admit", penned_animal)
+	_check(penned_animal.penned and is_equal_approx(penned_animal.call("pen_production_factor"), 0.4), "niveau 3 : production x0,4")
 	_check(pen.call("capacity") == 16 and pen.call("upgrade") == "TOAST_MAX_LEVEL", "niveau 3 : 16 places, maximum")
 	_check(pen.call("get_state").get("level") == 3, "niveau sauvegardé")
 	var copy = load("res://scripts/world/pen.gd").create()
