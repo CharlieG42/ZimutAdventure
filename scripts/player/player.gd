@@ -143,6 +143,8 @@ var _wading: bool = false
 var _landscape_ref: Node3D
 
 const MOUNT_LIFT := 0.75
+const BOOTS_ITEM := "gear_hide_boots"
+const BOOTS_SPEED_FACTOR := 1.08
 ## Hauteur (au-dessus du sol) du creux du dos du cheval, où se pose le bassin du cavalier.
 const MOUNT_SEAT_HEIGHT := 1.86
 ## Le bassin s'abaisse de 18 cm dans la pose « à cheval » (voir les modèles du personnage).
@@ -793,6 +795,10 @@ func _physics_process(delta: float) -> void:
 	_update_stamina(delta)
 
 	var top_speed := sprint_speed if _sprinting else walk_speed
+	# Bottes de peau : on marche et on court un peu plus vite.
+	var inventory_now := InteractionManager.get_inventory()
+	if inventory_now != null and bool(inventory_now.call("is_worn", BOOTS_ITEM)):
+		top_speed *= BOOTS_SPEED_FACTOR
 	if _mount != null:
 		top_speed *= MOUNT_SPEED_MULTIPLIER
 	elif _drawing:
@@ -1087,11 +1093,7 @@ func _update_hero_gear() -> void:
 	if inventory == null:
 		return
 	_hero.call("set_held_tool", String(inventory.call("get_equipped")))
-	var worn: Array = []
-	for id in _hero.get("GEAR_IDS"):
-		if bool(inventory.call("has_item", id, 1)):
-			worn.append(id)
-	_hero.call("set_gear", worn)
+	_hero.call("set_gear", inventory.call("get_worn"))
 
 ## Applique une nouvelle apparence (écran de personnalisation).
 func apply_character_profile(profile: CharacterProfile) -> void:

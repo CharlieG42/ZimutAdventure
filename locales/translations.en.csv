@@ -580,7 +580,7 @@ ANIMALS_STAYING,staying put
 ANIMALS_UNKNOWN_HINT,Feed one to tame it.
 
 ACTION_COLLECT_ALL,Collect everything (%d)
-TOAST_COLLECTED,Collected: %s.
+TOAST_PEN_COLLECTED,Collected: %s.
 TOAST_COLLECT_NEED_SICKLE,(Equip the sickle for wool.)
 ACTION_DOG_GUARD,Order to guard the place
 TOAST_DOG_GUARD,The dog stands guard here.
@@ -588,3 +588,18 @@ TOAST_DOG_GUARD_PEN,The dog goes to guard the pen.
 ANIMALS_GUARDING,guarding
 TOAST_HERD_NIGHT,Night falls: %d animal(s) head into the pen.
 TOAST_HERD_DAWN,Day breaks: %d animal(s) leave the pen.
+ACTION_CHARACTER,Character
+CHARACTER_TITLE,%s — level %d
+CHARACTER_TOOL,Tool in hand: %s
+SLOT_HEAD,Head
+SLOT_BODY,Body
+SLOT_FEET,Feet
+SLOT_BACK,Back
+SLOT_EMPTY,none
+SLOT_NOTHING_OWNED,Nothing for this slot yet (craft it in the Crafting tab).
+ACTION_WEAR,Wear
+ACTION_TAKE_OFF,Take off
+GEAR_EFFECT_HAT,shades you from the sun: thirst −20%
+GEAR_EFFECT_CLOAK,"warm, damage taken −35%"
+GEAR_EFFECT_BOOTS,speed +8%
+GEAR_EFFECT_BACKPACK,for style (and long walks)

@@ -161,6 +161,7 @@ func _ready() -> void:
 	_setup_tutorial()
 	_setup_build_panel()
 	_setup_whistle_button()
+	_setup_character_panel()
 	_setup_character_creator()
 	if _player != null:
 		joystick.moved.connect(_on_fixed_move)
@@ -172,6 +173,28 @@ func _ready() -> void:
 		if _player.has_signal("stamina_changed"):
 			_player.connect("stamina_changed", _on_stamina_changed)
 		_on_view_changed(_player.call("is_first_person"))
+
+var character_panel: CharacterPanel
+var character_button: Button
+
+## Fenêtre Personnage (vêtements portés, aperçu 3D) et son bouton dans la barre du bas.
+func _setup_character_panel() -> void:
+	character_panel = CharacterPanel.new()
+	character_panel.name = "CharacterPanel"
+	journal_panel.get_parent().add_child(character_panel)
+	character_button = Button.new()
+	character_button.name = "CharacterButton"
+	character_button.text = tr("ACTION_CHARACTER")
+	character_button.custom_minimum_size = Vector2(0.0, 56.0)
+	character_button.focus_mode = Control.FOCUS_NONE
+	character_button.pressed.connect(open_character_panel)
+	view_button.get_parent().add_child(character_button)
+	view_button.get_parent().move_child(character_button, journal_button.get_index() + 1)
+
+func open_character_panel() -> void:
+	if journal_panel != null and journal_panel.visible:
+		journal_panel.close()
+	character_panel.toggle()
 
 ## Bouton « Siffler » (barre du bas) : visible seulement si un cheval ou un chien apprivoisé existe.
 func _setup_whistle_button() -> void:
@@ -333,7 +356,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		if slot >= 0 and slot < 4:
 			hotbar.call("select_index", slot)
 			return
+	if event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).physical_keycode == KEY_C:
+		open_character_panel()
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("open_journal"):
+		if character_panel != null and character_panel.visible:
+			character_panel.close()
 		_on_journal_pressed()
 	elif event.is_action_pressed("open_map"):
 		_on_map_pressed()
