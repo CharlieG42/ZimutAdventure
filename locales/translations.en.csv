@@ -522,7 +522,7 @@ CHAR_TUNIC,Tunic
 CHAR_PANTS,Trousers
 CHAR_START,Start the adventure
 CHAR_DONE,Done
-SETTING_APPEARANCE,Edit my character (name, appearance)
+SETTING_APPEARANCE,"Edit my character (name, appearance)"
 CAT_CLOTHES,Clothing
 CRAFT_STRAW_HAT,Straw hat
 CRAFT_HIDE_BOOTS,Hide boots
@@ -565,7 +565,7 @@ TOAST_PEN_EMPTY,No animal to herd or release.
 TOAST_HERD_STUCK,The animal could not find the pen entrance.
 TOAST_UPGRADE_NO_ROOM,Not enough room: a building is in the way.
 QUEST_TAMER_3_TITLE,Small-time breeder
-QUEST_TAMER_3_DESC,Tame 3 animals in total (livestock, dog or horse).
+QUEST_TAMER_3_DESC,"Tame 3 animals in total (livestock, dog or horse)."
 QUEST_TAMER_8_TITLE,Breeder
 QUEST_TAMER_8_DESC,Tame 8 animals in total: your ranch is taking shape.
 QUEST_TAMER_15_TITLE,Beast master
