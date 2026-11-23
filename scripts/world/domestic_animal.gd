@@ -337,7 +337,19 @@ func scare_by_predator() -> void:
 
 func _production_seconds() -> float:
 	var seconds := float(PRODUCTS[species]["seconds"])
-	return seconds * (PEN_PRODUCTION_FACTOR if penned else 1.0)
+	return seconds * pen_production_factor()
+
+## Un enclos accélère la production, d'autant plus qu'il est amélioré (niveau 1 : 0,6 ; 2 : 0,5 ; 3 : 0,4).
+func pen_production_factor() -> float:
+	if not penned:
+		return 1.0
+	var level := 1
+	if is_inside_tree():
+		for pen in get_tree().get_nodes_in_group("pens"):
+			if bool(pen.call("contains", global_position)):
+				level = int(pen.get("level"))
+				break
+	return maxf(0.3, PEN_PRODUCTION_FACTOR - 0.1 * float(level - 1))
 
 ## Entre dans un enclos : l'animal s'y installe et ne quitte plus ses abords.
 func enter_pen(spot: Vector3, radius: float) -> void:
