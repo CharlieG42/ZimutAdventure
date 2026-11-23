@@ -77,6 +77,12 @@ const SUMMON_MAX_DISTANCE := 120.0
 var ready_at: float = 0.0
 ## Ranch : enclos vers lequel la bête est menée, et trajet (points de passage) en cours.
 var herd_pen: Node3D = null
+## Chien de garde : posté près de l'enclos (ou là où on l'a laissé), il chasse les prédateurs.
+var guarding: bool = false
+var _guard_cd: float = 0.0
+const GUARD_RADIUS := 16.0
+const GUARD_BITE_RANGE := 2.2
+const GUARD_PEN_DISTANCE := 60.0
 var _route: Array = []
 var _route_left: float = 0.0
 var _route_pen_on_arrival: bool = false
@@ -144,7 +150,9 @@ func get_prompt_key() -> String:
 		"horse":
 			return "ACTION_MOUNT"
 		"dog":
-			return "ACTION_DOG_STAY" if following else "ACTION_DOG_FOLLOW"
+			if following:
+				return "ACTION_DOG_STAY"
+			return "ACTION_DOG_FOLLOW" if guarding else "ACTION_DOG_GUARD"
 	if PRODUCTS.has(species):
 		return String(PRODUCTS[species]["prompt"]) if is_product_ready() else "ACTION_PET"
 	return "ACTION_INTERACT"
@@ -157,10 +165,7 @@ func interact_with(interactor: Node3D) -> void:
 	elif species == "horse":
 		mount(interactor)
 	elif species == "dog":
-		following = not following
-		_voice()
-		_toast(tr("TOAST_DOG_FOLLOW") if following else tr("TOAST_DOG_STAY"))
-		state_changed.emit(self)
+		_cycle_dog_order()
 	elif is_product_ready():
 		_voice()
 		_collect_product()
@@ -318,6 +323,76 @@ func _collect_product() -> void:
 
 ## Récolte le produit de la bête (lait, œufs, laine) sans message : renvoie {"item", "amount"},
 ## ou {} si rien n'est prêt ou si l'outil manque (faucille pour la laine).
+## Ordres du chien, un clic à chaque fois : suit → reste ici → monte la garde → suit...
+func _cycle_dog_order() -> void:
+	_voice()
+	if following:
+		following = false
+		guarding = false
+		_center = global_position
+		_toast(tr("TOAST_DOG_STAY"))
+	elif not guarding:
+		order_guard()
+	else:
+		guarding = false
+		following = true
+		_route.clear()
+		_toast(tr("TOAST_DOG_FOLLOW"))
+	state_changed.emit(self)
+
+## Poste le chien de garde : à l'enclos le plus proche s'il y en a un, sinon sur place.
+func order_guard() -> void:
+	following = false
+	guarding = true
+	var post: Node3D = null
+	var best := GUARD_PEN_DISTANCE
+	if is_inside_tree():
+		for pen in get_tree().get_nodes_in_group("pens"):
+			var distance := global_position.distance_to(pen.global_position)
+			if distance < best:
+				best = distance
+				post = pen
+	wander_radius = 4.0
+	if post != null:
+		_set_route([post.call("gate_outside"), post.call("gate_inside"), post.global_position], false)
+		_toast(tr("TOAST_DOG_GUARD_PEN"))
+	else:
+		_center = global_position
+		_toast(tr("TOAST_DOG_GUARD"))
+
+## Garde : le chien fonce sur le prédateur le plus proche du poste et le mord. Vrai s'il agit.
+func _guard_tick(delta: float) -> bool:
+	_guard_cd = maxf(0.0, _guard_cd - delta)
+	var target: Node3D = null
+	var best := GUARD_RADIUS
+	for predator in get_tree().get_nodes_in_group("predators"):
+		if not is_instance_valid(predator) or bool(predator.get("_dead")):
+			continue
+		var distance: float = _center.distance_to(predator.global_position)
+		if distance < best:
+			best = distance
+			target = predator
+	if target == null:
+		return false
+	var offset := target.global_position - global_position
+	offset.y = 0.0
+	var gap := offset.length()
+	if gap <= GUARD_BITE_RANGE:
+		if _guard_cd <= 0.0 and target.has_method("hit"):
+			_guard_cd = 1.2
+			_voice()
+			target.call("hit", 1, global_position)
+		velocity.x = move_toward(velocity.x, 0.0, 30.0 * delta)
+		velocity.z = move_toward(velocity.z, 0.0, 30.0 * delta)
+		_face_direction(offset.normalized(), delta)
+		return true
+	var wanted: Vector3 = offset / gap * FLEE_SPEED * 0.9 * float(_config["speed"])
+	_track_stuck(wanted, delta)
+	velocity.x = move_toward(velocity.x, wanted.x, 30.0 * delta)
+	velocity.z = move_toward(velocity.z, wanted.z, 30.0 * delta)
+	_face_direction(wanted.normalized(), delta)
+	return true
+
 func harvest() -> Dictionary:
 	if not tamed or not PRODUCTS.has(species) or not is_product_ready():
 		return {}
@@ -509,6 +584,8 @@ func _update_behavior(delta: float) -> void:
 	if not _route.is_empty() and not mounted:
 		if _follow_route(delta):
 			return
+	if species == "dog" and tamed and guarding and _route.is_empty() and _guard_tick(delta):
+		return
 	if species == "dog" and tamed and following and _player != null and is_instance_valid(_player):
 		_follow_player(delta)
 		return
@@ -570,13 +647,14 @@ func take_arrow_hit(from_position: Vector3) -> void:
 
 func get_state() -> Dictionary:
 	return {"key": spawn_key, "species": species, "pos": _center if not mounted else global_position,
-			"ready_at": ready_at, "following": following, "penned": penned}
+			"ready_at": ready_at, "following": following, "penned": penned, "guarding": guarding}
 
 func apply_state(state: Dictionary) -> void:
 	tamed = true
 	trust = int(TRUST_NEEDED.get(species, 3))
 	ready_at = float(state.get("ready_at", 0.0))
 	following = bool(state.get("following", true))
+	guarding = bool(state.get("guarding", false)) and not following
 	penned = bool(state.get("penned", false))
 	if penned:
 		wander_radius = 3.0
@@ -749,6 +827,7 @@ func call_to_player(player: Node3D) -> bool:
 	herd_pen = null
 	if species == "dog":
 		following = true
+		guarding = false
 		state_changed.emit(self)
 	else:
 		summoned = true

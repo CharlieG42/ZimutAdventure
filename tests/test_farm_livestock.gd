@@ -163,9 +163,10 @@ func _initialize() -> void:
 	_check(int(progression.call("get_stat", "stat_dog")) == 1, "compteur chien")
 	_check(dog.get_prompt_key() == "ACTION_DOG_STAY", "chien : peut rester")
 	dog.interact_with(player)
-	_check(not dog.following and dog.get_prompt_key() == "ACTION_DOG_FOLLOW", "ordre : rester")
+	_check(not dog.following and dog.get_prompt_key() == "ACTION_DOG_GUARD", "ordre : rester")
 	dog.interact_with(player)
-	_check(dog.following, "ordre : suivre")
+	dog.interact_with(player)
+	_check(dog.following, "ordre : suivre (après la garde)")
 	dog.global_position = player.global_position + Vector3(12, 0, 0)
 	for i in 120:
 		await physics_frame
