@@ -58,6 +58,10 @@ func place(item_id: String, origin: Vector3, yaw: float) -> String:
 		return "TOAST_CANNOT_PLACE"
 	if get_child_count() >= MAX_STRUCTURES:
 		return "TOAST_TOO_MANY"
+	if PLACEABLE[item_id] == "palisade":
+		var snapped := snap_palisade(origin, yaw)
+		origin = snapped["pos"]
+		yaw = snapped["yaw"]
 	var site_error := _site_error(PLACEABLE[item_id], origin)
 	if site_error != "":
 		return site_error
@@ -74,6 +78,51 @@ func place(item_id: String, origin: Vector3, yaw: float) -> String:
 	if node is Pen:
 		(node as Pen).gather_nearby()
 	return ""
+
+## Distance max entre l'extrémité visée et celle d'une palissade existante pour s'y raccorder.
+const PALISADE_SNAP_DISTANCE := 2.4
+
+## Raccorde une palissade aux palissades déjà posées : son extrémité vient se coller à
+## l'extrémité libre la plus proche, alignée (même direction) ou en angle droit, du côté
+## le plus proche de l'endroit visé. Renvoie {"pos", "yaw", "snapped"}.
+func snap_palisade(origin: Vector3, yaw: float, exclude: Node = null) -> Dictionary:
+	var half := Palisade.LENGTH * 0.5
+	var best := {"pos": origin, "yaw": yaw, "snapped": false}
+	var best_score := INF
+	for record in _records:
+		var other := record.get("node") as Node3D
+		if other == null or other == exclude or not is_instance_valid(other) or not (other is Palisade):
+			continue
+		var other_axis := other.global_transform.basis.x.normalized()
+		var other_yaw := other.rotation.y
+		for end_sign in [-1.0, 1.0]:
+			var end_point: Vector3 = other.global_position + other_axis * half * end_sign
+			var flat_gap := Vector2(end_point.x - origin.x, end_point.z - origin.z).length()
+			if flat_gap > PALISADE_SNAP_DISTANCE + half:
+				continue
+			for quarter in 4:
+				var candidate_yaw := other_yaw + float(quarter) * PI * 0.5
+				var axis := Vector3(cos(candidate_yaw), 0.0, -sin(candidate_yaw))
+				for side in [-1.0, 1.0]:
+					var center: Vector3 = end_point + axis * half * side
+					# Pas par-dessus la palissade existante (ni sur une autre).
+					if _palisade_overlaps(center, exclude):
+						continue
+					var score := Vector2(center.x - origin.x, center.z - origin.z).length() \
+							+ 0.6 * absf(angle_difference(candidate_yaw, yaw))
+					if score < best_score and Vector2(center.x - origin.x, center.z - origin.z).length() < PALISADE_SNAP_DISTANCE + half:
+						best_score = score
+						best = {"pos": Vector3(center.x, origin.y, center.z), "yaw": wrapf(candidate_yaw, -PI, PI), "snapped": true}
+	return best
+
+func _palisade_overlaps(center: Vector3, exclude: Node) -> bool:
+	for record in _records:
+		var other := record.get("node") as Node3D
+		if other == null or other == exclude or not is_instance_valid(other) or not (other is Palisade):
+			continue
+		if Vector2(other.global_position.x - center.x, other.global_position.z - center.z).length() < 1.0:
+			return true
+	return false
 
 ## Le terrain permet-il d'installer `kind` en `origin` ? "" si oui, sinon la clé de l'erreur.
 func _site_error(kind: String, origin: Vector3) -> String:
@@ -151,10 +200,15 @@ func _collect_for_ghost(node: Node) -> void:
 func update_move(origin: Vector3, player_position: Vector3 = Vector3.INF) -> void:
 	if _moving == null:
 		return
+	var kind: String = PLACEABLE.get(String(_move_record["item"]), "")
+	var yaw := _move_yaw
+	if kind == "palisade":
+		var snapped := snap_palisade(origin, _move_yaw, _moving)
+		origin = snapped["pos"]
+		yaw = snapped["yaw"]
 	var ground := _ground_height(origin.x, origin.z)
 	_moving.position = Vector3(origin.x, ground, origin.z)
-	_moving.rotation.y = _move_yaw
-	var kind: String = PLACEABLE.get(String(_move_record["item"]), "")
+	_moving.rotation.y = yaw
 	var valid := _site_error(kind, origin) == ""
 	if valid and _moving is Pen:
 		var half := (_moving as Pen).half()
@@ -165,6 +219,9 @@ func update_move(origin: Vector3, player_position: Vector3 = Vector3.INF) -> voi
 		for record in _records:
 			var other := record.get("node") as Node3D
 			if other == null or other == _moving or not is_instance_valid(other):
+				continue
+			# Les palissades se raccordent bout à bout : elles peuvent être proches.
+			if other is Palisade and _moving is Palisade:
 				continue
 			if other.global_position.distance_to(_moving.global_position) < MOVE_MIN_SPACING:
 				valid = false
@@ -190,7 +247,7 @@ func confirm_move() -> String:
 		move_finished.emit(false, "TOAST_CANNOT_PLACE")
 		return "TOAST_CANNOT_PLACE"
 	_move_record["pos"] = _moving.position
-	_move_record["yaw"] = _move_yaw
+	_move_record["yaw"] = _moving.rotation.y
 	_carry_animals()
 	_end_move()
 	_save()

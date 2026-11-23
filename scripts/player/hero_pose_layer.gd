@@ -112,9 +112,12 @@ func _apply_ride(skeleton: Skeleton3D) -> void:
 	for side in ["Left", "Right"]:
 		var out := 1.0 if side == "Left" else -1.0
 		var leg_pitch := _limb_pitch(skeleton, side + "UpLeg", side + "Leg")
-		_turn(skeleton, side + "UpLeg", Vector3.RIGHT, (-leg_pitch - 0.62) * ride)
-		_turn(skeleton, side + "UpLeg", Vector3.BACK, 0.55 * out * ride)
-		_turn(skeleton, side + "Leg", Vector3.RIGHT, 0.8 * ride)
+		# Cuisses de part et d'autre du cheval (ventre ≈ 0,3 m de demi-largeur), genou plié,
+		# pied ramené sous le genou comme dans un étrier.
+		_turn(skeleton, side + "UpLeg", Vector3.RIGHT, (-leg_pitch - 0.7) * ride)
+		_turn(skeleton, side + "UpLeg", Vector3.BACK, 0.82 * out * ride)
+		_turn(skeleton, side + "Leg", Vector3.RIGHT, 1.0 * ride)
+		_turn(skeleton, side + "Foot", Vector3.RIGHT, -0.3 * ride)
 		var arm_pitch := _limb_pitch(skeleton, side + "Arm", side + "ForeArm")
 		_turn(skeleton, side + "Arm", Vector3.RIGHT, (-arm_pitch - 0.35) * ride)
 		_turn(skeleton, side + "ForeArm", Vector3.RIGHT, -0.95 * ride)

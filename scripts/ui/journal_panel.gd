@@ -238,6 +238,19 @@ func _refresh_animals() -> void:
 	var progression := InteractionManager.get_progression()
 	if progression == null:
 		return
+	var current := {}
+	for node in get_tree().get_nodes_in_group("tamed"):
+		if is_instance_valid(node):
+			var list: Array = current.get(String(node.get("species")), [])
+			list.append(node)
+			current[String(node.get("species"))] = list
+	# Les parties d'avant le compteur par espèce n'ont que le total : on rattrape le compteur
+	# à partir des bêtes apprivoisées présentes dans le monde.
+	for species in ANIMAL_SPECIES:
+		var counted := int(progression.call("get_stat", "stat_tamed_" + species))
+		var alive: int = (current.get(species, []) as Array).size()
+		if alive > counted:
+			progression.call("add_stat", "stat_tamed_" + species, alive - counted)
 	var total := int(progression.call("get_stat", "stat_tamed"))
 	var species_known := 0
 	for species in ANIMAL_SPECIES:
@@ -248,12 +261,6 @@ func _refresh_animals() -> void:
 		if total < int(milestone):
 			_add_label(_animals_list, tr("ANIMALS_NEXT") % int(milestone), 16, ACCENT)
 			break
-	var current := {}
-	for node in get_tree().get_nodes_in_group("tamed"):
-		if is_instance_valid(node):
-			var list: Array = current.get(String(node.get("species")), [])
-			list.append(node)
-			current[String(node.get("species"))] = list
 	for species in ANIMAL_SPECIES:
 		var count := int(progression.call("get_stat", "stat_tamed_" + species))
 		var line := RichTextLabel.new()

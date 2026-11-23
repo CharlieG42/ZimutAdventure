@@ -130,6 +130,12 @@ var _safe_position: Vector3 = Vector3.ZERO
 ## Monture actuelle (cheval apprivoisé) : le joueur est surélevé et va plus vite.
 var _mount: Node3D
 var _mount_lift: float = 0.0
+## Pieds au-dessus du sol en pente : surélévation lissée des visuels quand un pied s'enfoncerait.
+var _foot_lift: float = 0.0
+var _foot_skeleton: Skeleton3D = null
+var _foot_bones: PackedInt32Array = []
+const FOOT_LIFT_MAX := 0.45
+const FOOT_CLEARANCE := 0.04
 
 ## Dans la rivière, on avance moins vite (à pied comme à cheval).
 const WADE_SPEED_FACTOR := 0.6
@@ -137,6 +143,10 @@ var _wading: bool = false
 var _landscape_ref: Node3D
 
 const MOUNT_LIFT := 0.75
+## Hauteur (au-dessus du sol) du creux du dos du cheval, où se pose le bassin du cavalier.
+const MOUNT_SEAT_HEIGHT := 1.86
+## Le bassin s'abaisse de 18 cm dans la pose « à cheval » (voir les modèles du personnage).
+const RIDE_HIP_DROP := 0.18
 const MOUNT_SPEED_MULTIPLIER := 1.7
 var _safe_timer: float = 0.0
 
@@ -257,8 +267,32 @@ func try_interact() -> void:
 ## Monte un animal (cheval) : le joueur est surélevé, la monture suit ses déplacements.
 func mount(animal: Node3D) -> void:
 	_mount = animal
-	_mount_lift = MOUNT_LIFT
+	_mount_lift = mount_lift_for_hero()
 	_apply_view_mode()
+
+## Surélévation du personnage en selle : son bassin se pose sur le dos du cheval, quelle que
+## soit sa taille (homme ou femme).
+func mount_lift_for_hero() -> float:
+	var hip := hero_hip_height()
+	if hip <= 0.0:
+		return MOUNT_LIFT
+	return clampf(MOUNT_SEAT_HEIGHT - (hip - RIDE_HIP_DROP), 0.6, 1.5)
+
+## Hauteur du bassin du personnage debout (repère des visuels), 0 si inconnue.
+func hero_hip_height() -> float:
+	if _hero == null:
+		return 0.0
+	var skeletons := _hero.find_children("*", "Skeleton3D", true, false)
+	if not skeletons.is_empty():
+		var sk := skeletons[0] as Skeleton3D
+		var bone := sk.find_bone("mixamorig_Hips")
+		if bone >= 0:
+			var world_hip := sk.global_transform * sk.get_bone_global_rest(bone).origin
+			return (visuals.global_transform.affine_inverse() * world_hip).y
+	var hip_value = _hero.get("_hip_height")
+	if hip_value != null:
+		return float(hip_value)
+	return 0.0
 
 func dismount() -> void:
 	_mount = null
@@ -988,6 +1022,39 @@ func _hide_rigid_body(node: Node) -> void:
 	for child in node.get_children():
 		_hide_rigid_body(child)
 
+## En montée, le pied avant retombe plus haut que le sol sous le centre du personnage :
+## sans correction il s'enfonce dans la pente. On sonde le sol sous les pieds et on relève
+## les visuels juste assez (la collision ne bouge pas).
+func _update_foot_lift(delta: float) -> void:
+	var wanted := 0.0
+	if _mount == null and is_on_floor() and _hero != null:
+		if _foot_skeleton == null or not is_instance_valid(_foot_skeleton):
+			_foot_bones = PackedInt32Array()
+			var skeletons := _hero.find_children("*", "Skeleton3D", true, false)
+			if not skeletons.is_empty():
+				_foot_skeleton = skeletons[0] as Skeleton3D
+				for bone_name in ["mixamorig_LeftToeBase", "mixamorig_RightToeBase", "mixamorig_LeftFoot", "mixamorig_RightFoot"]:
+					var bone := _foot_skeleton.find_bone(bone_name)
+					if bone >= 0:
+						_foot_bones.append(bone)
+		if _foot_skeleton != null and not _foot_bones.is_empty():
+			var space := get_world_3d().direct_space_state
+			for bone in _foot_bones:
+				var foot := _foot_skeleton.global_transform * _foot_skeleton.get_bone_global_pose(bone).origin
+				# Hauteur du pied sans la surélévation actuelle.
+				foot.y -= _foot_lift
+				var query := PhysicsRayQueryParameters3D.create(foot + Vector3(0.0, 0.8, 0.0), foot + Vector3(0.0, -0.6, 0.0))
+				query.collision_mask = 1
+				query.exclude = [get_rid()]
+				var hit := space.intersect_ray(query)
+				if not hit.is_empty():
+					wanted = maxf(wanted, float((hit["position"] as Vector3).y) + FOOT_CLEARANCE - foot.y)
+	wanted = clampf(wanted, 0.0, FOOT_LIFT_MAX)
+	_foot_lift = move_toward(_foot_lift, wanted, delta * (3.0 if wanted > _foot_lift else 1.5))
+
+func foot_lift() -> float:
+	return _foot_lift
+
 func _update_hero(delta: float, horizontal_speed: float, moving: bool) -> void:
 	_hero.call("set_riding", _mount != null)
 	_hero.call("set_bow", _bow_equipped and (_aiming or _drawing), get_draw_charge())
@@ -1062,7 +1129,8 @@ func _update_character(delta: float, horizontal_speed: float) -> void:
 		if _attack_anim > 0.0:
 			lean += 0.12 * sin((1.0 - _attack_anim / ATTACK_ANIM_TIME) * PI)
 		visuals.rotation = Vector3(lean, _visuals_base_yaw + _facing_yaw, 0.0)
-		visuals.position.y = _mount_lift
+		_update_foot_lift(delta)
+		visuals.position.y = _mount_lift + _foot_lift
 		_update_hero(delta, horizontal_speed, moving)
 		return
 	visuals.rotation = Vector3(lean, _visuals_base_yaw + _facing_yaw, 0.0)
