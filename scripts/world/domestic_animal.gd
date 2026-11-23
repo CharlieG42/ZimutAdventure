@@ -75,6 +75,12 @@ var _summon_left: float = 0.0
 const SUMMON_SECONDS := 40.0
 const SUMMON_MAX_DISTANCE := 120.0
 var ready_at: float = 0.0
+## Ranch : enclos vers lequel la bête est menée, et trajet (points de passage) en cours.
+var herd_pen: Node3D = null
+var _route: Array = []
+var _route_left: float = 0.0
+var _route_pen_on_arrival: bool = false
+const ROUTE_SECONDS := 90.0
 
 var _interaction: Area3D
 var _indicator: MeshInstance3D
@@ -448,6 +454,9 @@ func _update_curiosity() -> void:
 func _update_behavior(delta: float) -> void:
 	if (_player == null or not is_instance_valid(_player)) and is_inside_tree():
 		_player = get_tree().get_first_node_in_group("player") as Node3D
+	if not _route.is_empty() and not mounted:
+		if _follow_route(delta):
+			return
 	if species == "dog" and tamed and following and _player != null and is_instance_valid(_player):
 		_follow_player(delta)
 		return
@@ -677,15 +686,98 @@ func _build_chicken() -> void:
 
 ## Sifflet du joueur : un cheval apprivoisé (et non monté) accourt. Renvoie vrai s'il entend.
 func call_to_player(player: Node3D) -> bool:
-	if species != "horse" or not tamed or mounted or player == null:
+	if (species != "horse" and species != "dog") or not tamed or mounted or player == null:
 		return false
 	var gap := player.global_position - global_position
 	gap.y = 0.0
 	if gap.length() > SUMMON_MAX_DISTANCE:
 		return false
 	_player = player
-	summoned = true
-	_summon_left = SUMMON_SECONDS
+	_route.clear()
+	herd_pen = null
+	if species == "dog":
+		following = true
+		state_changed.emit(self)
+	else:
+		summoned = true
+		_summon_left = SUMMON_SECONDS
 	_stuck_time = 0.0
 	_voice()
 	return true
+
+# --- Ranch : trajets vers / hors de l'enclos -----------------------------------------------------
+
+## Mène la bête jusqu'à l'enclos : elle contourne jusqu'à la barrière, entre, puis s'installe.
+func herd_to(pen: Node3D) -> bool:
+	if not tamed or not is_livestock or mounted or penned or pen == null:
+		return false
+	herd_pen = pen
+	var route: Array = []
+	if not bool(pen.call("contains", global_position)):
+		route.append(pen.call("gate_outside"))
+	route.append(pen.call("gate_inside"))
+	_set_route(route, true)
+	return true
+
+## Sort de l'enclos : la bête passe la barrière et reprend sa vie dehors.
+func leave_pen(outside: Vector3) -> void:
+	if not penned:
+		return
+	penned = false
+	herd_pen = null
+	var gate: Vector3 = outside
+	if get_tree() != null:
+		for pen in get_tree().get_nodes_in_group("pens"):
+			if pen.call("contains", global_position):
+				gate = pen.call("gate_inside")
+				break
+	wander_radius = 8.0
+	_set_route([gate, outside], false)
+	state_changed.emit(self)
+
+func _set_route(route: Array, enter_pen_at_end: bool) -> void:
+	_route = route
+	_route_left = ROUTE_SECONDS
+	_route_pen_on_arrival = enter_pen_at_end
+	_stuck_time = 0.0
+
+func is_on_route() -> bool:
+	return not _route.is_empty()
+
+## Avance vers le prochain point du trajet. Renvoie vrai tant que le trajet n'est pas fini.
+func _follow_route(delta: float) -> bool:
+	_route_left -= delta
+	if _route_left <= 0.0:
+		_end_route(false)
+		return false
+	var point: Vector3 = _route[0]
+	var to_point := point - global_position
+	to_point.y = 0.0
+	var distance := to_point.length()
+	if distance < 1.2:
+		_route.pop_front()
+		if _route.is_empty():
+			_end_route(true)
+			return false
+		return true
+	var wanted: Vector3 = to_point / distance * FLEE_SPEED * 0.5 * float(_config["speed"])
+	_fleeing = false
+	_track_stuck(wanted, delta)
+	velocity.x = move_toward(velocity.x, wanted.x, 30.0 * delta)
+	velocity.z = move_toward(velocity.z, wanted.z, 30.0 * delta)
+	_face_direction(wanted.normalized(), delta)
+	return true
+
+func _end_route(arrived: bool) -> void:
+	var pen := herd_pen
+	var enter := _route_pen_on_arrival
+	_route.clear()
+	herd_pen = null
+	_route_pen_on_arrival = false
+	_center = global_position
+	if enter and pen != null and is_instance_valid(pen):
+		# Arrivée (ou trajet bloqué) : s'il reste de la place, la bête s'installe dans l'enclos.
+		if arrived or bool(pen.call("contains", global_position)):
+			pen.call("admit", self)
+		else:
+			_toast(tr("TOAST_HERD_STUCK"))
