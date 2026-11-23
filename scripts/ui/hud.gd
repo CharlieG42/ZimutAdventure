@@ -191,11 +191,12 @@ func _on_whistle_pressed() -> void:
 func _refresh_whistle_button() -> void:
 	var available := false
 	for node in get_tree().get_nodes_in_group("domestic"):
-		if is_instance_valid(node) and (node.get("species") == "horse" or node.get("species") == "dog") and bool(node.get("tamed")):
-			if bool(node.get("mounted")):
-				available = false
-				break
+		if not is_instance_valid(node) or not bool(node.get("tamed")):
+			continue
+		# Un chien se siffle même quand on est à cheval ; le cheval, lui, seulement une fois descendu.
+		if node.get("species") == "dog" or (node.get("species") == "horse" and not bool(node.get("mounted"))):
 			available = true
+			break
 	if whistle_button.visible != available:
 		whistle_button.visible = available
 

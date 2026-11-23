@@ -564,3 +564,17 @@ TOAST_RELEASED,%d bête(s) sortent de l'enclos.
 TOAST_PEN_EMPTY,Aucune bête à rassembler ou à libérer.
 TOAST_HERD_STUCK,La bête n'a pas trouvé l'entrée de l'enclos.
 TOAST_UPGRADE_NO_ROOM,Pas assez de place : une construction gêne l'agrandissement.
+QUEST_TAMER_3_TITLE,Petit éleveur
+QUEST_TAMER_3_DESC,Apprivoisez 3 animaux au total (bétail, chien ou cheval).
+QUEST_TAMER_8_TITLE,Éleveur
+QUEST_TAMER_8_DESC,Apprivoisez 8 animaux au total : le ranch prend forme.
+QUEST_TAMER_15_TITLE,Maître des bêtes
+QUEST_TAMER_15_DESC,Apprivoisez 15 animaux au total.
+JOURNAL_ANIMALS,Animaux
+ANIMALS_INTRO,Animaux apprivoisés : %d (%d espèce(s) sur %d).
+ANIMALS_NEXT,Prochain succès : %d animaux apprivoisés.
+ANIMALS_COUNT,×%d apprivoisé(s)
+ANIMALS_PENNED,%d en enclos
+ANIMALS_FOLLOWING,te suit
+ANIMALS_STAYING,reste sur place
+ANIMALS_UNKNOWN_HINT,Nourrissez-en un pour l'apprivoiser.

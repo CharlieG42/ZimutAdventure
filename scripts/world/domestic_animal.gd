@@ -289,6 +289,7 @@ func tame() -> void:
 	var progression := InteractionManager.get_progression()
 	if progression != null:
 		progression.call("add_stat", "stat_tamed", 1)
+		progression.call("add_stat", "stat_tamed_" + species, 1)
 		if LIVESTOCK.has(species):
 			progression.call("add_stat", "stat_tamed_livestock", 1)
 		elif species == "dog":

@@ -15,6 +15,7 @@ var _quests_list: VBoxContainer
 var _craft_list: VBoxContainer
 var _inventory_list: VBoxContainer
 var _notebook_list: VBoxContainer
+var _animals_list: VBoxContainer
 var _notebook: Node
 var _close_button: Button
 var _quest_manager: Node
@@ -74,6 +75,7 @@ func _build() -> void:
 	_craft_list = _add_tab(tr("JOURNAL_CRAFT"))
 	_inventory_list = _add_tab(tr("JOURNAL_INVENTORY_TITLE"))
 	_notebook_list = _add_tab(tr("JOURNAL_NOTEBOOK"))
+	_animals_list = _add_tab(tr("JOURNAL_ANIMALS"))
 	_build_settings(_add_tab(tr("JOURNAL_SETTINGS")))
 
 	_close_button = Button.new()
@@ -221,6 +223,61 @@ func _refresh() -> void:
 	_refresh_craft()
 	_refresh_inventory()
 	_refresh_notebook()
+	_refresh_animals()
+
+# --- Animaux apprivoisés ----------------------------------------------------------------
+
+const ANIMAL_SPECIES := ["cow", "sheep", "goat", "chicken", "horse", "dog"]
+const TAMER_MILESTONES := [3, 8, 15]
+
+## Une ligne par espèce : combien en ont été apprivoisés, combien vivent en enclos ou suivent le joueur.
+func _refresh_animals() -> void:
+	if _animals_list == null:
+		return
+	_clear(_animals_list)
+	var progression := InteractionManager.get_progression()
+	if progression == null:
+		return
+	var total := int(progression.call("get_stat", "stat_tamed"))
+	var species_known := 0
+	for species in ANIMAL_SPECIES:
+		if int(progression.call("get_stat", "stat_tamed_" + species)) > 0:
+			species_known += 1
+	_add_label(_animals_list, tr("ANIMALS_INTRO") % [total, species_known, ANIMAL_SPECIES.size()], 18, Color(1, 0.95, 0.85))
+	for milestone in TAMER_MILESTONES:
+		if total < int(milestone):
+			_add_label(_animals_list, tr("ANIMALS_NEXT") % int(milestone), 16, ACCENT)
+			break
+	var current := {}
+	for node in get_tree().get_nodes_in_group("tamed"):
+		if is_instance_valid(node):
+			var list: Array = current.get(String(node.get("species")), [])
+			list.append(node)
+			current[String(node.get("species"))] = list
+	for species in ANIMAL_SPECIES:
+		var count := int(progression.call("get_stat", "stat_tamed_" + species))
+		var line := RichTextLabel.new()
+		line.bbcode_enabled = true
+		line.fit_content = true
+		line.scroll_active = false
+		line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		line.add_theme_font_size_override("normal_font_size", 18)
+		line.add_theme_font_size_override("bold_font_size", 19)
+		if count > 0:
+			var details: PackedStringArray = [tr("ANIMALS_COUNT") % count]
+			var animals: Array = current.get(species, [])
+			var penned := 0
+			for animal in animals:
+				if bool(animal.get("penned")):
+					penned += 1
+			if penned > 0:
+				details.append(tr("ANIMALS_PENNED") % penned)
+			if species == "dog" and not animals.is_empty():
+				details.append(tr("ANIMALS_FOLLOWING") if bool(animals[0].get("following")) else tr("ANIMALS_STAYING"))
+			line.text = "[b][color=#e8c690]%s[/color][/b]  [color=#ffffffcc]%s[/color]" % [tr("ANIMAL_" + String(species).to_upper()), ", ".join(details)]
+		else:
+			line.text = "[b][color=#ffffff80]???[/color][/b]  [color=#ffffff80][i]%s[/i][/color]" % tr("ANIMALS_UNKNOWN_HINT")
+		_animals_list.add_child(line)
 
 # --- Carnet d'observation ---------------------------------------------------------------
 
