@@ -564,3 +564,17 @@ TOAST_RELEASED,%d animal(s) leave the pen.
 TOAST_PEN_EMPTY,No animal to herd or release.
 TOAST_HERD_STUCK,The animal could not find the pen entrance.
 TOAST_UPGRADE_NO_ROOM,Not enough room: a building is in the way.
+QUEST_TAMER_3_TITLE,Small-time breeder
+QUEST_TAMER_3_DESC,Tame 3 animals in total (livestock, dog or horse).
+QUEST_TAMER_8_TITLE,Breeder
+QUEST_TAMER_8_DESC,Tame 8 animals in total: your ranch is taking shape.
+QUEST_TAMER_15_TITLE,Beast master
+QUEST_TAMER_15_DESC,Tame 15 animals in total.
+JOURNAL_ANIMALS,Animals
+ANIMALS_INTRO,Tamed animals: %d (%d species out of %d).
+ANIMALS_NEXT,Next achievement: %d tamed animals.
+ANIMALS_COUNT,×%d tamed
+ANIMALS_PENNED,%d in a pen
+ANIMALS_FOLLOWING,following you
+ANIMALS_STAYING,staying put
+ANIMALS_UNKNOWN_HINT,Feed one to tame it.
