@@ -26,6 +26,11 @@ const SOLID_LAYER := 1
 const UPGRADE_ROOM_ERROR := "TOAST_UPGRADE_NO_ROOM"
 
 var level: int = 1
+## Nom donné par le joueur (vide = « Enclos n ») et identifiant stable (chiens de garde affectés).
+var pen_name: String = ""
+var pen_id: String = ""
+const MAX_GUARDS := 2
+const NAME_MAX_LENGTH := 24
 
 static func create() -> Area3D:
 	var area := Area3D.new()
@@ -85,6 +90,8 @@ func release_auto() -> int:
 	return released
 
 func _ready() -> void:
+	if pen_id == "":
+		pen_id = "pen_%d_%d" % [Time.get_ticks_usec(), randi() % 100000]
 	add_to_group("structures")
 	add_to_group("pens")
 	prompt_text = "ACTION_HERD"
@@ -344,9 +351,90 @@ func _rebuild() -> void:
 	_build()
 
 func get_state() -> Dictionary:
-	return {"level": level}
+	return {"level": level, "name": pen_name, "id": pen_id}
+
+# --- Gestion du ranch (fenêtre Ranch) ---------------------------------------------------------
+
+func display_name() -> String:
+	if pen_name != "":
+		return pen_name
+	var index := 1
+	if is_inside_tree():
+		index = get_tree().get_nodes_in_group("pens").find(self) + 1
+	return tr("PEN_DEFAULT_NAME") % maxi(index, 1)
+
+func rename(new_name: String) -> void:
+	pen_name = new_name.strip_edges().substr(0, NAME_MAX_LENGTH)
+	_save_spawner()
+
+## Chiens de garde affectés à cet enclos.
+func guard_dogs() -> Array:
+	var dogs: Array = []
+	for animal in get_tree().get_nodes_in_group("tamed"):
+		if is_instance_valid(animal) and animal.get("species") == "dog" and bool(animal.get("guarding")) \
+				and animal.get("guard_pen_id") == pen_id:
+			dogs.append(animal)
+	return dogs
+
+## Affecte un chien à la garde de l'enclos (2 au plus). Renvoie "" ou la clé d'erreur.
+func assign_guard(dog: Node) -> String:
+	if dog == null or dog.get("species") != "dog" or not bool(dog.get("tamed")):
+		return "TOAST_CANNOT_ASSIGN"
+	var dogs := guard_dogs()
+	if dogs.has(dog):
+		return ""
+	if dogs.size() >= MAX_GUARDS:
+		return "TOAST_PEN_GUARDS_FULL"
+	dog.call("order_guard", self)
+	return ""
+
+func unassign_guard(dog: Node) -> void:
+	if dog != null and dog.get("guard_pen_id") == pen_id:
+		dog.call("stay_here")
+
+## Met une bête d'élevage dans cet enclos : elle quitte son enclos actuel et vient à pied
+## (de très loin, elle est ramenée devant la barrière). Renvoie "" ou la clé d'erreur.
+func assign_animal(animal: Node) -> String:
+	if animal == null or not bool(animal.get("tamed")) or not bool(animal.get("is_livestock")):
+		return "TOAST_CANNOT_ASSIGN"
+	if get_occupants().has(animal) or animal.get("herd_pen") == self:
+		return ""
+	if free_slots() <= 0:
+		return "TOAST_PEN_FULL"
+	if bool(animal.get("mounted")):
+		return "TOAST_CANNOT_ASSIGN"
+	# Une bête dans un autre enclos en sort d'abord par sa barrière.
+	var via: Array = []
+	for other in get_tree().get_nodes_in_group("pens"):
+		if other != self and bool(other.call("contains", animal.global_position)):
+			via = [other.call("gate_inside"), other.call("gate_outside")]
+			break
+	if bool(animal.get("penned")):
+		animal.call("leave_pen", animal.global_position)
+	animal.set("herd_pen", null)
+	if animal.global_position.distance_to(global_position) > HERD_RADIUS * 1.5:
+		animal.global_position = gate_outside() + Vector3(0.0, 0.5, 0.0)
+		via.clear()
+	if not bool(animal.call("herd_to", self, false, via)):
+		return "TOAST_CANNOT_ASSIGN"
+	return ""
+
+## Fait sortir une bête de cet enclos.
+func release_animal(animal: Node) -> void:
+	if get_occupants().has(animal):
+		animal.call("leave_pen", to_global(Vector3(0.0, 0.0, half() + 2.0)))
+	elif animal.get("herd_pen") == self:
+		animal.set("herd_pen", null)
+
+func _save_spawner() -> void:
+	var spawner := get_parent()
+	if spawner != null and spawner.has_method("save_now"):
+		spawner.call("save_now")
 
 func apply_state(state: Dictionary) -> void:
+	pen_name = String(state.get("name", ""))
+	if String(state.get("id", "")) != "":
+		pen_id = String(state.get("id"))
 	var saved := clampi(int(state.get("level", 1)), 1, MAX_LEVEL)
 	if saved != level:
 		level = saved

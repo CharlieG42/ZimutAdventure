@@ -603,3 +603,36 @@ GEAR_EFFECT_HAT,shades you from the sun: thirst −20%
 GEAR_EFFECT_CLOAK,"warm, damage taken −35%"
 GEAR_EFFECT_BOOTS,speed +8%
 GEAR_EFFECT_BACKPACK,for style (and long walks)
+ACTION_RANCH,Ranch
+RANCH_TITLE,Ranch — pen management
+RANCH_NO_PEN,No pen yet: build one (Crafting tab).
+PEN_DEFAULT_NAME,Pen %d
+RANCH_PEN_STATS,"Level %d · %d/%d animals · %d/%d guard dogs"
+RANCH_HERD,Herd
+RANCH_RELEASE,Release
+RANCH_COLLECT,Collect all
+RANCH_GUARDS,Guard dogs
+RANCH_NO_DOG,No tamed dog.
+RANCH_DOG_NAME,Dog %d
+RANCH_DOG_HERE,guards this pen
+RANCH_GUARDS_OTHER,guards ‘%s’
+ACTION_ASSIGN_GUARD,Assign
+ACTION_UNASSIGN,Remove
+RANCH_LIVESTOCK,Tamed livestock
+RANCH_NO_LIVESTOCK,No tamed livestock.
+RANCH_ON_THE_WAY,on the way
+RANCH_HERE,in this pen
+RANCH_IN_PEN,in ‘%s’
+RANCH_FREE,roaming free
+ACTION_PUT_HERE,Put here
+ACTION_TAKE_OUT,Take out
+RANCH_NOTHING_READY,Nothing ready to collect.
+TOAST_CANNOT_ASSIGN,Not possible for this animal.
+TOAST_PEN_GUARDS_FULL,Two dogs already guard this pen.
+TOAST_PEN_FULL,The pen is full: upgrade it for more room.
+SPECIES_COW,Cow
+SPECIES_SHEEP,Sheep
+SPECIES_GOAT,Goat
+SPECIES_CHICKEN,Chicken
+SPECIES_HORSE,Horse
+SPECIES_DOG,Dog

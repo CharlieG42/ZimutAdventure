@@ -603,3 +603,36 @@ GEAR_EFFECT_HAT,protège du soleil : soif −20 %
 GEAR_EFFECT_CLOAK,"chaud, dégâts reçus −35 %"
 GEAR_EFFECT_BOOTS,vitesse +8 %
 GEAR_EFFECT_BACKPACK,pour le style (et les longues marches)
+ACTION_RANCH,Ranch
+RANCH_TITLE,Ranch — gestion des enclos
+RANCH_NO_PEN,Aucun enclos : construisez-en un (onglet Fabrication).
+PEN_DEFAULT_NAME,Enclos %d
+RANCH_PEN_STATS,"Niveau %d · %d/%d bêtes · %d/%d chiens de garde"
+RANCH_HERD,Rassembler
+RANCH_RELEASE,Libérer
+RANCH_COLLECT,Tout collecter
+RANCH_GUARDS,Chiens de garde
+RANCH_NO_DOG,Aucun chien apprivoisé.
+RANCH_DOG_NAME,Chien %d
+RANCH_DOG_HERE,garde cet enclos
+RANCH_GUARDS_OTHER,garde « %s »
+ACTION_ASSIGN_GUARD,Affecter
+ACTION_UNASSIGN,Retirer
+RANCH_LIVESTOCK,Bétail apprivoisé
+RANCH_NO_LIVESTOCK,Aucune bête d'élevage apprivoisée.
+RANCH_ON_THE_WAY,en route
+RANCH_HERE,dans cet enclos
+RANCH_IN_PEN,dans « %s »
+RANCH_FREE,en liberté
+ACTION_PUT_HERE,Mettre ici
+ACTION_TAKE_OUT,Sortir
+RANCH_NOTHING_READY,Rien n'est prêt à collecter.
+TOAST_CANNOT_ASSIGN,Impossible pour cet animal.
+TOAST_PEN_GUARDS_FULL,Deux chiens gardent déjà cet enclos.
+TOAST_PEN_FULL,L'enclos est plein : améliorez-le pour plus de places.
+SPECIES_COW,Vache
+SPECIES_SHEEP,Mouton
+SPECIES_GOAT,Chèvre
+SPECIES_CHICKEN,Poule
+SPECIES_HORSE,Cheval
+SPECIES_DOG,Chien
