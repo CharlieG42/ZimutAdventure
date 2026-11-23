@@ -16,6 +16,8 @@ const UPGRADE_COSTS := {
 		3: {"item_wood": 8, "item_stone": 6, "item_pelt": 2},
 	},
 }
+## Le même terrain doit rester libre quand l'abri s'agrandit.
+const UPGRADE_ROOM_ERROR := "TOAST_UPGRADE_NO_ROOM"
 ## Part de santé rendue par une nuit dans l'abri, selon son niveau.
 const SLEEP_HEAL := {1: 0.0, 2: 0.35, 3: 0.8}
 
@@ -74,6 +76,8 @@ func upgrade() -> String:
 		return "TOAST_MAX_LEVEL"
 	if not upgrade_missing().is_empty():
 		return "TOAST_UPGRADE_MISSING"
+	if kind == "shelter" and not _has_room_to_grow():
+		return UPGRADE_ROOM_ERROR
 	var inventory := InteractionManager.get_inventory()
 	var cost := next_upgrade_cost()
 	for item_id in cost:
@@ -87,6 +91,23 @@ func upgrade() -> String:
 	if spawner != null and spawner.has_method("save_now"):
 		spawner.call("save_now")
 	return ""
+
+## L'agrandissement ne doit pas avaler une autre construction (un coffre, un feu...) :
+## seuls les objets déjà sous le toit actuel restent permis.
+func _has_room_to_grow() -> bool:
+	var old_size := shelter_size()
+	level += 1
+	var new_size := shelter_size()
+	level -= 1
+	for other in get_tree().get_nodes_in_group("structures") if is_inside_tree() else []:
+		if other == self or not (other is Node3D):
+			continue
+		var local := to_local((other as Node3D).global_position)
+		var in_new: bool = absf(local.x) < new_size.x * 0.5 + 0.4 and local.z < FRONT_Z + 0.4 and local.z > FRONT_Z - new_size.z - 0.4
+		var in_old: bool = absf(local.x) < old_size.x * 0.5 + 0.4 and local.z < FRONT_Z + 0.4 and local.z > FRONT_Z - old_size.z - 0.4
+		if in_new and not in_old:
+			return false
+	return true
 
 func _rebuild() -> void:
 	for child in get_children():
@@ -186,56 +207,138 @@ func _build_bed() -> void:
 	_add_solid(Vector3(0.9, 0.6, 2.0), Vector3(0.0, 0.3, 0.0))
 	_add_trigger(Vector3(1.6, 1.6, 2.6), Vector3(0.0, 0.8, 0.0))
 
+## Dimensions de l'abri par niveau : largeur (X), profondeur (Z) et hauteur sous toit.
+## L'entrée reste au même endroit (z = FRONT_Z) : en montant de niveau l'abri s'élargit et
+## s'enfonce vers l'arrière, pour offrir plus de place à l'intérieur.
+const SHELTER_SIZES := {
+	1: Vector3(3.0, 2.0, 2.8),
+	2: Vector3(4.6, 2.3, 4.0),
+	3: Vector3(6.2, 2.6, 5.4),
+}
+const FRONT_Z := 1.4
+const WALL := 0.16
+
+func shelter_size() -> Vector3:
+	return SHELTER_SIZES[clampi(level, 1, MAX_LEVEL)]
+
+## Centre de l'intérieur (repère local) : l'abri grandit vers le fond.
+func _interior_center_z(size: Vector3) -> float:
+	return FRONT_Z - size.z * 0.5
+
+## Centre de l'abri dans le monde (le chauffage et la détection d'abri s'y réfèrent).
+func shelter_center() -> Vector3:
+	return to_global(Vector3(0.0, 0.0, _interior_center_z(shelter_size())))
+
+## Rayon dans lequel on est « à l'abri » : s'agrandit avec l'abri.
+func shelter_radius() -> float:
+	var size := shelter_size()
+	return maxf(size.x, size.z) * 0.5 + 3.0
+
+## Surface intérieure approximative en m² (affichée dans le détail du niveau).
+func interior_area() -> float:
+	var size := shelter_size()
+	return (size.x - 2.0 * WALL) * (size.z - WALL)
+
+## Un point du monde est-il sous le toit de l'abri ?
+func contains_point(point: Vector3) -> bool:
+	var size := shelter_size()
+	var local := to_local(point)
+	return absf(local.x) < size.x * 0.5 - WALL and local.z < FRONT_Z + 0.2 and local.z > FRONT_Z - size.z
+
 func _build_shelter() -> void:
+	var size := shelter_size()
+	var width := size.x
+	var depth := size.z
+	var height := size.y
+	var center_z := _interior_center_z(size)
 	var wood := _material(Color(0.4, 0.26, 0.14))
 	var hide := _material(Color(0.7, 0.55, 0.36))
 	var mat := _material(Color(0.55, 0.22, 0.16))
 	# Abri adossé : paroi du fond, deux montants latéraux, toit incliné, tapis. Ouvert en +Z.
-	_box(self, Vector3(3.0, 2.0, 0.16), Vector3(0.0, 1.0, -1.4), wood)
-	for x in [-1.42, 1.42]:
-		_box(self, Vector3(0.16, 2.0, 2.8), Vector3(x, 1.0, 0.0), wood)
-	var roof := _box(self, Vector3(3.5, 0.14, 3.2), Vector3(0.0, 2.1, -0.1), hide)
+	var back_z := FRONT_Z - depth + WALL * 0.5
+	_box(self, Vector3(width, height, WALL), Vector3(0.0, height * 0.5, back_z), wood)
+	for x in [-(width * 0.5 - WALL * 0.5), width * 0.5 - WALL * 0.5]:
+		_box(self, Vector3(WALL, height, depth), Vector3(x, height * 0.5, center_z), wood)
+	var roof := _box(self, Vector3(width + 0.5, 0.14, depth + 0.4), Vector3(0.0, height + 0.1, center_z - 0.1), hide)
 	roof.rotation_degrees.x = 7.0
-	_box(self, Vector3(2.4, 0.04, 2.2), Vector3(0.0, 0.03, 0.1), mat)
-	_add_solid(Vector3(3.0, 2.0, 0.16), Vector3(0.0, 1.0, -1.4))
-	for x in [-1.42, 1.42]:
-		_add_solid(Vector3(0.16, 2.0, 2.8), Vector3(x, 1.0, 0.0))
-	_add_solid(Vector3(3.5, 0.2, 3.2), Vector3(0.0, 2.15, -0.1))
+	_box(self, Vector3(width - 0.6, 0.04, depth - 0.6), Vector3(0.0, 0.03, center_z + 0.1), mat)
+	_add_solid(Vector3(width, height, WALL), Vector3(0.0, height * 0.5, back_z))
+	for x in [-(width * 0.5 - WALL * 0.5), width * 0.5 - WALL * 0.5]:
+		_add_solid(Vector3(WALL, height, depth), Vector3(x, height * 0.5, center_z))
+	_add_solid(Vector3(width + 0.5, 0.2, depth + 0.4), Vector3(0.0, height + 0.15, center_z - 0.1))
 	if level >= 2:
-		_build_shelter_reinforced(wood, hide)
+		_build_shelter_reinforced(wood, hide, size)
 	if level >= 3:
-		_build_shelter_cabin(wood, hide)
-	_add_trigger(Vector3(2.6, 2.0, 2.6), Vector3(0.0, 1.0, 0.1))
+		_build_shelter_cabin(wood, hide, size)
+	_add_trigger(Vector3(width - 0.4, height, depth - 0.2), Vector3(0.0, height * 0.5, center_z + 0.1))
 
-## Niveau 2 : seuil et pieux de façade, peaux tendues sur les côtés, couchage garni.
-func _build_shelter_reinforced(wood: Material, hide: Material) -> void:
+## Niveau 2 : seuil et pieux de façade, peaux tendues, étagère au fond, couchages garnis.
+func _build_shelter_reinforced(wood: Material, hide: Material, size: Vector3) -> void:
 	var fur := _material(Color(0.82, 0.72, 0.58))
-	for x in [-1.42, 1.42]:
-		_box(self, Vector3(0.2, 2.3, 0.2), Vector3(x, 1.15, 1.45), wood)
-	_box(self, Vector3(3.1, 0.14, 0.16), Vector3(0.0, 2.3, 1.45), wood)
-	for x in [-1.1, 1.1]:
-		_box(self, Vector3(0.7, 1.3, 0.05), Vector3(x, 1.5, 1.45), hide)
-	_box(self, Vector3(1.8, 0.16, 0.9), Vector3(0.0, 0.1, -0.85), fur)
-	_box(self, Vector3(0.9, 0.05, 1.4), Vector3(0.0, 0.07, 0.7), fur)
+	var width := size.x
+	var depth := size.z
+	var center_z := _interior_center_z(size)
+	var back_z := FRONT_Z - depth + WALL
+	for x in [-width * 0.5, width * 0.5]:
+		_box(self, Vector3(0.2, size.y + 0.3, 0.2), Vector3(x, (size.y + 0.3) * 0.5, FRONT_Z + 0.05), wood)
+	_box(self, Vector3(width + 0.1, 0.14, 0.16), Vector3(0.0, size.y + 0.3, FRONT_Z + 0.05), wood)
+	for x in [-(width * 0.5 - 0.5), width * 0.5 - 0.5]:
+		_box(self, Vector3(0.7, 1.3, 0.05), Vector3(x, size.y - 0.8, FRONT_Z + 0.05), hide)
+	# Deux couchages de fourrure le long du fond, un tapis à l'entrée.
+	for x in [-width * 0.25, width * 0.25]:
+		_box(self, Vector3(1.4, 0.16, 0.9), Vector3(x, 0.1, back_z + 0.6), fur)
+	_box(self, Vector3(1.0, 0.05, 1.4), Vector3(0.0, 0.07, FRONT_Z - 0.9), fur)
+	# Étagère de rangement contre la paroi du fond.
+	_box(self, Vector3(width - 1.2, 0.08, 0.35), Vector3(0.0, 1.3, back_z + 0.2), wood)
+	_box(self, Vector3(width - 1.2, 0.08, 0.35), Vector3(0.0, 0.85, back_z + 0.2), wood)
+	for x in [-(width * 0.5 - 0.65), width * 0.5 - 0.65]:
+		_box(self, Vector3(0.08, 1.3, 0.35), Vector3(x, 0.65, back_z + 0.2), wood)
+	var jar := _material(Color(0.62, 0.4, 0.24))
+	for x in [-0.6, 0.0, 0.7]:
+		_box(self, Vector3(0.22, 0.26, 0.22), Vector3(x, 1.47, back_z + 0.2), jar)
+	_box(self, Vector3(0.3, 0.2, 0.3), Vector3(-0.3, 0.99, back_z + 0.2), jar)
 
-## Niveau 3 : cabane — second toit, foyer de pierre au fond et lanterne.
-func _build_shelter_cabin(wood: Material, hide: Material) -> void:
+## Niveau 3 : cabane — second toit, foyer de pierre, table et tabourets, lanternes.
+func _build_shelter_cabin(wood: Material, hide: Material, size: Vector3) -> void:
 	var stone := _material(Color(0.5, 0.48, 0.46))
 	var glow := StandardMaterial3D.new()
 	glow.albedo_color = Color(1.0, 0.78, 0.4)
 	glow.emission_enabled = true
 	glow.emission = Color(1.0, 0.62, 0.22)
 	glow.emission_energy_multiplier = 1.6
+	var width := size.x
+	var depth := size.z
+	var center_z := _interior_center_z(size)
+	var back_z := FRONT_Z - depth + WALL
 	# Second toit posé sur des chevrons, même pente que le premier (pas d'interpénétration).
-	for x in [-1.5, 0.0, 1.5]:
-		_box(self, Vector3(0.12, 0.34, 3.2), Vector3(x, 2.33, -0.1), wood).rotation_degrees.x = 7.0
-	var upper := _box(self, Vector3(3.9, 0.14, 3.6), Vector3(0.0, 2.58, -0.1), hide)
+	var rafters := 3 + int(width / 2.0)
+	for i in rafters:
+		var x := -width * 0.5 + width * (float(i) + 0.5) / float(rafters)
+		_box(self, Vector3(0.12, 0.34, depth + 0.4), Vector3(x, size.y + 0.33, center_z - 0.1), wood).rotation_degrees.x = 7.0
+	var upper := _box(self, Vector3(width + 0.9, 0.14, depth + 0.8), Vector3(0.0, size.y + 0.58, center_z - 0.1), hide)
 	upper.rotation_degrees.x = 7.0
-	_box(self, Vector3(1.0, 0.5, 0.6), Vector3(1.0, 0.25, -1.0), stone)
-	_box(self, Vector3(0.7, 0.16, 0.4), Vector3(1.0, 0.58, -1.0), stone)
-	_box(self, Vector3(0.16, 0.22, 0.16), Vector3(-1.0, 1.7, 0.9), glow)
-	_box(self, Vector3(0.04, 0.3, 0.04), Vector3(-1.0, 1.95, 0.9), wood)
-	_add_solid(Vector3(1.0, 0.5, 0.6), Vector3(1.0, 0.25, -1.0))
+	# Foyer de pierre dans l'angle du fond.
+	var hearth_x := width * 0.5 - 0.9
+	_box(self, Vector3(1.0, 0.5, 0.6), Vector3(hearth_x, 0.25, back_z + 0.4), stone)
+	_box(self, Vector3(0.7, 0.16, 0.4), Vector3(hearth_x, 0.58, back_z + 0.4), stone)
+	_box(self, Vector3(0.5, size.y - 0.6, 0.4), Vector3(hearth_x, 0.6 + (size.y - 0.6) * 0.5, back_z + 0.3), stone)
+	_add_solid(Vector3(1.0, 0.5, 0.6), Vector3(hearth_x, 0.25, back_z + 0.4))
+	# Table et deux tabourets.
+	var table_z := center_z + 0.3
+	var table_x := -width * 0.5 + 1.3
+	_box(self, Vector3(1.3, 0.08, 0.8), Vector3(table_x, 0.78, table_z), wood)
+	for dx in [-0.55, 0.55]:
+		for dz in [-0.3, 0.3]:
+			_box(self, Vector3(0.08, 0.76, 0.08), Vector3(table_x + dx, 0.38, table_z + dz), wood)
+	for dz in [-0.75, 0.75]:
+		_box(self, Vector3(0.36, 0.4, 0.36), Vector3(table_x, 0.2, table_z + dz), wood)
+	_add_solid(Vector3(1.3, 0.8, 0.8), Vector3(table_x, 0.4, table_z))
+	# Lanternes de part et d'autre de l'entrée et au-dessus de la table.
+	for x in [-(width * 0.5 - 0.5), width * 0.5 - 0.5]:
+		_box(self, Vector3(0.16, 0.22, 0.16), Vector3(x, size.y - 0.3, FRONT_Z - 0.5), glow)
+		_box(self, Vector3(0.04, 0.3, 0.04), Vector3(x, size.y - 0.05, FRONT_Z - 0.5), wood)
+	_box(self, Vector3(0.16, 0.22, 0.16), Vector3(table_x, size.y - 0.5, table_z), glow)
+	_box(self, Vector3(0.04, 0.5, 0.04), Vector3(table_x, size.y - 0.15, table_z), wood)
 
 func _material(color: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()

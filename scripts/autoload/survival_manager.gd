@@ -209,7 +209,7 @@ func _gather_context(player: Node3D) -> Dictionary:
 	context["fire_distance"] = best
 	for structure in get_tree().get_nodes_in_group("structures"):
 		if structure is Node3D and str(structure.get("kind")) == "shelter" \
-				and (structure as Node3D).global_position.distance_to(p) < SHELTER_RADIUS:
+				and _shelter_center(structure).distance_to(p) < _shelter_radius(structure):
 			context["sheltered"] = true
 			context["shelter_level"] = maxi(int(context.get("shelter_level", 1)), int(structure.get("level")))
 	var inventory := InteractionManager.get_inventory()
@@ -217,6 +217,13 @@ func _gather_context(player: Node3D) -> Dictionary:
 	context["in_water"] = player.has_method("is_wading") and bool(player.call("is_wading"))
 	context["rain_exposed"] = context["weather"] == "rain" or context["weather"] == "snow"
 	return context
+
+## L'abri s'agrandit avec son niveau : son centre et son rayon viennent de la construction.
+func _shelter_center(structure: Node3D) -> Vector3:
+	return structure.call("shelter_center") if structure.has_method("shelter_center") else structure.global_position
+
+func _shelter_radius(structure: Node3D) -> float:
+	return float(structure.call("shelter_radius")) if structure.has_method("shelter_radius") else SHELTER_RADIUS
 
 func _hint(key: String) -> void:
 	var tree := get_tree()

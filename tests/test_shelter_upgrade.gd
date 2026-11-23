@@ -41,6 +41,9 @@ func _init() -> void:
 	_check(shelter.get("level") == 1 and shelter.call("can_upgrade"), "abri niveau 1, améliorable")
 	_check(not bed.call("can_upgrade"), "le lit ne s'améliore pas")
 	var bodies_1 := shelter.find_children("*", "StaticBody3D", false, false).size()
+	var size_1: Vector3 = shelter.call("shelter_size")
+	var area_1: float = shelter.call("interior_area")
+	var radius_1: float = shelter.call("shelter_radius")
 	var meshes_1 := shelter.find_children("*", "MeshInstance3D", true, false).size()
 
 	# Matériaux manquants : rien n'est consommé.
@@ -62,7 +65,10 @@ func _init() -> void:
 	_check(int(inventory.call("count_of", "item_wood")) == 14 and int(inventory.call("count_of", "item_pelt")) == 3, "coût du niveau 2 consommé")
 	await process_frame
 	_check(shelter.find_children("*", "MeshInstance3D", true, false).size() > meshes_1, "le niveau 2 ajoute de la matière")
-	_check(shelter.find_children("*", "StaticBody3D", false, false).size() == bodies_1, "pas de collision en double")
+	_check(shelter.find_children("*", "StaticBody3D", false, false).size() >= bodies_1, "les murs restent solides")
+	_check(shelter.call("shelter_size").x > size_1.x and shelter.call("shelter_size").z > size_1.z, "le niveau 2 agrandit l'intérieur")
+	_check(float(shelter.call("interior_area")) > area_1 * 1.4, "surface intérieure nettement plus grande")
+	_check(float(shelter.call("shelter_radius")) > radius_1, "le rayon de chaleur suit")
 	_check(shelter.find_children("*", "CollisionShape3D", false, false).size() == 1, "une seule zone d'interaction")
 	_check(shelter.get_prompt() == "ACTION_SLEEP", "de jour au niveau 2 : on ne fait que dormir la nuit")
 
@@ -83,6 +89,9 @@ func _init() -> void:
 	# Niveau 3 : sieste de jour.
 	_check(shelter.call("upgrade") == "", "niveau 3")
 	_check(not shelter.call("can_upgrade") and shelter.call("upgrade") == "TOAST_MAX_LEVEL", "niveau maximum")
+	_check(float(shelter.call("interior_area")) > area_1 * 2.0, "niveau 3 : l'espace plus que doublé")
+	_check(shelter.call("contains_point", shelter.to_global(Vector3(2.0, 0.0, -2.0))), "un point au fond appartient à l'intérieur du niveau 3")
+	_check(not shelter.call("contains_point", shelter.to_global(Vector3(10.0, 0.0, 0.0))), "un point lointain est dehors")
 	clock.call("set_hour", 12.0)
 	_check(shelter.get_prompt() == "ACTION_REST_BED", "le niveau 3 permet une sieste de jour")
 	player.set("stamina", 0.1)
@@ -111,6 +120,20 @@ func _init() -> void:
 	_check(String(panel.get("_upgrade").text).contains("×6"), "le coût est affiché")
 	panel.call("_on_upgrade")
 	_check(shelter2.get("level") == 2, "le bouton améliore l'abri")
+
+	# Manque de place : une construction dans la future emprise bloque l'agrandissement.
+	var shelter3: Node3D = placed_script.create("shelter")
+	world.add_child(shelter3)
+	shelter3.position = spot + Vector3(30, 0, 30)
+	await process_frame
+	var blocker: Node3D = placed_script.create("camp_bed")
+	world.add_child(blocker)
+	blocker.position = shelter3.position + Vector3(0.0, 0.0, -2.0)
+	await process_frame
+	inventory.call("add_item", "item_wood", 10)
+	inventory.call("add_item", "item_pelt", 4)
+	_check(shelter3.call("upgrade") == "TOAST_UPGRADE_NO_ROOM", "construction gênante : pas d'agrandissement")
+	_check(shelter3.get("level") == 1, "le niveau reste 1")
 
 	if _errors.is_empty():
 		print("TEST_SHELTER_UPGRADE: PASS")

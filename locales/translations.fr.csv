@@ -103,7 +103,7 @@ TOAST_MOVED,Construction déplacée.
 TOAST_MOVE_CANCELLED,Déplacement annulé.
 TOAST_MOVE_HINT,Marchez pour choisir l'emplacement (vert = possible) puis posez.
 ACTION_UPGRADE,Améliorer
-TOAST_UPGRADED,Abri amélioré : niveau %d.
+TOAST_UPGRADED,Amélioration : niveau %d.
 TOAST_UPGRADE_MISSING,Il vous manque : %s.
 TOAST_MAX_LEVEL,Déjà au niveau maximum.
 TOAST_PLACED,Posé : %s
@@ -504,7 +504,7 @@ ACTION_FENCE,Palissade
 TOAST_FENCE_HINT,Touchez « Déplacer » pour repositionner cette palissade.
 ACTION_WHISTLE,Siffler
 TOAST_WHISTLE,Vous sifflez : le cheval arrive !
-TOAST_WHISTLE_NONE,Aucun cheval apprivoisé à appeler.
+TOAST_WHISTLE_NONE,Aucun cheval ni chien apprivoisé à appeler.
 TOAST_WHISTLE_FAR,Votre cheval est trop loin pour vous entendre.
 CHAR_TITLE,Votre personnage
 CHAR_GENDER,Genre
@@ -553,3 +553,14 @@ CHAR_NAME,Nom
 CHAR_NAME_HINT,Nom de votre personnage
 CHAR_DEFAULT_NAME,Aventurier
 SETTING_MAIN_MENU,Retour au menu principal (sauvegarde)
+TOAST_WHISTLE_DOG,Votre chien accourt !
+TOAST_WHISTLE_BOTH,Votre cheval et votre chien accourent !
+ACTION_HERD,Rassembler le bétail (%d)
+ACTION_RELEASE,Libérer le bétail (%d)
+ACTION_PEN_EMPTY,Enclos vide : apprivoisez du bétail
+TOAST_HERD,%d bête(s) rejoignent l'enclos.
+TOAST_HERD_PARTIAL,%d bête(s) en route : l'enclos est plein (%d places).
+TOAST_RELEASED,%d bête(s) sortent de l'enclos.
+TOAST_PEN_EMPTY,Aucune bête à rassembler ou à libérer.
+TOAST_HERD_STUCK,La bête n'a pas trouvé l'entrée de l'enclos.
+TOAST_UPGRADE_NO_ROOM,Pas assez de place : une construction gêne l'agrandissement.

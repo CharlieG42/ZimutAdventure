@@ -436,21 +436,34 @@ func _choppable_in_reach(forward: Vector3) -> Node3D:
 			best_distance = distance
 	return best
 
-## Siffler : appelle le cheval apprivoisé le plus proche. Renvoie vrai si un cheval répond.
+## Siffler : appelle le cheval et le chien apprivoisés les plus proches. Renvoie vrai si au moins un répond.
 func whistle() -> bool:
 	var horses: Array = []
+	var dogs: Array = []
 	for node in get_tree().get_nodes_in_group("domestic"):
-		if is_instance_valid(node) and node.get("species") == "horse" and bool(node.get("tamed")) and not bool(node.get("mounted")):
+		if not is_instance_valid(node) or not bool(node.get("tamed")) or bool(node.get("mounted")):
+			continue
+		if node.get("species") == "horse":
 			horses.append(node)
-	if horses.is_empty():
+		elif node.get("species") == "dog":
+			dogs.append(node)
+	if horses.is_empty() and dogs.is_empty():
 		_hud_toast(tr("TOAST_WHISTLE_NONE"))
 		return false
-	horses.sort_custom(func(a, b): return a.global_position.distance_to(global_position) < b.global_position.distance_to(global_position))
-	if bool(horses[0].call("call_to_player", self)):
+	var by_distance := func(a, b): return a.global_position.distance_to(global_position) < b.global_position.distance_to(global_position)
+	horses.sort_custom(by_distance)
+	dogs.sort_custom(by_distance)
+	var horse_came: bool = not horses.is_empty() and bool(horses[0].call("call_to_player", self))
+	var dog_came: bool = not dogs.is_empty() and bool(dogs[0].call("call_to_player", self))
+	if horse_came and dog_came:
+		_hud_toast(tr("TOAST_WHISTLE_BOTH"))
+	elif horse_came:
 		_hud_toast(tr("TOAST_WHISTLE"))
-		return true
-	_hud_toast(tr("TOAST_WHISTLE_FAR"))
-	return false
+	elif dog_came:
+		_hud_toast(tr("TOAST_WHISTLE_DOG"))
+	else:
+		_hud_toast(tr("TOAST_WHISTLE_FAR"))
+	return horse_came or dog_came
 
 func _swing_arm() -> void:
 	_attack_anim = ATTACK_ANIM_TIME

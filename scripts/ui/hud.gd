@@ -173,7 +173,7 @@ func _ready() -> void:
 			_player.connect("stamina_changed", _on_stamina_changed)
 		_on_view_changed(_player.call("is_first_person"))
 
-## Bouton « Siffler » (barre du bas) : visible seulement si un cheval apprivoisé existe.
+## Bouton « Siffler » (barre du bas) : visible seulement si un cheval ou un chien apprivoisé existe.
 func _setup_whistle_button() -> void:
 	whistle_button = Button.new()
 	whistle_button.name = "WhistleButton"
@@ -191,11 +191,11 @@ func _on_whistle_pressed() -> void:
 func _refresh_whistle_button() -> void:
 	var available := false
 	for node in get_tree().get_nodes_in_group("domestic"):
-		if is_instance_valid(node) and node.get("species") == "horse" and bool(node.get("tamed")):
-			available = true
+		if is_instance_valid(node) and (node.get("species") == "horse" or node.get("species") == "dog") and bool(node.get("tamed")):
 			if bool(node.get("mounted")):
 				available = false
 				break
+			available = true
 	if whistle_button.visible != available:
 		whistle_button.visible = available
 

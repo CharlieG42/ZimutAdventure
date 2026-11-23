@@ -103,7 +103,7 @@ TOAST_MOVED,Structure moved.
 TOAST_MOVE_CANCELLED,Move cancelled.
 TOAST_MOVE_HINT,Walk to choose the spot (green = valid) then place it.
 ACTION_UPGRADE,Upgrade
-TOAST_UPGRADED,Shelter upgraded: level %d.
+TOAST_UPGRADED,Upgraded: level %d.
 TOAST_UPGRADE_MISSING,You are missing: %s.
 TOAST_MAX_LEVEL,Already at maximum level.
 TOAST_PLACED,Placed: %s
@@ -504,7 +504,7 @@ ACTION_FENCE,Palisade
 TOAST_FENCE_HINT,Tap "Move" to reposition this palisade.
 ACTION_WHISTLE,Whistle
 TOAST_WHISTLE,You whistle: your horse is coming!
-TOAST_WHISTLE_NONE,No tamed horse to call.
+TOAST_WHISTLE_NONE,No tamed horse or dog to call.
 TOAST_WHISTLE_FAR,Your horse is too far away to hear you.
 CHAR_TITLE,Your character
 CHAR_GENDER,Gender
@@ -553,3 +553,14 @@ CHAR_NAME,Name
 CHAR_NAME_HINT,Your character's name
 CHAR_DEFAULT_NAME,Adventurer
 SETTING_MAIN_MENU,Back to main menu (saves)
+TOAST_WHISTLE_DOG,Your dog comes running!
+TOAST_WHISTLE_BOTH,Your horse and your dog come running!
+ACTION_HERD,Herd the livestock (%d)
+ACTION_RELEASE,Release the livestock (%d)
+ACTION_PEN_EMPTY,Empty pen: tame some livestock
+TOAST_HERD,%d animal(s) head into the pen.
+TOAST_HERD_PARTIAL,%d animal(s) on the way: the pen is full (%d places).
+TOAST_RELEASED,%d animal(s) leave the pen.
+TOAST_PEN_EMPTY,No animal to herd or release.
+TOAST_HERD_STUCK,The animal could not find the pen entrance.
+TOAST_UPGRADE_NO_ROOM,Not enough room: a building is in the way.
