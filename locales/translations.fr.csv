@@ -522,7 +522,7 @@ CHAR_TUNIC,Tunique
 CHAR_PANTS,Pantalon
 CHAR_START,Commencer l'aventure
 CHAR_DONE,Valider
-SETTING_APPEARANCE,Modifier mon personnage (nom, apparence)
+SETTING_APPEARANCE,"Modifier mon personnage (nom, apparence)"
 CAT_CLOTHES,Vêtements
 CRAFT_STRAW_HAT,Chapeau de paille
 CRAFT_HIDE_BOOTS,Bottes de peau
@@ -565,7 +565,7 @@ TOAST_PEN_EMPTY,Aucune bête à rassembler ou à libérer.
 TOAST_HERD_STUCK,La bête n'a pas trouvé l'entrée de l'enclos.
 TOAST_UPGRADE_NO_ROOM,Pas assez de place : une construction gêne l'agrandissement.
 QUEST_TAMER_3_TITLE,Petit éleveur
-QUEST_TAMER_3_DESC,Apprivoisez 3 animaux au total (bétail, chien ou cheval).
+QUEST_TAMER_3_DESC,"Apprivoisez 3 animaux au total (bétail, chien ou cheval)."
 QUEST_TAMER_8_TITLE,Éleveur
 QUEST_TAMER_8_DESC,Apprivoisez 8 animaux au total : le ranch prend forme.
 QUEST_TAMER_15_TITLE,Maître des bêtes
