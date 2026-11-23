@@ -116,6 +116,10 @@ func _load() -> void:
 		if entry is Dictionary and entry.has("key"):
 			_saved[String(entry["key"])] = entry
 
+## Sauvegarde immédiate (retour au menu principal).
+func save_now() -> void:
+	_save()
+
 func _save() -> void:
 	if not _autosave:
 		return

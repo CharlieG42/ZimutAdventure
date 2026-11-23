@@ -7,6 +7,7 @@ extends RefCounted
 ## Les réglages (musique, langue) restent communs à toutes les parties.
 
 const MAX_SLOTS := 3
+const MENU_SCENE := "res://scenes/main_menu.tscn"
 const ROOT := "user://saves"
 const INFO_FILE := "slot.cfg"
 const MIGRATED_FILE := "user://saves/migrated.cfg"
@@ -93,6 +94,24 @@ static func reload_autoloads(tree: SceneTree) -> void:
 		var node := tree.root.get_node_or_null(autoload_name)
 		if node != null and node.has_method("reload_from_disk"):
 			node.call("reload_from_disk")
+
+## Écrit tout sur disque (retour au menu : l'état de la partie ne doit rien perdre).
+static func save_all(tree: SceneTree) -> void:
+	for autoload_name: String in RELOADED_AUTOLOADS:
+		var node := tree.root.get_node_or_null(autoload_name)
+		if node != null and node.has_method("_save"):
+			node.call("_save")
+	for group_name in ["structure_spawner", "livestock_spawner"]:
+		for node in tree.get_nodes_in_group(group_name):
+			if node.has_method("save_now"):
+				node.call("save_now")
+
+## Quitte l'aventure pour le menu principal (partie sauvegardée, choix d'une autre partie possible).
+static func return_to_menu(tree: SceneTree) -> void:
+	save_all(tree)
+	active_slot = 0
+	tree.paused = false
+	tree.change_scene_to_file(MENU_SCENE)
 
 ## Met à jour nom / genre de la partie active (le joueur modifie son personnage en cours d'aventure).
 static func update_active_info(profile: Object) -> void:

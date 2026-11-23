@@ -552,3 +552,4 @@ MENU_DELETE_CONFIRM,Supprimer définitivement la partie de %s ? Cette action est
 CHAR_NAME,Nom
 CHAR_NAME_HINT,Nom de votre personnage
 CHAR_DEFAULT_NAME,Aventurier
+SETTING_MAIN_MENU,Retour au menu principal (sauvegarde)

@@ -132,6 +132,15 @@ func _build_settings(list: VBoxContainer) -> void:
 			hud.call("open_character_creator"))
 	list.add_child(appearance)
 
+	var menu_button := Button.new()
+	menu_button.name = "MainMenuButton"
+	menu_button.text = tr("SETTING_MAIN_MENU")
+	menu_button.custom_minimum_size = Vector2(0, BUTTON_HEIGHT)
+	menu_button.focus_mode = Control.FOCUS_NONE
+	menu_button.add_theme_font_size_override("font_size", 20)
+	menu_button.pressed.connect(func(): SaveSlots.return_to_menu(get_tree()))
+	list.add_child(menu_button)
+
 	_add_label(list, tr("SETTING_QUALITY"), 20, ACCENT)
 	var quality := OptionButton.new()
 	quality.custom_minimum_size = Vector2(0, BUTTON_HEIGHT)

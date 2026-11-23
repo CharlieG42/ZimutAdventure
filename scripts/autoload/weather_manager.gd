@@ -88,9 +88,11 @@ func _ready() -> void:
 
 ## Relit le jour de la partie choisie (menu de démarrage).
 func reload_from_disk() -> void:
+	_day = 0
 	_load()
 	var clock := _clock()
 	if clock != null:
+		clock.set("hour", clock.get("start_hour"))
 		_day = maxi(_day, int(clock.get("day")))
 		clock.set("day", _day)
 	_season = season_for(_day)

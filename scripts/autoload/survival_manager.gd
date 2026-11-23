@@ -76,6 +76,12 @@ func _ready() -> void:
 	health_changed.emit(_health)
 
 func reload_from_disk() -> void:
+	_hunger = 1.0
+	_thirst = 1.0
+	_health = 1.0
+	_warmth = 1.0
+	_wet = 0.0
+	_cold_hint_shown = false
 	_load()
 	_reemit()
 	health_changed.emit(_health)
