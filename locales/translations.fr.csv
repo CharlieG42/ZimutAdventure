@@ -580,7 +580,7 @@ ANIMALS_STAYING,reste sur place
 ANIMALS_UNKNOWN_HINT,Nourrissez-en un pour l'apprivoiser.
 
 ACTION_COLLECT_ALL,Tout collecter (%d)
-TOAST_COLLECTED,Collecté : %s.
+TOAST_PEN_COLLECTED,Collecté : %s.
 TOAST_COLLECT_NEED_SICKLE,(Équipez la faucille pour la laine.)
 ACTION_DOG_GUARD,Ordonner de garder les lieux
 TOAST_DOG_GUARD,Le chien monte la garde ici.
@@ -588,3 +588,18 @@ TOAST_DOG_GUARD_PEN,Le chien va garder l'enclos.
 ANIMALS_GUARDING,garde les lieux
 TOAST_HERD_NIGHT,La nuit tombe : %d bête(s) rentrent à l'enclos.
 TOAST_HERD_DAWN,Le jour se lève : %d bête(s) sortent de l'enclos.
+ACTION_CHARACTER,Personnage
+CHARACTER_TITLE,%s — niveau %d
+CHARACTER_TOOL,Outil en main : %s
+SLOT_HEAD,Tête
+SLOT_BODY,Corps
+SLOT_FEET,Pieds
+SLOT_BACK,Dos
+SLOT_EMPTY,aucun
+SLOT_NOTHING_OWNED,Rien pour cet emplacement (à fabriquer : onglet Fabrication).
+ACTION_WEAR,Porter
+ACTION_TAKE_OFF,Retirer
+GEAR_EFFECT_HAT,protège du soleil : soif −20 %
+GEAR_EFFECT_CLOAK,"chaud, dégâts reçus −35 %"
+GEAR_EFFECT_BOOTS,vitesse +8 %
+GEAR_EFFECT_BACKPACK,pour le style (et les longues marches)

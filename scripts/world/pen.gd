@@ -251,7 +251,7 @@ func _on_interact(_interactor: Node3D) -> void:
 			var parts: PackedStringArray = []
 			for item_id in totals:
 				parts.append("%d %s" % [int(totals[item_id]), tr("ITEM_" + String(item_id).to_upper())])
-			var message := tr("TOAST_COLLECTED") % ", ".join(parts)
+			var message := tr("TOAST_PEN_COLLECTED") % ", ".join(parts)
 			if _blocked_by_tool() > 0:
 				message += " " + tr("TOAST_COLLECT_NEED_SICKLE")
 			_toast(message)

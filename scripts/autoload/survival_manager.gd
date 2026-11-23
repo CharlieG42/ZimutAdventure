@@ -29,6 +29,9 @@ const HEALTH_REGEN := 0.004
 ## Une cape de fourrure réduit les dégâts reçus.
 const CLOAK_ITEM := "armor_fur_cloak"
 const CLOAK_REDUCTION := 0.35
+## Le chapeau de paille réduit la soif.
+const HAT_ITEM := "gear_straw_hat"
+const HAT_THIRST_FACTOR := 0.8
 
 # --- Température -------------------------------------------------------------------------
 const BASE_TEMPERATURE := {"spring": 16.0, "summer": 27.0, "autumn": 12.0, "winter": 1.0}
@@ -103,6 +106,10 @@ func _process(delta: float) -> void:
 	var blessed := float(exploration.call("drain_factor")) if exploration != null else 1.0
 	update_temperature(delta, _gather_context(player as Node3D))
 	var heat := HOT_THIRST if is_hot() else 1.0
+	# Le chapeau de paille protège du soleil : on a moins soif.
+	var inventory_now := InteractionManager.get_inventory()
+	if inventory_now != null and bool(inventory_now.call("is_worn", HAT_ITEM)):
+		heat *= HAT_THIRST_FACTOR
 	_hunger = maxf(0.0, _hunger - hunger_drain * rate * hunger_weather * blessed * delta)
 	_thirst = maxf(0.0, _thirst - thirst_drain * rate * thirst_weather * blessed * heat * delta)
 	_reemit()
@@ -213,7 +220,7 @@ func _gather_context(player: Node3D) -> Dictionary:
 			context["sheltered"] = true
 			context["shelter_level"] = maxi(int(context.get("shelter_level", 1)), int(structure.get("level")))
 	var inventory := InteractionManager.get_inventory()
-	context["cloak"] = inventory != null and bool(inventory.call("has_item", CLOAK_ITEM, 1))
+	context["cloak"] = inventory != null and bool(inventory.call("is_worn", CLOAK_ITEM))
 	context["in_water"] = player.has_method("is_wading") and bool(player.call("is_wading"))
 	context["rain_exposed"] = context["weather"] == "rain" or context["weather"] == "snow"
 	return context
@@ -247,7 +254,7 @@ func get_health() -> float:
 ## Inflige des dégâts (0 à 1 = toute la santé). Retourne true si le joueur est à terre.
 func damage(amount: float) -> bool:
 	var inventory := InteractionManager.get_inventory()
-	if inventory != null and inventory.has_item(CLOAK_ITEM, 1):
+	if inventory != null and inventory.is_worn(CLOAK_ITEM):
 		amount *= 1.0 - CLOAK_REDUCTION
 	_health = maxf(0.0, _health - amount)
 	health_changed.emit(_health)
