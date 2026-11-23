@@ -392,12 +392,26 @@ func dismount(rider: Node3D) -> void:
 	collision_mask = 1
 	if rider != null:
 		var side := rider.global_transform.basis.x.normalized()
-		global_position = rider.global_position + side * 1.4
+		var spot := rider.global_position + side * 1.4
+		# Pas à l'intérieur d'un abri : on essaie l'autre côté, puis l'arrière.
+		for candidate in [side * 1.4, -side * 1.4, rider.global_transform.basis.z.normalized() * 2.2]:
+			spot = rider.global_position + candidate
+			if not _inside_shelter(spot):
+				break
+		global_position = spot
 		if rider.has_method("dismount"):
 			rider.call("dismount")
 	_center = global_position
 	velocity = Vector3.ZERO
 	state_changed.emit(self)
+
+func _inside_shelter(point: Vector3) -> bool:
+	if not is_inside_tree():
+		return false
+	for structure in get_tree().get_nodes_in_group("structures"):
+		if structure.has_method("contains_point") and bool(structure.call("contains_point", point)):
+			return true
+	return false
 
 func _physics_process(delta: float) -> void:
 	if mounted and _player != null and is_instance_valid(_player):

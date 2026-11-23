@@ -6,6 +6,8 @@ extends CharacterBody3D
 
 const FLEE_SPEED := 5.0
 const WANDER_SPEED := 1.3
+## Couche des volumes interdits aux animaux (intérieur des abris).
+const ANIMAL_BLOCK_LAYER := 128
 const FLEE_DISTANCE := 5.0
 const TURN_SPEED := 6.0
 const GRAVITY := 18.0
@@ -70,6 +72,8 @@ func _ready() -> void:
 	_config = _species_config()
 	_center = global_position
 	_home = global_position
+	# Les animaux ne pénètrent pas dans les abris (couche 8, que le joueur ignore).
+	collision_mask |= ANIMAL_BLOCK_LAYER
 	_base_layer = collision_layer
 	_base_mask = collision_mask
 	_player = get_tree().get_first_node_in_group("player") as Node3D

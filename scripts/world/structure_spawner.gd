@@ -5,8 +5,8 @@ extends Node3D
 const SAVE_NAME := "structures.cfg"
 const MAX_SLOPE := 1.2
 const MAX_STRUCTURES := 40
-## Constructions que l'on peut déplacer (pas l'enclos ni le potager, qui portent bétail et cultures).
-const MOVABLE_KINDS := ["camp_bed", "wool_bed", "chest", "campfire", "shelter", "palisade"]
+## Constructions que l'on peut déplacer (pas le potager, qui porte des cultures). L'enclos emmène ses bêtes.
+const MOVABLE_KINDS := ["camp_bed", "wool_bed", "chest", "campfire", "shelter", "palisade", "pen"]
 const MOVE_MIN_SPACING := 1.4
 const MOVE_TINT_OK := Color(0.3, 1.0, 0.4, 0.38)
 const MOVE_TINT_BAD := Color(1.0, 0.25, 0.2, 0.42)
@@ -40,6 +40,8 @@ var _move_yaw: float = 0.0
 var _move_valid: bool = false
 var _move_layers: Array = []
 var _move_meshes: Array = []
+## Bêtes d'un enclos soulevé : position relative à l'enclos, pour les suivre à la repose.
+var _move_animals: Array = []
 
 func _ready() -> void:
 	add_to_group("structure_spawner")
@@ -124,6 +126,10 @@ func begin_move(node: Node3D) -> bool:
 	_moving = node
 	_move_from = {"pos": node.position, "yaw": node.rotation.y}
 	_move_yaw = node.rotation.y
+	_move_animals.clear()
+	if node is Pen:
+		for animal in (node as Pen).get_occupants():
+			_move_animals.append([animal, node.to_local(animal.global_position)])
 	_move_layers.clear()
 	_move_meshes.clear()
 	_collect_for_ghost(node)
@@ -150,6 +156,11 @@ func update_move(origin: Vector3, player_position: Vector3 = Vector3.INF) -> voi
 	_moving.rotation.y = _move_yaw
 	var kind: String = PLACEABLE.get(String(_move_record["item"]), "")
 	var valid := _site_error(kind, origin) == ""
+	if valid and _moving is Pen:
+		var half := (_moving as Pen).half()
+		for corner in [Vector2(half, half), Vector2(-half, half), Vector2(half, -half), Vector2(-half, -half)]:
+			if absf(_ground_height(origin.x + corner.x, origin.z + corner.y) - ground) > MAX_SLOPE * 1.6:
+				valid = false
 	if valid:
 		for record in _records:
 			var other := record.get("node") as Node3D
@@ -180,6 +191,7 @@ func confirm_move() -> String:
 		return "TOAST_CANNOT_PLACE"
 	_move_record["pos"] = _moving.position
 	_move_record["yaw"] = _move_yaw
+	_carry_animals()
 	_end_move()
 	_save()
 	move_finished.emit(true, "TOAST_MOVED")
@@ -193,6 +205,19 @@ func cancel_move() -> void:
 	_moving.rotation.y = _move_from["yaw"]
 	_end_move()
 	move_finished.emit(true, "TOAST_MOVE_CANCELLED")
+
+## Les bêtes de l'enclos déplacé le suivent : même place, dans le nouvel enclos.
+func _carry_animals() -> void:
+	for entry in _move_animals:
+		var animal := entry[0] as Node3D
+		if animal == null or not is_instance_valid(animal):
+			continue
+		var spot: Vector3 = _moving.to_global(entry[1])
+		animal.global_position = spot + Vector3(0.0, 0.3, 0.0)
+		animal.set("_center", spot)
+		if animal is CharacterBody3D:
+			(animal as CharacterBody3D).velocity = Vector3.ZERO
+	_move_animals.clear()
 
 func _end_move() -> void:
 	for entry in _move_layers:
