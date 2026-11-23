@@ -578,3 +578,7 @@ ANIMALS_PENNED,%d in a pen
 ANIMALS_FOLLOWING,following you
 ANIMALS_STAYING,staying put
 ANIMALS_UNKNOWN_HINT,Feed one to tame it.
+
+ACTION_COLLECT_ALL,Collect everything (%d)
+TOAST_COLLECTED,Collected: %s.
+TOAST_COLLECT_NEED_SICKLE,(Equip the sickle for wool.)

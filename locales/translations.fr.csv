@@ -578,3 +578,7 @@ ANIMALS_PENNED,%d en enclos
 ANIMALS_FOLLOWING,te suit
 ANIMALS_STAYING,reste sur place
 ANIMALS_UNKNOWN_HINT,Nourrissez-en un pour l'apprivoiser.
+
+ACTION_COLLECT_ALL,Tout collecter (%d)
+TOAST_COLLECTED,Collecté : %s.
+TOAST_COLLECT_NEED_SICKLE,(Équipez la faucille pour la laine.)
