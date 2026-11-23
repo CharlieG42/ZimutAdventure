@@ -26,6 +26,11 @@ func _init() -> void:
 	var player := world.get_node("Player") as CharacterBody3D
 	var inventory := root.get_node_or_null("Inventory")
 	var survival := root.get_node_or_null("SurvivalManager")
+	# Les niveaux 2 et 3 demandent un niveau de joueur (3 puis 5).
+	var progression := root.get_node_or_null("Progression")
+	if progression != null:
+		progression.call("clear_for_test", true)
+		progression.call("add_xp", 100000)
 	_check(inventory != null and survival != null, "autoloads disponibles")
 	var spot := Vector3(player.global_position.x + 8.0, 0.0, player.global_position.z)
 	_check(spawner.call("place", "building_shelter", spot, 0.0) == "", "abri posé")

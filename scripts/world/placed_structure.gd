@@ -107,10 +107,19 @@ func upgrade_missing() -> Dictionary:
 			missing[item_id] = need - have
 	return missing
 
+## Niveau du joueur requis pour chaque niveau de bâtiment.
+const UPGRADE_PLAYER_LEVEL := {2: 3, 3: 5}
+
+func upgrade_required_level() -> int:
+	return int(UPGRADE_PLAYER_LEVEL.get(level + 1, 1)) if can_upgrade() else 0
+
 ## Améliore la construction. Renvoie "" si réussi, sinon la clé d'erreur.
 func upgrade() -> String:
 	if not can_upgrade():
 		return "TOAST_MAX_LEVEL"
+	var progression_check := InteractionManager.get_progression()
+	if progression_check != null and int(progression_check.call("get_level")) < upgrade_required_level():
+		return "TOAST_UPGRADE_LEVEL"
 	if not upgrade_missing().is_empty():
 		return "TOAST_UPGRADE_MISSING"
 	if kind == "shelter" and not _has_room_to_grow():

@@ -131,6 +131,8 @@ func _on_upgrade() -> void:
 		for item_id in missing:
 			parts.append("%s ×%d" % [tr("ITEM_" + String(item_id).to_upper()), int(missing[item_id])])
 		_toast(tr(error) % ", ".join(parts))
+	elif error == "TOAST_UPGRADE_LEVEL":
+		_toast(tr(error) % int(_upgrade_target.call("upgrade_required_level")))
 	else:
 		_toast(tr(error))
 	_refresh()

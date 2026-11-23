@@ -636,3 +636,28 @@ SPECIES_GOAT,Goat
 SPECIES_CHICKEN,Chicken
 SPECIES_HORSE,Horse
 SPECIES_DOG,Dog
+JOURNAL_BUILDINGS,Buildings
+BUILDINGS_NONE,No upgradable building: build a shelter or a pen.
+BUILDINGS_INTRO,"Your level: %d. Get within %d m of a building to upgrade it."
+BUILDINGS_LEVEL,level %d/%d
+BUILDINGS_MAX,Maximum level reached.
+BUILDINGS_NEXT,"Level %d: %s · [color=%s]player level %d[/color]"
+BUILDINGS_GO_CLOSER,Get closer (%d m)
+BUILDINGS_MISSING,Missing materials
+BUILDINGS_UPGRADE,Upgrade to level %d
+TOAST_UPGRADE_LEVEL,Player level %d required
+TOAST_WILD_ARRIVED,"%s spotted, heading %s."
+HERD_CHICKEN,Chickens
+HERD_SHEEP,Sheep
+HERD_COW,Cows
+HERD_GOAT,Goats
+HERD_DOG,A dog
+HERD_HORSE,A horse
+DIR_N,north
+DIR_NE,northeast
+DIR_E,east
+DIR_SE,southeast
+DIR_S,south
+DIR_SW,southwest
+DIR_W,west
+DIR_NW,northwest

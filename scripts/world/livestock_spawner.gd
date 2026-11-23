@@ -23,6 +23,15 @@ var _landscape: Node3D
 var _autosave: bool = DisplayServer.get_name() != "headless"
 var _saved: Dictionary = {}
 var _animals: Array = []
+## Repeuplement : animaux sauvages (non apprivoisés) visés par espèce. Quand le joueur en a
+## apprivoisé assez, de nouveaux groupes arrivent au loin, hors de vue.
+const WILD_TARGET := {"chicken": 3, "sheep": 3, "cow": 2, "goat": 2, "dog": 1, "horse": 1}
+const REPOPULATE_SECONDS := 120.0
+const ARRIVAL_MIN_DISTANCE := 45.0
+const ARRIVAL_MAX_DISTANCE := 110.0
+var _repopulate_left: float = REPOPULATE_SECONDS
+var _next_id: int = 100
+var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	add_to_group("livestock_spawner")
@@ -53,7 +62,88 @@ func _spawn_all() -> void:
 				var z := center.z + offset.y
 				_spawn_animal(species, key, Vector3(x, _ground_height(x, z), z), {})
 			spawned += 1
+	# Bêtes apprivoisées venues d'un repeuplement (clés hors des groupes de départ).
+	var known := {}
+	for animal in _animals:
+		known[String(animal.get("spawn_key"))] = true
+	for key in _saved:
+		if known.has(key):
+			continue
+		var species := String(key).get_slice("#", 0)
+		if not WILD_TARGET.has(species):
+			continue
+		_spawn_animal(species, key, _saved[key].get("pos", origin), _saved[key])
+		_next_id = maxi(_next_id, int(String(key).get_slice("#", 1)) + 1)
+		spawned += 1
+	_rng.randomize()
 	print("LivestockSpawner: placed %d domestic animals" % spawned)
+
+func _process(delta: float) -> void:
+	_repopulate_left -= delta
+	if _repopulate_left > 0.0:
+		return
+	_repopulate_left = REPOPULATE_SECONDS
+	repopulate()
+
+## Nombre d'animaux sauvages (non apprivoisés) d'une espèce.
+func wild_count(species: String) -> int:
+	var count := 0
+	for animal in get_animals():
+		if animal.get("species") == species and not bool(animal.get("tamed")):
+			count += 1
+	return count
+
+## Fait arriver, pour UNE espèce en manque, un petit groupe sauvage au loin. Renvoie l'espèce
+## (ou "" si aucune ne manque).
+func repopulate() -> String:
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	if player == null or animal_scene == null:
+		return ""
+	var missing: Array = []
+	for species in WILD_TARGET:
+		if wild_count(species) < int(WILD_TARGET[species]):
+			missing.append(species)
+	if missing.is_empty():
+		return ""
+	var species: String = missing[_rng.randi() % missing.size()]
+	var center := _arrival_point(player.global_position)
+	if center == Vector3.INF:
+		return ""
+	var count := int(WILD_TARGET[species]) - wild_count(species)
+	for i in count:
+		var x := center.x + _rng.randf_range(-3.5, 3.5)
+		var z := center.z + _rng.randf_range(-3.5, 3.5)
+		_spawn_animal(species, "%s#%d" % [species, _next_id], Vector3(x, _ground_height(x, z), z), {})
+		_next_id += 1
+	_announce(species, center - player.global_position)
+	return species
+
+func _arrival_point(origin: Vector3) -> Vector3:
+	for attempt in 40:
+		var angle := _rng.randf_range(0.0, TAU)
+		var distance := _rng.randf_range(ARRIVAL_MIN_DISTANCE, ARRIVAL_MAX_DISTANCE)
+		var x := origin.x + cos(angle) * distance
+		var z := origin.z + sin(angle) * distance
+		var y := _ground_height(x, z)
+		if y < min_terrain_height or _in_water(x, z, 6.0):
+			continue
+		var flat := true
+		for offset in [Vector2(4, 0), Vector2(-4, 0), Vector2(0, 4), Vector2(0, -4)]:
+			if absf(_ground_height(x + offset.x, z + offset.y) - y) > 1.8:
+				flat = false
+		if flat:
+			return Vector3(x, y, z)
+	return Vector3.INF
+
+## « Des chèvres ont été aperçues au nord-est. »
+func _announce(species: String, offset: Vector3) -> void:
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud == null or not hud.has_method("show_toast"):
+		return
+	var bearing := fposmod(rad_to_deg(atan2(offset.x, -offset.z)), 360.0)
+	var directions := ["DIR_N", "DIR_NE", "DIR_E", "DIR_SE", "DIR_S", "DIR_SW", "DIR_W", "DIR_NW"]
+	var direction: String = directions[int(round(bearing / 45.0)) % 8]
+	hud.show_toast(tr("TOAST_WILD_ARRIVED") % [tr("HERD_" + species.to_upper()), tr(direction)], 4.0)
 
 func _pick_center(rng: RandomNumberGenerator, origin: Vector3, near_start: bool) -> Vector3:
 	for attempt in 60:
