@@ -16,6 +16,7 @@ var _craft_list: VBoxContainer
 var _inventory_list: VBoxContainer
 var _notebook_list: VBoxContainer
 var _animals_list: VBoxContainer
+var _buildings_list: VBoxContainer
 var _notebook: Node
 var _close_button: Button
 var _quest_manager: Node
@@ -76,6 +77,7 @@ func _build() -> void:
 	_inventory_list = _add_tab(tr("JOURNAL_INVENTORY_TITLE"))
 	_notebook_list = _add_tab(tr("JOURNAL_NOTEBOOK"))
 	_animals_list = _add_tab(tr("JOURNAL_ANIMALS"))
+	_buildings_list = _add_tab(tr("JOURNAL_BUILDINGS"))
 	_build_settings(_add_tab(tr("JOURNAL_SETTINGS")))
 
 	_close_button = Button.new()
@@ -224,6 +226,103 @@ func _refresh() -> void:
 	_refresh_inventory()
 	_refresh_notebook()
 	_refresh_animals()
+	_refresh_buildings()
+
+# --- Bâtiments améliorables ------------------------------------------------------------
+
+## Distance max (m) entre le joueur et le bâtiment pour l'améliorer depuis le journal.
+const UPGRADE_DISTANCE := 8.0
+
+## Bâtiments qui s'améliorent (abri, enclos) : niveau, coût du suivant (vert = suffisant,
+## rouge = manquant), niveau de joueur requis ; le bouton n'agit que tout près du bâtiment.
+func _refresh_buildings() -> void:
+	if _buildings_list == null or not is_inside_tree():
+		return
+	_clear(_buildings_list)
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	var progression := InteractionManager.get_progression()
+	var player_level := int(progression.call("get_level")) if progression != null else 1
+	var buildings: Array = []
+	for node in get_tree().get_nodes_in_group("structures"):
+		if not is_instance_valid(node) or not node.has_method("upgrade_required_level"):
+			continue
+		if node is Pen or PlacedStructure.UPGRADE_COSTS.has(String(node.get("kind"))):
+			buildings.append(node)
+	if buildings.is_empty():
+		_add_label(_buildings_list, tr("BUILDINGS_NONE"), 18, Color(1, 1, 1, 0.75))
+		return
+	_add_label(_buildings_list, tr("BUILDINGS_INTRO") % [player_level, int(UPGRADE_DISTANCE)], 16, Color(1, 0.95, 0.85))
+	if player != null:
+		buildings.sort_custom(func(a, b): return a.global_position.distance_to(player.global_position) < b.global_position.distance_to(player.global_position))
+	for i in buildings.size():
+		_add_building_card(buildings[i], i, player, player_level)
+
+func _add_building_card(building: Node3D, index: int, player: Node3D, player_level: int) -> void:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", _box(Color(0.18, 0.12, 0.07, 0.9), Color(ACCENT, 0.5), 2, 12, 10))
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	card.add_child(column)
+	var name_text: String = building.call("display_name") if building.has_method("display_name") else tr("ITEM_BUILDING_" + String(building.get("kind")).to_upper()).capitalize()
+	var distance := building.global_position.distance_to(player.global_position) if player != null else 0.0
+	var level := int(building.get("level"))
+	var title := RichTextLabel.new()
+	title.bbcode_enabled = true
+	title.fit_content = true
+	title.scroll_active = false
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title.add_theme_font_size_override("normal_font_size", 18)
+	title.add_theme_font_size_override("bold_font_size", 19)
+	title.text = "[b][color=#e8c690]%s[/color][/b]  %s  [color=#ffffff99]· %d m[/color]" % [name_text, tr("BUILDINGS_LEVEL") % [level, 3], int(distance)]
+	column.add_child(title)
+	var button := Button.new()
+	button.name = "Upgrade%d" % index
+	button.focus_mode = Control.FOCUS_NONE
+	button.custom_minimum_size = Vector2(0, BUTTON_HEIGHT * 0.9)
+	if not bool(building.call("can_upgrade")):
+		_add_label(column, tr("BUILDINGS_MAX"), 16, Color(0.6, 0.9, 0.6))
+		_buildings_list.add_child(card)
+		return
+	var cost: Dictionary = building.call("next_upgrade_cost")
+	var parts: PackedStringArray = []
+	var enough := true
+	for item_id in cost:
+		var have: int = int(_inventory.call("count_of", item_id)) if _inventory != null else 0
+		var need := int(cost[item_id])
+		enough = enough and have >= need
+		parts.append("[color=%s]%d/%d %s[/color]" % ["#8fe08f" if have >= need else "#ff8a7a", have, need, tr("ITEM_" + String(item_id).to_upper())])
+	var required := int(building.call("upgrade_required_level"))
+	var cost_label := RichTextLabel.new()
+	cost_label.bbcode_enabled = true
+	cost_label.fit_content = true
+	cost_label.scroll_active = false
+	cost_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cost_label.add_theme_font_size_override("normal_font_size", 16)
+	cost_label.text = tr("BUILDINGS_NEXT") % [level + 1, ", ".join(parts), "#8fe08f" if player_level >= required else "#ff8a7a", required]
+	column.add_child(cost_label)
+	var near := distance <= UPGRADE_DISTANCE
+	if not near:
+		button.text = tr("BUILDINGS_GO_CLOSER") % int(distance)
+		button.disabled = true
+	elif player_level < required:
+		button.text = tr("TOAST_UPGRADE_LEVEL") % required
+		button.disabled = true
+	elif not enough:
+		button.text = tr("BUILDINGS_MISSING")
+		button.disabled = true
+	else:
+		button.text = tr("BUILDINGS_UPGRADE") % (level + 1)
+	button.pressed.connect(func():
+		var error: String = building.call("upgrade")
+		if error == "":
+			_notify(tr("TOAST_UPGRADED") % int(building.get("level")))
+		elif error == "TOAST_UPGRADE_LEVEL":
+			_notify(tr(error) % required)
+		elif error != "TOAST_UPGRADE_MISSING":
+			_notify(tr(error))
+		_refresh_buildings())
+	column.add_child(button)
+	_buildings_list.add_child(card)
 
 # --- Animaux apprivoisés ----------------------------------------------------------------
 

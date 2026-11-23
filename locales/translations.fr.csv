@@ -636,3 +636,28 @@ SPECIES_GOAT,Chèvre
 SPECIES_CHICKEN,Poule
 SPECIES_HORSE,Cheval
 SPECIES_DOG,Chien
+JOURNAL_BUILDINGS,Bâtiments
+BUILDINGS_NONE,Aucun bâtiment améliorable : construisez un abri ou un enclos.
+BUILDINGS_INTRO,"Votre niveau : %d. Approchez-vous à moins de %d m d'un bâtiment pour l'améliorer."
+BUILDINGS_LEVEL,niveau %d/%d
+BUILDINGS_MAX,Niveau maximum atteint.
+BUILDINGS_NEXT,"Niveau %d : %s · [color=%s]niveau de joueur %d[/color]"
+BUILDINGS_GO_CLOSER,Approchez-vous (%d m)
+BUILDINGS_MISSING,Matériaux manquants
+BUILDINGS_UPGRADE,Améliorer au niveau %d
+TOAST_UPGRADE_LEVEL,Niveau de joueur %d requis
+TOAST_WILD_ARRIVED,"%s en vue, direction %s."
+HERD_CHICKEN,Des poules
+HERD_SHEEP,Des moutons
+HERD_COW,Des vaches
+HERD_GOAT,Des chèvres
+HERD_DOG,Un chien
+HERD_HORSE,Un cheval
+DIR_N,nord
+DIR_NE,nord-est
+DIR_E,est
+DIR_SE,sud-est
+DIR_S,sud
+DIR_SW,sud-ouest
+DIR_W,ouest
+DIR_NW,nord-ouest
