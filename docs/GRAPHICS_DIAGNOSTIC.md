@@ -38,11 +38,15 @@ propositions classées par coût/bénéfice. Références au code actuel entre p
 
 ### P1 — fort impact visuel, coût moyen (1-3 jours)
 
-4. **Ciel en shader custom** (remplace `ProceduralSkyMaterial`) : étoiles procédurales
+4. **Ciel en shader custom** ✅ **FAIT** (`assets/vfx/sky/sky.gdshader`, remplace le
+   `ProceduralSkyMaterial` dans `canyon_playground.tscn`) : étoiles procédurales
    la nuit (hash 3D + scintillement), **lune visible** (disque + halo) qui suit la
-   `moon` light, nuages en drift (défilement UV de `cloud_cover.png`), gradient de
-   crépuscule plus riche. Un seul `sky.gdshader`, piloté par les mêmes variables
-   (heure, météo, saison). C'est le plus gros « wow » la nuit.
+   `moon` light, nuages en drift (défilement UV de `cloud_cover.png`, masque alpha),
+   gradient de crépuscule plus riche, disque solaire + halo. Piloté par
+   `DayNightCycle` via les uniforms (heure, météo, saison). Note Godot 4.7 : dans un
+   `shader_type sky`, le point d'entrée est `void sky()` (pas `fragment()`), `EYEDIR`
+   n'existe que dans les fonctions d'entrée (pas dans les helpers) et `COLOR` est un
+   `vec3`.
 5. **Eau améliorée** : ajouter un Fresnel avec teinte de ciel reflété + reflet du soleil
    (specular directionnelle) dans `water_surface.gdshader`/`river_surface.gdshader` ;
    éventuellement transparence accrue près des berges. Pas de réflexion réelle
@@ -83,6 +87,6 @@ propositions classées par coût/bénéfice. Références au code actuel entre p
 
 ## Recommandation
 
-Commencer par **P0 (MSAA + coupe SSAO/glow en low)** — 1 PR courte, testable via
-`test_quality_shadows`-style — puis **P1-4 (ciel custom nuit/lune/étoiles)** qui est
-le plus visible en screenshots. P1-5 (eau) et P1-6 (feu de camp) suivent bien.
+Commencer par **P0 (MSAA + coupe SSAO/glow en low)** ✅ **FAIT** — puis **P1-4 (ciel
+custom nuit/lune/étoiles)** ✅ **FAIT** qui est le plus visible en screenshots.
+P1-5 (eau) et P1-6 (feu de camp) suivent bien.

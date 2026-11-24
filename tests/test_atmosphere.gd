@@ -32,11 +32,17 @@ func _init() -> void:
 		await process_frame
 	var env_node := world.get_node("WorldEnvironment") as WorldEnvironment
 	var sky_mat = env_node.environment.sky.sky_material
-	if sky_mat is ProceduralSkyMaterial:
+	if sky_mat is ShaderMaterial:
+		var sm := sky_mat as ShaderMaterial
+		if sm.shader == null or not sm.shader.resource_path.ends_with("sky.gdshader"):
+			errors.append("le ciel custom devrait utiliser sky.gdshader : %s" % sm.shader)
+		if sm.get_shader_parameter("cloud_texture") == null:
+			errors.append("cloud_texture (nuages) non branché sur le ShaderMaterial du ciel")
+	elif sky_mat is ProceduralSkyMaterial:
 		if (sky_mat as ProceduralSkyMaterial).sky_cover == null:
 			errors.append("sky_cover (nuages) non branché sur le ProceduralSkyMaterial")
 	else:
-		errors.append("le ciel n'est plus un ProceduralSkyMaterial : %s" % sky_mat)
+		errors.append("matériel de ciel inattendu : %s" % sky_mat)
 	var flare := world.get_node_or_null("SunFlare") as SunFlare
 	if flare == null:
 		errors.append("nœud SunFlare manquant")

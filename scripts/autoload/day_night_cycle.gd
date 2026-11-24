@@ -93,7 +93,25 @@ func _apply() -> void:
 		moon.visible = moon.light_energy > 0.01
 	if environment != null:
 		var sky: Sky = environment.sky
-		if sky != null and sky.sky_material is ProceduralSkyMaterial:
+		if sky != null and sky.sky_material is ShaderMaterial:
+			# Ciel custom (assets/vfx/sky/sky.gdshader) : étoiles, lune, nuages animés.
+			var mat := sky.sky_material as ShaderMaterial
+			mat.set_shader_parameter("top_color", Color(0.09, 0.09, 0.27).lerp(Color(0.2, 0.45, 0.86), day_factor))
+			var horizon_day2 := Color(0.98, 0.80, 0.58).lerp(Color(1.0, 0.5, 0.24), low_sun)
+			mat.set_shader_parameter("horizon_color", Color(0.20, 0.12, 0.30).lerp(horizon_day2, smoothstep(0.0, 0.3, day_factor)))
+			mat.set_shader_parameter("ground_color", Color(0.02, 0.02, 0.05).lerp(Color(0.35, 0.22, 0.14), day_factor))
+			mat.set_shader_parameter("day_factor", day_factor)
+			mat.set_shader_parameter("energy", lerp(0.3, 1.0, day_factor) * (1.0 - 0.35 * weather_dim))
+			var sun_t: Transform3D = sun.global_transform if sun.is_inside_tree() else sun.transform
+			mat.set_shader_parameter("sun_direction", sun_t.basis.z.normalized())
+			mat.set_shader_parameter("sun_color", sun.light_color)
+			if moon != null and is_instance_valid(moon):
+				var moon_t: Transform3D = moon.global_transform if moon.is_inside_tree() else moon.transform
+				mat.set_shader_parameter("moon_direction", moon_t.basis.z.normalized())
+			var night_factor := 1.0 - day_factor
+			mat.set_shader_parameter("star_amount", smoothstep(0.05, 0.4, night_factor))
+			mat.set_shader_parameter("cloud_cover", weather_dim)
+		elif sky != null and sky.sky_material is ProceduralSkyMaterial:
 			var sky_mat: ProceduralSkyMaterial = sky.sky_material
 			sky_mat.sky_top_color = Color(0.09, 0.09, 0.27).lerp(Color(0.2, 0.45, 0.86), day_factor)
 			# Horizon : plus orangé quand le soleil est bas (aube, crépuscule).
