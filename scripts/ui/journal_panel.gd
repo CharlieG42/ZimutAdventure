@@ -175,6 +175,19 @@ func _build_settings(list: VBoxContainer) -> void:
 	minimap.toggled.connect(func(on): settings.call("set_minimap", on))
 	list.add_child(minimap)
 
+	# Orientation de l'écran sur mobile : automatique (capteur) ou verrouillée.
+	_add_label(list, tr("SETTING_ORIENTATION"), 20, ACCENT)
+	var orient := OptionButton.new()
+	orient.custom_minimum_size = Vector2(0, BUTTON_HEIGHT)
+	orient.focus_mode = Control.FOCUS_NONE
+	orient.add_theme_font_size_override("font_size", 20)
+	var orientations: Array = settings.get("ORIENTATIONS")
+	for i in orientations.size():
+		orient.add_item(tr("SETTING_ORIENTATION_" + String(orientations[i]).to_upper()), i)
+	orient.selected = maxi(orientations.find(String(settings.get("orientation"))), 0)
+	orient.item_selected.connect(func(index): settings.call("set_orientation", String(orientations[index])))
+	list.add_child(orient)
+
 	var replay := Button.new()
 	replay.text = tr("SETTING_TUTORIAL")
 	replay.custom_minimum_size = Vector2(0, BUTTON_HEIGHT)

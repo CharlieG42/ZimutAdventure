@@ -110,6 +110,7 @@ Chaque région = **une grande carte ouverte** (plusieurs dizaines de km² en jeu
 - Carte du monde et journal adaptés au tactile (pinch-to-zoom sur la carte).
 - **Deux modes automatiques selon la position du téléphone** (aucun verrou d'orientation : le manifeste Android autorise paysage + portrait, `fullSensor`) : en **paysage** le jeu se joue à deux mains (deux sticks + boutons d'action au-dessus du stick caméra) ; en **portrait** il se joue à une main (stick fixe en bas à gauche, colonne d'actions ancrée en bas à droite, caméra au glisser ailleurs, menus en haut, FOV élargi). Le HUD choisit son mode d'après l'aspect de l'écran et se réorganise à chaque rotation.
 - Pas de pub, pas de micro-transactions.
+- **Orientation réglable** (Journal → Réglages) : « automatique » suit le capteur (paysage = deux mains, portrait = une main), ou verrou « paysage » / « portrait ».
 
 ## 7. Direction artistique
 
