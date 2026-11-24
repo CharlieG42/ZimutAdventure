@@ -614,7 +614,9 @@ ACTION_TAKE_OFF,Take off
 GEAR_EFFECT_HAT,shades you from the sun: thirst −20%
 GEAR_EFFECT_CLOAK,"warm, damage taken −35%"
 GEAR_EFFECT_BOOTS,speed +8%
-GEAR_EFFECT_BACKPACK,for style (and long walks)
+GEAR_EFFECT_BACKPACK,"bigger bag: +20 kg capacity"
+HUD_WEIGHT,Bag %d/%d kg
+TOAST_OVERLOADED,Bag too heavy: sprint locked!
 ACTION_RANCH,Ranch
 RANCH_TITLE,Ranch — pen management
 RANCH_NO_PEN,No pen yet: build one (Crafting tab).

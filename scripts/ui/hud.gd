@@ -34,6 +34,7 @@ const BASE_MARGIN := 16
 @onready var quest_tracker: Label = $Overlay/QuestTracker
 @onready var bottom_bar: HBoxContainer = $SafeArea/VBox/BottomBar
 @onready var vbox: VBoxContainer = $SafeArea/VBox
+@onready var weight_label: Label = $Overlay/WeightLabel
 ## Consignes des premières minutes (créées en code, voir TutorialPanel).
 var tutorial_panel: TutorialPanel
 var build_panel: BuildPanel
@@ -80,6 +81,8 @@ var _bow_overlay: Control
 var _gauge: ProgressBar
 var _gauge_label: Label
 var _prompt_refresh: float = 0.0
+var _load_check: float = 0.0
+var _was_overloaded: bool = false
 
 ## Qualité réduite (PerformanceGuard) : niveau 1 coupe le grain, niveau 2 aussi la vignette.
 func set_fx_level(level: int) -> void:
@@ -335,6 +338,27 @@ func _setup_quest_tracker() -> void:
 func _on_quest_changed(_a = null, _b = null, _c = null) -> void:
 	_update_quest_tracker.call_deferred()
 
+## Poids du sac affiché sous les jauges quand il dépasse 45 % de la capacité
+## (rouge au-delà de 100 % ; toast au passage en surcharge).
+func _update_weight_label() -> void:
+	if weight_label == null or not is_inside_tree():
+		return
+	var inventory := InteractionManager.get_inventory()
+	if inventory == null or not inventory.has_method("weight_fraction"):
+		weight_label.visible = false
+		return
+	var fraction := float(inventory.call("weight_fraction"))
+	var overloaded := fraction > 1.0
+	if overloaded and not _was_overloaded:
+		show_toast(tr("TOAST_OVERLOADED"), 2.2)
+	_was_overloaded = overloaded
+	if fraction <= 0.45:
+		weight_label.visible = false
+		return
+	weight_label.visible = true
+	weight_label.text = tr("HUD_WEIGHT") % [int(round(float(inventory.call("total_weight")))), int(round(float(inventory.call("capacity"))))]
+	weight_label.add_theme_color_override("font_color", Color(0.95, 0.45, 0.4) if overloaded else Color(0.95, 0.85, 0.6))
+
 func _update_quest_tracker() -> void:
 	if not is_inside_tree():
 		return
@@ -373,6 +397,10 @@ func _process(delta: float) -> void:
 	if _prompt_refresh <= 0.0 and is_instance_valid(_focused_interactable):
 		_prompt_refresh = 0.15
 		_refresh_prompt_text(_focused_interactable)
+	_load_check -= delta
+	if _load_check <= 0.0:
+		_load_check = 0.5
+		_update_weight_label()
 	if _player == null:
 		return
 	if _bow_overlay != null and _player.has_method("get_bow_state"):
@@ -789,7 +817,7 @@ func _fit_clock() -> void:
 ## _fit_to_viewport recalcule ensuite tout explicitement, à n'importe quelle taille.
 func _capture_layout() -> void:
 	var nodes: Array[Control] = [joystick, camera_joystick, action_pad, minimap, vitals, level_badge, quest_tracker, hotbar,
-		sprint_button, jump_button, interact_button, attack_button, aim_button]
+		weight_label, sprint_button, jump_button, interact_button, attack_button, aim_button]
 	for node: Control in nodes:
 		var rect := node.get_global_rect()
 		node.layout_mode = 0
@@ -930,6 +958,9 @@ func _fit_to_viewport(vp_override: Vector2 = Vector2.ZERO) -> void:
 		vitals.pivot_offset = Vector2.ZERO
 		var vitals_size := VitalsPanel.panel_size()
 		_set_offsets(vitals, Vector4(16.0, 116.0, 16.0 + vitals_size.x, 116.0 + vitals_size.y))
+		# Poids du sac sous les jauges réduites.
+		var wl_top := 116.0 + vitals_size.y * 0.5 + 6.0
+		_set_offsets(weight_label, Vector4(16.0, wl_top, 260.0, wl_top + 32.0))
 		# Mini-carte en haut à droite, réduite.
 		_set_offsets(minimap, Vector4(vp.x - 136.0, 116.0, vp.x - 16.0, 236.0))
 		# Hotbar au-dessus du stick de déplacement, à gauche.
@@ -955,6 +986,7 @@ func _fit_to_viewport(vp_override: Vector2 = Vector2.ZERO) -> void:
 		_set_offsets(vitals, _base_offsets[vitals])
 		_set_offsets(hotbar, _base_offsets[hotbar])
 		_set_offsets(quest_tracker, _base_offsets[quest_tracker])
+		_set_offsets(weight_label, _base_offsets[weight_label])
 		level_badge.visible = true
 	_layout_tutorial(vp)
 	if build_panel != null:
