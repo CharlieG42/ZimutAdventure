@@ -303,6 +303,9 @@ TOAST_CHEST_STORED,%d objets rangés dans le coffre.
 TOAST_CHEST_TAKEN,%d objets repris.
 TOAST_CHEST_EMPTY,Le coffre est vide.
 TOAST_WAKE_POINT,Point de réveil enregistré ici.
+EVENT_WOLVES,Des hurlements… une meute de loups rôde dans le secteur !
+EVENT_STORM,Le ciel s'assombrit d'un coup : une tempête éclate !
+EVENT_SOURCE,"Source d'eau inconnue découverte (%s, %d m) !"
 QUEST_CAMP_TITLE,Un camp à soi
 QUEST_CAMP_DESC,"Fabriquez un feu de camp (niveau 2) et posez-le depuis le sac : il se nourrit de bois, cuit vos plats et tient les rôdeurs à distance."
 QUEST_CHEST_TITLE,Ranger ses affaires
