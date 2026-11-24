@@ -89,6 +89,9 @@ func _apply() -> void:
 	# identifiants d'autoload ne sont pas résolus.)
 	var rm := get_node_or_null("/root/RegionManager")
 	var pal: Dictionary = rm.call("palette") as Dictionary if rm != null else {}
+	var aurora_region := 0.0
+	if rm != null:
+		aurora_region = float((rm.call("def", rm.get("current_region")) as Dictionary).get("aurora", 0.0))
 	var day_factor := _day_factor()
 	sun.rotation.x = _base_sun_rotation.x + (hour - 12.0) / 24.0 * TAU
 	sun.visible = day_factor > 0.02
@@ -133,6 +136,8 @@ func _apply() -> void:
 				mat.set_shader_parameter("moon_direction", moon_t.basis.z.normalized())
 			var night_factor := 1.0 - day_factor
 			mat.set_shader_parameter("star_amount", smoothstep(0.05, 0.4, night_factor))
+			# Aurores boréales : seulement là où la région le prévoit (Canada), la nuit.
+			mat.set_shader_parameter("aurora_amount", aurora_region * smoothstep(0.15, 0.7, night_factor))
 			mat.set_shader_parameter("cloud_cover", weather_dim)
 		elif sky != null and sky.sky_material is ProceduralSkyMaterial:
 			var sky_mat: ProceduralSkyMaterial = sky.sky_material

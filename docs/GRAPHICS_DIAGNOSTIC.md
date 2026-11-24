@@ -72,16 +72,20 @@ propositions classées par coût/bénéfice. Références au code actuel entre p
    `prop_rock`/`prop_trunk`/`prop_foliage`. Note Godot 4.7 : `use_colors` doit être
    activé AVANT `instance_count`, et les couleurs vivent dans le RenderingServer
    (illisibles en headless dummy).
-10. **Ombres de contact du personnage** : le SSAO aide déjà ; en high, augmenter
-    `ssao_radius`/`intensity` légèrement sur PC uniquement.
+10. **Ombres de contact du personnage** ✅ **FAIT** : en qualité haute (niveau 0) et
+    **sur PC uniquement** (pas android/ios), `PerformanceGuard` pousse le SSAO à
+    radius 2.4 / intensity 1.7 (défaut 1.5 / 1.2 restauré dès le niveau 1).
 
 ### P3 — plus lourd / régions futures
 
-11. **Aurores boréales** (bandes animées dans le ciel custom) — pour la région Grand
-    Nord canadien (GDD), pas pour le canyon.
-12. **Comètes/étoiles filantes** la nuit (2-3 sprites animés dans le ciel).
-13. **Lumière dynamique des lucioles la nuit** (quelques point lights éteintes par
-    distance, ou émissif + pas d'ombre) — ambiance, à budgetiser.
+11. **Aurores boréales** ✅ **FAIT** : rideaux ondulants (double sinus animé) dans
+    `sky.gdshader`, uniform `aurora_amount` piloté par `DayNightCycle` = 1 au Grand Nord
+    canadien, 0 ailleurs, visible la nuit uniquement.
+12. **Comètes/étoiles filantes** ✅ **FAIT** : météores procéduraux dans `sky.gdshader`
+    (fenêtre toutes les ~8 s, traînée lumineuse qui traverse le ciel, la nuit).
+13. **Lucioles la nuit** ✅ **FAIT** : `world_setup` ajoute un émetteur `Fireflies`
+    (petits quads additif jaune-vert, ~26 particules autour du joueur), activé uniquement
+    la nuit (phase `night` de DayNightCycle).
 14. **Reflets d'eau réels** : impossibles en Compatibility (pas de probes/SSR) — rester
     sur le Fresnel (P1-5).
 
@@ -98,4 +102,4 @@ propositions classées par coût/bénéfice. Références au code actuel entre p
 
 Commencer par **P0 (MSAA + coupe SSAO/glow en low)** ✅ **FAIT** — puis **P1-4 (ciel
 custom nuit/lune/étoiles)** ✅ **FAIT** qui est le plus visible en screenshots.
-**P1-5 (eau : Fresnel ciel + reflet de soleil)** ✅ **FAIT**. **P1-6 (feu de camp : halo bloom + flicker)** ✅ **FAIT**. **P2 (rim light, backlight, teintes par instance)** ✅ **FAIT**. Reste : P2-10 (SSAO renforcé en high) et P3.
+**P1-5 (eau : Fresnel ciel + reflet de soleil)** ✅ **FAIT**. **P1-6 (feu de camp : halo bloom + flicker)** ✅ **FAIT**. **P2 (rim light, backlight, teintes par instance, SSAO haut PC)** ✅ **FAIT** et **P3 (aurores, météores, lucioles)** ✅ **FAIT**. Reste : P3-14 (reflets d'eau réels, impossible en Compatibility).

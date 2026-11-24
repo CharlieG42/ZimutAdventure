@@ -92,9 +92,15 @@ func _apply_env_quality(lvl: int) -> void:
 			"ssao": environment.ssao_enabled,
 			"glow": environment.glow_enabled,
 			"msaa": int(ProjectSettings.get_setting_with_override("rendering/anti_aliasing/quality/msaa_3d")),
+			"ssao_radius": environment.ssao_radius,
+			"ssao_intensity": environment.ssao_intensity,
 		}
 	environment.ssao_enabled = bool(_env_defaults["ssao"]) if lvl < 1 else false
 	environment.glow_enabled = bool(_env_defaults["glow"]) if lvl < 2 else false
+	# P2-10 : en qualité haute (niveau 0) sur PC uniquement, SSAO un peu plus large/dense.
+	var pc_high := lvl == 0 and not (OS.has_feature("android") or OS.has_feature("ios"))
+	environment.ssao_radius = 2.4 if pc_high else float(_env_defaults["ssao_radius"])
+	environment.ssao_intensity = 1.7 if pc_high else float(_env_defaults["ssao_intensity"])
 	var msaa_default := int(_env_defaults["msaa"])
 	get_viewport().msaa_3d = msaa_default if lvl < 2 else Viewport.MSAA_DISABLED
 
