@@ -159,6 +159,19 @@ func _generate_terrain() -> void:
 		_collision_body.add_child(col)
 		add_child(_collision_body)
 
+## Teintes de terrain de la région courante (RegionManager) : le matériau partagé
+## (canyon_terrain.tres) est dupliqué avant modification pour ne pas fuiter entre régions.
+func apply_region_palette(overrides: Dictionary) -> void:
+	if _terrain == null or overrides.is_empty():
+		return
+	var current := _terrain.get_active_material(0) as ShaderMaterial
+	if current == null:
+		return
+	var mat := current.duplicate() as ShaderMaterial
+	for key in overrides:
+		mat.set_shader_parameter(key, overrides[key])
+	_terrain.set_surface_override_material(0, mat)
+
 func _displace_mesh(plane: PlaneMesh) -> ArrayMesh:
 	var arrays: Array = []
 	arrays.resize(Mesh.ARRAY_MAX)

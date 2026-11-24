@@ -87,7 +87,7 @@ func _initialize() -> void:
 	_check(journal != null, "journal trouvé")
 	if journal != null:
 		var tabs: TabContainer = journal.get("_tabs")
-		_check(tabs.get_tab_count() == 7, "sept onglets dont Carnet, Animaux, Bâtiments et Réglages (%d)" % tabs.get_tab_count())
+		_check(tabs.get_tab_count() == 8, "huit onglets dont Voyager, Carnet, Animaux, Bâtiments et Réglages (%d)" % tabs.get_tab_count())
 
 	world.queue_free()
 	await process_frame

@@ -16,7 +16,7 @@ const LEGACY_FILES := ["inventory.cfg", "quests.cfg", "notebook.cfg", "progressi
 		"exploration.cfg", "weather.cfg", "structures.cfg", "livestock.cfg", "tutorial.cfg", "character.cfg"]
 ## Gestionnaires globaux à relire quand on choisit une partie.
 const RELOADED_AUTOLOADS := ["Inventory", "QuestManager", "Notebook", "Progression", "SurvivalManager",
-		"Exploration", "Weather"]
+		"Exploration", "Weather", "RegionManager"]
 
 ## 0 = aucune partie choisie.
 static var active_slot: int = 0

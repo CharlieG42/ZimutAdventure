@@ -713,3 +713,16 @@ ITEM_GEAR_LEATHER_GLOVES,gants de cuir
 GEAR_EFFECT_SHIRT,chaleur +2 °C
 GEAR_EFFECT_TROUSERS,chaleur +2 °C
 GEAR_EFFECT_GLOVES,chaleur +1.5 °C
+REGION_AMERICAN_WEST_DESC,"Canyons, mesas et rivières asséchées de l'Ouest américain."
+REGION_AUSTRALIAN_OUTBACK_DESC,"Désert rouge, bush et eucalyptus : chaleur extrême, très peu d'eau."
+REGION_CANADIAN_NORTH_DESC,"Toundra, forêt boréale et lacs enneigés, aurores boréales la nuit."
+JOURNAL_TRAVEL,Voyager
+TRAVEL_INTRO,Changez de territoire (niveau actuel : %d). Le voyage charge la nouvelle carte.
+TRAVEL_GO,Voyager vers cette région
+TRAVEL_CURRENT,Région actuelle
+TRAVEL_LOCKED_LEVEL,Niveau %d requis
+REGION_ENTER,Bienvenue : %s
+ANIMAL_KANGAROO,Le kangourou
+ANIMAL_MOOSE,L'orignal
+ANIMAL_DINGO,Le dingo
+ANIMAL_BEAR,L'ours

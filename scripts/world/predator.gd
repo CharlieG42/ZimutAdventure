@@ -13,6 +13,16 @@ const PREDATORS := {
 			"ear": 0.24, "neck": 0.24, "hop": 0.0, "speed": 1.1,
 			"tail_len": 0.42, "tail_color": Color(0.5, 0.38, 0.24),
 			"hp": 2, "damage": 0.08, "chase": 5.2, "detect": 18.0, "pelts": 1},
+	# Outback australien : dingo fauve.
+	"dingo": {"scale": 0.7, "fur": Color(0.78, 0.5, 0.24), "belly": Color(0.92, 0.8, 0.6),
+			"ear": 0.3, "neck": 0.26, "hop": 0.15, "speed": 1.25,
+			"tail_len": 0.45, "tail_color": Color(0.6, 0.38, 0.18),
+			"hp": 3, "damage": 0.11, "chase": 6.0, "detect": 22.0, "pelts": 1},
+	# Grand Nord canadien : ours, lent mais très dangereux.
+	"bear": {"scale": 1.7, "fur": Color(0.16, 0.12, 0.09), "belly": Color(0.3, 0.24, 0.18),
+			"ear": 0.14, "neck": 0.45, "hop": 0.0, "speed": 0.85,
+			"tail_len": 0.2, "tail_color": Color(0.12, 0.09, 0.07),
+			"hp": 12, "damage": 0.3, "chase": 4.8, "detect": 24.0, "pelts": 4},
 }
 const BITE_RANGE := 1.9
 const BITE_COOLDOWN := 1.3

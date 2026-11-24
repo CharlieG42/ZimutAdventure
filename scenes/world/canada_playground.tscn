@@ -1,0 +1,175 @@
+[gd_scene load_steps=29 format=3 uid="uid://zimutcanada01"]
+
+[ext_resource type="Script" path="res://scripts/world/distance_culler.gd" id="96_culler"]
+[ext_resource type="Script" path="res://scripts/world/zone_announcer.gd" id="95_zones"]
+[ext_resource type="Script" path="res://scripts/world/landscape_manager.gd" id="1_landscape"]
+[ext_resource type="Script" path="res://scripts/world/predator_spawner.gd" id="99_predators"]
+[ext_resource type="Script" path="res://scripts/world/site_spawner.gd" id="98_sites"]
+[ext_resource type="Script" path="res://scripts/world/fishing_spawner.gd" id="97_fishing"]
+[ext_resource type="PackedScene" uid="uid://zimutplayer0001" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://scripts/world/collectible_spawner.gd" id="3_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/collectible_item.tscn" id="4_item"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5_hud"]
+[ext_resource type="Script" path="res://scripts/world/world_setup.gd" id="6_setup"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/campfire.tscn" id="7_campfire"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/signpost.tscn" id="8_sign"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/wood_item.tscn" id="9_wood"]
+[ext_resource type="Script" path="res://scripts/world/breakable_rock_spawner.gd" id="10_rockspawn"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/breakable_rock.tscn" id="11_rock"]
+[ext_resource type="Script" path="res://scripts/world/animal_spawner.gd" id="12_animalspawn"]
+[ext_resource type="PackedScene" path="res://scenes/world/passive_animal.tscn" id="13_animal"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/water_source.tscn" id="14_water"]
+[ext_resource type="Script" path="res://scripts/world/structure_spawner.gd" id="14_structures"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/choppable_tree.tscn" id="15_tree"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/berry_bush.tscn" id="16_bush"]
+[ext_resource type="Script" path="res://scripts/world/livestock_spawner.gd" id="17_livestock"]
+[ext_resource type="PackedScene" path="res://scenes/world/domestic_animal.tscn" id="18_domestic"]
+[ext_resource type="Texture2D" path="res://assets/vfx/sky/cloud_cover.png" id="19_clouds"]
+[ext_resource type="Shader" path="res://assets/vfx/sky/sky.gdshader" id="22_sky"]
+[ext_resource type="Script" path="res://scripts/vfx/sun_flare.gd" id="20_flare"]
+[ext_resource type="Script" path="res://scripts/vfx/footprints.gd" id="21_footprints"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
+shader = ExtResource("22_sky")
+shader_parameter/cloud_texture = ExtResource("19_clouds")
+
+[sub_resource type="Sky" id="Sky_sky"]
+sky_material = SubResource("ShaderMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_sky"]
+background_mode = 2
+sky = SubResource("Sky_sky")
+ambient_light_source = 2
+ambient_light_color = Color(0.75, 0.65, 0.55, 1)
+ambient_light_energy = 0.6
+tonemap_mode = 2
+tonemap_exposure = 0.9
+tonemap_white = 6.0
+glow_enabled = true
+glow_intensity = 0.7
+glow_strength = 1.0
+glow_bloom = 0.12
+glow_hdr_threshold = 0.9
+glow_blend_mode = 0
+adjustment_enabled = true
+adjustment_saturation = 1.25
+adjustment_contrast = 1.12
+ssao_enabled = true
+ssao_radius = 1.5
+ssao_intensity = 1.2
+ssao_sharpness = 0.6
+fog_enabled = true
+fog_light_color = Color(0.75, 0.55, 0.38, 1)
+fog_light_energy = 0.6
+fog_sun_scatter = 0.4
+fog_density = 0.0018
+fog_aerial_perspective = 0.3
+fog_sky_affect = 0.2
+fog_height = 8.0
+fog_height_density = 0.15
+
+[node name="CanadaPlayground" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_sky")
+
+[node name="SunFlare" type="Sprite3D" parent="."]
+visible = false
+script = ExtResource("20_flare")
+
+[node name="Footprints" type="Node3D" parent="."]
+script = ExtResource("21_footprints")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 60, 0)
+light_color = Color(1, 0.9, 0.75, 1)
+light_energy = 1.55
+light_specular = 0.5
+shadow_enabled = true
+shadow_bias = 0.03
+shadow_blur = 1.6
+directional_shadow_mode = 1
+directional_shadow_blend_splits = true
+directional_shadow_max_distance = 120.0
+
+[node name="Landscape" type="Node3D" parent="."]
+script = ExtResource("1_landscape")
+
+[node name="Collectibles" type="Node3D" parent="."]
+script = ExtResource("3_spawner")
+item_scene = ExtResource("4_item")
+count = 14
+
+[node name="WoodCollectibles" type="Node3D" parent="."]
+script = ExtResource("3_spawner")
+item_scene = ExtResource("9_wood")
+count = 6
+seed_offset = 1337
+spawn_radius = 180.0
+min_terrain_height = -5.0
+
+[node name="Campfire" parent="." instance=ExtResource("7_campfire")]
+
+[node name="Signpost" parent="." instance=ExtResource("8_sign")]
+message_key = "SIGN_CANYON_1"
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+groups = ["player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 12, -30)
+
+[node name="BreakableRocks" type="Node3D" parent="."]
+script = ExtResource("10_rockspawn")
+rock_scene = ExtResource("11_rock")
+count = 25
+
+[node name="WaterSource" parent="." instance=ExtResource("14_water")]
+
+[node name="Animals" type="Node3D" parent="."]
+script = ExtResource("12_animalspawn")
+animal_scene = ExtResource("13_animal")
+count = 6
+
+[node name="ChoppableTrees" type="Node3D" parent="."]
+script = ExtResource("10_rockspawn")
+rock_scene = ExtResource("15_tree")
+count = 45
+spawn_radius = 130.0
+seed_offset = 777
+min_distance_to_player = 8.0
+zone_affinity = Array[float]([0.1, 1.0, 0.04, 0.55])
+
+[node name="BerryBushes" type="Node3D" parent="."]
+script = ExtResource("10_rockspawn")
+rock_scene = ExtResource("16_bush")
+count = 30
+spawn_radius = 140.0
+seed_offset = 909
+min_distance_to_player = 6.0
+zone_affinity = Array[float]([0.15, 0.6, 0.05, 1.0])
+
+[node name="Predators" type="Node3D" parent="."]
+script = ExtResource("99_predators")
+
+[node name="Livestock" type="Node3D" parent="."]
+script = ExtResource("17_livestock")
+animal_scene = ExtResource("18_domestic")
+
+[node name="Sites" type="Node3D" parent="."]
+script = ExtResource("98_sites")
+
+[node name="Fishing" type="Node3D" parent="."]
+script = ExtResource("97_fishing")
+
+[node name="Structures" type="Node3D" parent="."]
+script = ExtResource("14_structures")
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]
+
+[node name="WorldSetup" type="Node" parent="."]
+script = ExtResource("6_setup")
+
+[node name="DistanceCuller" type="Node" parent="."]
+script = ExtResource("96_culler")
+
+[node name="ZoneAnnouncer" type="Node" parent="."]
+script = ExtResource("95_zones")

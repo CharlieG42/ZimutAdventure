@@ -713,3 +713,16 @@ ITEM_GEAR_LEATHER_GLOVES,leather gloves
 GEAR_EFFECT_SHIRT,warmth +2 °C
 GEAR_EFFECT_TROUSERS,warmth +2 °C
 GEAR_EFFECT_GLOVES,warmth +1.5 °C
+REGION_AMERICAN_WEST_DESC,"Canyons, mesas and dried-up rivers of the American West."
+REGION_AUSTRALIAN_OUTBACK_DESC,"Red desert, bush and eucalyptus: extreme heat, very little water."
+REGION_CANADIAN_NORTH_DESC,"Tundra, boreal forest and snowy lakes, northern lights at night."
+JOURNAL_TRAVEL,Travel
+TRAVEL_INTRO,Change territory (current level: %d). Travelling loads the new map.
+TRAVEL_GO,Travel to this region
+TRAVEL_CURRENT,Current region
+TRAVEL_LOCKED_LEVEL,Level %d required
+REGION_ENTER,Welcome to %s
+ANIMAL_KANGAROO,The kangaroo
+ANIMAL_MOOSE,The moose
+ANIMAL_DINGO,The dingo
+ANIMAL_BEAR,The bear

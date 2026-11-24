@@ -55,6 +55,11 @@ const HUNGER_FACTOR := {"spring": 1.0, "summer": 1.0, "autumn": 1.0, "winter": 1
 var _day: int = 0
 var _weather: String = CLEAR
 var _season: String = "spring"
+# Surcharge de la région courante (RegionManager.apply_region_weather) : saison imposée,
+# neige au sol forcée, teinte du feuillage forcée.
+var _region_season: String = ""
+var _region_snow: float = -1.0
+var _region_foliage: Array = []
 var _snow: float = 0.0
 var _wet: float = 0.0
 var _tint: Color = Color(0.4, 0.6, 0.2)
@@ -136,7 +141,7 @@ func weather_for(day: int, slot: int) -> String:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("weather:%d:%d" % [day, slot])
 	var roll := rng.randf()
-	var season := season_for(day)
+	var season := _region_season if _region_season != "" else season_for(day)
 	var odds: Array = ODDS[season]
 	if roll < float(odds[0]):
 		return CLEAR
@@ -199,6 +204,23 @@ func clear_for_test() -> void:
 	_weather = CLEAR
 	_forced_weather = ""
 	_forced_until = -1.0
+	_region_season = ""
+	_region_snow = -1.0
+	_region_foliage = []
+
+## Météo imposée par la région courante (appelé par RegionManager.apply_to_world) :
+## saison fixe (été brûlant de l'outback, hiver canadien), neige au sol, feuillage.
+func apply_region_weather(w: Dictionary) -> void:
+	_region_season = String(w.get("season", ""))
+	_region_snow = float(w.get("snow", -1.0))
+	_region_foliage = w.get("foliage", [])
+	if _region_season != "":
+		_season = _region_season
+		_weather = _current_target()
+		_dim = float(LOOK[_weather][0])
+		_fog = float(LOOK[_weather][1])
+	if _effects:
+		snap_surfaces()
 
 # --- Boucle -----------------------------------------------------------------------------------------
 
@@ -229,9 +251,9 @@ func _process(delta: float) -> void:
 
 ## Neige, humidité et teinte du feuillage rejoignent doucement leur cible (variables globales des shaders).
 func _update_surfaces(delta: float) -> void:
-	var snow_target: float = SNOW_GROUND[_season] + (0.2 if _weather == SNOW else 0.0)
+	var snow_target: float = _region_snow if _region_snow >= 0.0 else SNOW_GROUND[_season] + (0.2 if _weather == SNOW else 0.0)
 	var wet_target := 1.0 if _weather == RAIN else (0.35 if _weather == CLOUDY and _wet > 0.35 else 0.0)
-	var foliage: Array = FOLIAGE[_season]
+	var foliage: Array = _region_foliage if not _region_foliage.is_empty() else FOLIAGE[_season]
 	_snow = move_toward(_snow, snow_target, 0.06 * delta)
 	_wet = move_toward(_wet, wet_target, 0.12 * delta)
 	_tint = _tint.lerp(foliage[0], clampf(0.5 * delta, 0.0, 1.0))
@@ -246,10 +268,14 @@ func _push_surfaces() -> void:
 
 ## Apparence immédiate des surfaces pour la saison et le temps courants (chargement, tests, captures).
 func snap_surfaces() -> void:
-	_snow = float(SNOW_GROUND[_season]) + (0.2 if _weather == SNOW else 0.0)
+	_snow = _region_snow if _region_snow >= 0.0 else float(SNOW_GROUND[_season]) + (0.2 if _weather == SNOW else 0.0)
 	_wet = 1.0 if _weather == RAIN else 0.0
-	_tint = FOLIAGE[_season][0]
-	_tint_amount = float(FOLIAGE[_season][1])
+	if _region_foliage.is_empty():
+		_tint = FOLIAGE[_season][0]
+		_tint_amount = float(FOLIAGE[_season][1])
+	else:
+		_tint = _region_foliage[0]
+		_tint_amount = float(_region_foliage[1])
 	_push_surfaces()
 
 func get_snow_amount() -> float:
@@ -263,7 +289,7 @@ func get_foliage_tint_amount() -> float:
 
 func _on_day_changed(day: int) -> void:
 	_day = day
-	var season := season_for(day)
+	var season := _region_season if _region_season != "" else season_for(day)
 	if season != _season:
 		_season = season
 		season_changed.emit(season)
