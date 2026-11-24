@@ -66,5 +66,7 @@ func _initialize() -> void:
 		var boots := hero.find_child("High_Boots", true, false) as MeshInstance3D
 		_check(boots != null and boots.visible, "bottes visibles")
 		_check(shoes != null and shoes.visible, "pieds visibles sous les bottes")
+		var boot_mat := boots.get_surface_override_material(0) as StandardMaterial3D
+		_check(boot_mat != null and boot_mat.albedo_color.v < 0.3, "bottes foncées, lisibles sur le sable")
 	print("TEST_PEN_FENCE: ", "PASS" if _failures == 0 else "FAIL")
 	quit(1 if _failures > 0 else 0)

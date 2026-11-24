@@ -114,8 +114,8 @@ func _process(delta: float) -> void:
 	var heat := HOT_THIRST if is_hot() else 1.0
 	# Le chapeau de paille protège du soleil : on a moins soif.
 	var inventory_now := InteractionManager.get_inventory()
-	if inventory_now != null and bool(inventory_now.call("is_worn", HAT_ITEM)):
-		heat *= HAT_THIRST_FACTOR
+	if inventory_now != null:
+		heat *= 1.0 - float(inventory_now.call("worn_stat", "thirst"))
 	_hunger = maxf(0.0, _hunger - hunger_drain * rate * hunger_weather * blessed * delta)
 	_thirst = maxf(0.0, _thirst - thirst_drain * rate * thirst_weather * blessed * heat * delta)
 	_reemit()
@@ -227,13 +227,9 @@ func _gather_context(player: Node3D) -> Dictionary:
 			context["sheltered"] = true
 			context["shelter_level"] = maxi(int(context.get("shelter_level", 1)), int(structure.get("level")))
 	var inventory := InteractionManager.get_inventory()
-	context["cloak"] = inventory != null and bool(inventory.call("is_worn", CLOAK_ITEM))
-	var gear_heat := 0.0
-	if inventory != null:
-		for item_id in GEAR_HEAT:
-			if bool(inventory.call("is_worn", item_id)):
-				gear_heat += float(GEAR_HEAT[item_id])
-	context["gear_heat"] = gear_heat
+	# Chaleur de tous les vêtements portés, cape comprise, selon leur niveau.
+	context["cloak"] = false
+	context["gear_heat"] = float(inventory.call("worn_stat", "heat")) if inventory != null else 0.0
 	context["in_water"] = player.has_method("is_wading") and bool(player.call("is_wading"))
 	context["rain_exposed"] = context["weather"] == "rain" or context["weather"] == "snow"
 	return context
@@ -267,8 +263,8 @@ func get_health() -> float:
 ## Inflige des dégâts (0 à 1 = toute la santé). Retourne true si le joueur est à terre.
 func damage(amount: float) -> bool:
 	var inventory := InteractionManager.get_inventory()
-	if inventory != null and inventory.is_worn(CLOAK_ITEM):
-		amount *= 1.0 - CLOAK_REDUCTION
+	if inventory != null:
+		amount *= 1.0 - clampf(float(inventory.worn_stat("damage")), 0.0, 0.8)
 	_health = maxf(0.0, _health - amount)
 	health_changed.emit(_health)
 	if _health <= 0.0:

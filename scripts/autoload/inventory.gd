@@ -14,24 +14,28 @@ const SAVE_NAME := "inventory.cfg"
 # --- Poids du sac ---------------------------------------------------------------------
 ## Poids (kg) par objet ; un objet inconnu compte DEFAULT_WEIGHT kg.
 const DEFAULT_WEIGHT := 0.5
+## Poids revus à la baisse (on atteignait trop vite la limite) ; les vêtements portés ne
+## comptent pas (voir total_weight).
 const WEIGHTS := {
-	"item_wood": 1.0, "item_stone": 2.0, "item_pelt": 1.5, "item_wool": 0.5,
-	"item_berries": 0.3, "item_vegetables": 0.5, "item_wheat": 1.0, "item_seeds": 0.2,
-	"item_grain_seeds": 0.2, "item_raw_meat": 0.8, "item_cooked_meat": 0.6,
-	"item_fish": 0.8, "item_fish_big": 1.5, "item_grilled_fish": 0.6, "item_grilled_fish_big": 1.2,
-	"item_egg": 0.1, "item_boiled_egg": 0.2, "item_milk": 1.0, "item_bread": 0.5,
-	"item_soup": 1.0, "item_roast_vegetables": 0.5, "item_relic": 0.5, "arrow": 0.05,
-	"tool_stone_axe": 2.5, "tool_sickle": 1.5, "tool_hoe": 2.0, "tool_watering_can": 2.0,
-	"tool_hunting_bow": 1.5, "tool_fishing_rod": 1.5, "tool_knife": 0.5,
-	"gear_straw_hat": 0.3, "gear_wool_shirt": 1.0, "gear_wool_trousers": 1.0,
-	"gear_leather_gloves": 0.4, "gear_hide_boots": 0.8, "armor_fur_cloak": 3.0, "gear_backpack": 1.0,
-	"building_campfire": 5.0, "building_shelter": 12.0, "building_pen": 15.0,
-	"building_palisade": 8.0, "building_farm_plot": 6.0,
-	"furniture_chest": 10.0, "furniture_camp_bed": 6.0, "furniture_wool_bed": 8.0,
+	"item_wood": 0.5, "item_stone": 0.8, "item_pelt": 0.6, "item_wool": 0.2,
+	"item_berries": 0.1, "item_vegetables": 0.3, "item_wheat": 0.4, "item_seeds": 0.05,
+	"item_grain_seeds": 0.05, "item_raw_meat": 0.5, "item_cooked_meat": 0.4,
+	"item_fish": 0.5, "item_fish_big": 1.0, "item_grilled_fish": 0.4, "item_grilled_fish_big": 0.8,
+	"item_egg": 0.05, "item_boiled_egg": 0.05, "item_milk": 0.5, "item_bread": 0.3,
+	"item_soup": 0.5, "item_roast_vegetables": 0.3, "item_relic": 0.3, "arrow": 0.02,
+	"tool_stone_axe": 1.5, "tool_sickle": 0.8, "tool_hoe": 1.2, "tool_watering_can": 1.2,
+	"tool_hunting_bow": 0.8, "tool_fishing_rod": 0.8, "tool_knife": 0.3,
+	"gear_straw_hat": 0.3, "gear_wool_shirt": 0.6, "gear_wool_trousers": 0.6,
+	"gear_leather_gloves": 0.3, "gear_hide_boots": 0.6, "armor_fur_cloak": 1.5, "gear_backpack": 0.8,
+	"building_campfire": 3.0, "building_shelter": 6.0, "building_pen": 8.0,
+	"building_palisade": 3.0, "building_farm_plot": 3.0,
+	"furniture_chest": 5.0, "furniture_camp_bed": 3.0, "furniture_wool_bed": 4.0,
 }
-## Capacité du sac (kg) : de base, et avec le sac à dos porté.
-const BASE_CAPACITY := 30.0
-const BACKPACK_BONUS := 20.0
+## Capacité du sac (kg) : de base, + 1 kg par niveau du joueur (jusqu'à +30), + le sac à dos
+## porté selon son niveau (voir GEAR_STATS).
+const BASE_CAPACITY := 40.0
+const CAPACITY_PER_LEVEL := 1.0
+const MAX_LEVEL_CAPACITY := 30.0
 ## Au-delà de ce taux de remplissage, la vitesse baisse ; à 120 %, minimum.
 const COMFORT_FRACTION := 0.6
 const FULL_FRACTION := 1.2
@@ -60,11 +64,38 @@ const GEAR := {
 	"gear_backpack": "back",
 }
 
+## Amélioration des vêtements (niveaux 1 à 3) : effets par niveau, coût du niveau suivant et
+## niveau de joueur requis.
+##  heat : °C ressentis · damage : part des dégâts évitée · thirst : part de soif en moins
+##  speed : bonus de vitesse · capacity : kg en plus dans le sac
+const GEAR_MAX_LEVEL := 3
+const GEAR_STATS := {
+	"gear_straw_hat": {"thirst": [0.2, 0.3, 0.4]},
+	"gear_wool_shirt": {"heat": [2.0, 3.0, 4.5]},
+	"armor_fur_cloak": {"heat": [7.0, 8.5, 10.0], "damage": [0.35, 0.45, 0.55]},
+	"gear_leather_gloves": {"heat": [1.5, 2.5, 3.5]},
+	"gear_wool_trousers": {"heat": [2.0, 3.0, 4.5]},
+	"gear_hide_boots": {"speed": [0.08, 0.12, 0.16]},
+	"gear_backpack": {"capacity": [25.0, 45.0, 70.0]},
+}
+const GEAR_UPGRADE_COSTS := {
+	"gear_straw_hat": {2: {"item_wheat": 4}, 3: {"item_wheat": 6, "item_wool": 2}},
+	"gear_wool_shirt": {2: {"item_wool": 3}, 3: {"item_wool": 4, "item_pelt": 1}},
+	"armor_fur_cloak": {2: {"item_pelt": 3, "item_wool": 2}, 3: {"item_pelt": 4, "item_wool": 3, "item_relic": 1}},
+	"gear_leather_gloves": {2: {"item_pelt": 2}, 3: {"item_pelt": 3, "item_wool": 1}},
+	"gear_wool_trousers": {2: {"item_wool": 3}, 3: {"item_wool": 4, "item_pelt": 1}},
+	"gear_hide_boots": {2: {"item_pelt": 2, "item_wood": 2}, 3: {"item_pelt": 3, "item_relic": 1}},
+	"gear_backpack": {2: {"item_pelt": 3, "item_wood": 4}, 3: {"item_pelt": 4, "item_wool": 3, "item_wood": 6}},
+}
+const GEAR_UPGRADE_PLAYER_LEVEL := {2: 4, 3: 8}
+
 var _items: Dictionary = {}
 var _autosave: bool = true
 var _equipped: String = ""
 ## emplacement → vêtement porté
 var _worn: Dictionary = {}
+## vêtement → niveau (1 par défaut)
+var _gear_levels: Dictionary = {}
 
 func _ready() -> void:
 	_load()
@@ -75,6 +106,7 @@ func reload_from_disk() -> void:
 	_equipped = ""
 	_worn.clear()
 	_worn.clear()
+	_gear_levels.clear()
 	_load()
 
 func add_item(item_id: String, amount: int = 1) -> void:
@@ -139,6 +171,57 @@ func take_off(slot: String) -> void:
 	worn_changed.emit()
 	_save()
 
+# --- Amélioration des vêtements ----------------------------------------------------------
+
+func gear_level(item_id: String) -> int:
+	return int(_gear_levels.get(item_id, 1))
+
+func can_upgrade_gear(item_id: String) -> bool:
+	return GEAR.has(item_id) and has_item(item_id, 1) and gear_level(item_id) < GEAR_MAX_LEVEL
+
+func gear_upgrade_cost(item_id: String) -> Dictionary:
+	if not GEAR.has(item_id) or gear_level(item_id) >= GEAR_MAX_LEVEL:
+		return {}
+	return ((GEAR_UPGRADE_COSTS[item_id] as Dictionary)[gear_level(item_id) + 1] as Dictionary).duplicate()
+
+func gear_upgrade_required_level(item_id: String) -> int:
+	return int(GEAR_UPGRADE_PLAYER_LEVEL.get(gear_level(item_id) + 1, 1))
+
+## Améliore un vêtement possédé. Renvoie "" ou la clé d'erreur.
+func upgrade_gear(item_id: String) -> String:
+	if not GEAR.has(item_id) or not has_item(item_id, 1):
+		return "TOAST_CANNOT_UPGRADE"
+	if gear_level(item_id) >= GEAR_MAX_LEVEL:
+		return "TOAST_MAX_LEVEL"
+	var progression := get_node_or_null("/root/Progression")
+	if progression != null and int(progression.call("get_level")) < gear_upgrade_required_level(item_id):
+		return "TOAST_UPGRADE_LEVEL"
+	var cost := gear_upgrade_cost(item_id)
+	for ingredient in cost:
+		if count_of(ingredient) < int(cost[ingredient]):
+			return "TOAST_UPGRADE_MISSING"
+	for ingredient in cost:
+		remove_item(ingredient, int(cost[ingredient]))
+	_gear_levels[item_id] = gear_level(item_id) + 1
+	worn_changed.emit()
+	_save()
+	return ""
+
+## Valeur d'un effet pour un vêtement à un niveau donné (0 si sans cet effet).
+static func gear_stat_value(item_id: String, stat: String, level: int) -> float:
+	var stats: Dictionary = GEAR_STATS.get(item_id, {})
+	if not stats.has(stat):
+		return 0.0
+	var values: Array = stats[stat]
+	return float(values[clampi(level, 1, values.size()) - 1])
+
+## Somme d'un effet sur les vêtements portés (à leur niveau).
+func worn_stat(stat: String) -> float:
+	var total := 0.0
+	for item_id in get_worn():
+		total += gear_stat_value(item_id, stat, gear_level(item_id))
+	return total
+
 func is_worn(item_id: String) -> bool:
 	return GEAR.has(item_id) and _worn.get(GEAR[item_id], "") == item_id
 
@@ -188,12 +271,20 @@ func get_all() -> Dictionary:
 func total_weight() -> float:
 	var total := 0.0
 	for item_id in _items:
-		total += item_weight(String(item_id)) * float(_items[item_id])
+		var count := int(_items[item_id])
+		# Un vêtement porté est sur le dos du personnage, pas dans le sac.
+		if is_worn(String(item_id)):
+			count -= 1
+		total += item_weight(String(item_id)) * float(count)
 	return total
 
-## Capacité actuelle du sac (kg) : le sac à dos porté ajoute BACKPACK_BONUS.
+## Capacité actuelle du sac (kg) : base + niveau du joueur + sac à dos porté (selon son niveau).
 func capacity() -> float:
-	return BASE_CAPACITY + (BACKPACK_BONUS if is_worn("gear_backpack") else 0.0)
+	var level_bonus := 0.0
+	var progression := get_node_or_null("/root/Progression")
+	if progression != null:
+		level_bonus = minf(MAX_LEVEL_CAPACITY, float(int(progression.call("get_level")) - 1) * CAPACITY_PER_LEVEL)
+	return BASE_CAPACITY + level_bonus + worn_stat("capacity")
 
 func weight_fraction() -> float:
 	var cap := capacity()
@@ -215,6 +306,11 @@ func _load() -> void:
 	var saved_tool := String(config.get_value("state", "equipped", ""))
 	if TOOLS.has(saved_tool) and has_item(saved_tool, 1):
 		_equipped = saved_tool
+	var levels = config.get_value("state", "gear_levels", {})
+	if levels is Dictionary:
+		for item_id in levels:
+			if GEAR.has(item_id):
+				_gear_levels[item_id] = clampi(int(levels[item_id]), 1, GEAR_MAX_LEVEL)
 	if config.has_section_key("state", "worn"):
 		for item_id in config.get_value("state", "worn", []):
 			if GEAR.has(item_id) and has_item(item_id, 1):
@@ -233,6 +329,7 @@ func _save() -> void:
 		config.set_value("items", key, int(_items[key]))
 	config.set_value("state", "equipped", _equipped)
 	config.set_value("state", "worn", get_worn())
+	config.set_value("state", "gear_levels", _gear_levels)
 	config.save(SaveSlots.file(SAVE_NAME))
 
 func clear_for_test() -> void:
@@ -240,3 +337,4 @@ func clear_for_test() -> void:
 	_items.clear()
 	_equipped = ""
 	_worn.clear()
+	_gear_levels.clear()

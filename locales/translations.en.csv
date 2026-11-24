@@ -726,3 +726,13 @@ ANIMAL_KANGAROO,The kangaroo
 ANIMAL_MOOSE,The moose
 ANIMAL_DINGO,The dingo
 ANIMAL_BEAR,The bear
+GEAR_LEVEL,level %d/%d
+GEAR_STAT_HEAT,warmth +%s °C
+GEAR_STAT_DAMAGE,damage taken −%d%%
+GEAR_STAT_THIRST,thirst −%d%%
+GEAR_STAT_SPEED,speed +%d%%
+GEAR_STAT_CAPACITY,bag +%d kg
+GEAR_UPGRADE_INFO,"Level %d: %s — %s · [color=%s]level %d[/color]"
+ACTION_UPGRADE_SHORT,Upgrade
+TOAST_CANNOT_UPGRADE,This item cannot be upgraded.
+GEAR_EFFECT_LINE,"• %s (lvl %d): %s"
