@@ -162,6 +162,7 @@ func _ready() -> void:
 	_setup_build_panel()
 	_setup_whistle_button()
 	_setup_character_panel()
+	_setup_dialogue_panel()
 	_setup_character_creator()
 	if _player != null:
 		joystick.moved.connect(_on_fixed_move)
@@ -178,6 +179,7 @@ var character_panel: CharacterPanel
 var ranch_panel: RanchPanel
 var ranch_button: Button
 var character_button: Button
+var dialogue_panel: DialoguePanel
 
 ## Fenêtre Personnage (vêtements portés, aperçu 3D) et son bouton dans la barre du bas.
 func _setup_character_panel() -> void:
@@ -226,6 +228,20 @@ func open_character_panel() -> void:
 	if ranch_panel != null and ranch_panel.visible:
 		ranch_panel.close()
 	character_panel.toggle()
+
+## Panneau de dialogue d'un PNJ (interaction « Parler »).
+func _setup_dialogue_panel() -> void:
+	dialogue_panel = DialoguePanel.new()
+	dialogue_panel.name = "DialoguePanel"
+	journal_panel.get_parent().add_child(dialogue_panel)
+
+## Ouvert par l'interaction « Parler » : on ferme les autres panneaux plein écran.
+func open_dialogue_panel(npc: Node) -> void:
+	for other: Control in [journal_panel, map_panel, character_panel, ranch_panel]:
+		if other != null and other.visible:
+			other.call("close")
+	if dialogue_panel != null:
+		dialogue_panel.open(npc)
 
 ## Bouton « Siffler » (barre du bas) : visible seulement si un cheval ou un chien apprivoisé existe.
 func _setup_whistle_button() -> void:
@@ -335,7 +351,8 @@ func _process(delta: float) -> void:
 	# La mini-carte s'efface quand un panneau plein écran est ouvert.
 	var panel_open := (map_panel != null and map_panel.visible) or (journal_panel != null and journal_panel.visible) \
 			or (character_creator != null and character_creator.visible) \
-			or (character_panel != null and character_panel.visible) or (ranch_panel != null and ranch_panel.visible)
+			or (character_panel != null and character_panel.visible) or (ranch_panel != null and ranch_panel.visible) \
+			or (dialogue_panel != null and dialogue_panel.visible)
 	if panel_open != _panels_open:
 		_panels_open = panel_open
 		_sync_mouse_mode()
@@ -423,6 +440,8 @@ func _on_journal_pressed() -> void:
 		journal_requested.emit()
 		return
 	if journal_panel != null:
+		if dialogue_panel != null and dialogue_panel.visible:
+			dialogue_panel.close()
 		journal_panel.toggle()
 		if journal_panel.visible and map_panel != null and map_panel.visible:
 			map_panel.close()
@@ -434,6 +453,8 @@ func _on_map_pressed() -> void:
 		map_requested.emit()
 		return
 	if map_panel != null:
+		if dialogue_panel != null and dialogue_panel.visible:
+			dialogue_panel.close()
 		map_panel.toggle()
 		if map_panel.visible and journal_panel != null and journal_panel.visible:
 			journal_panel.close()

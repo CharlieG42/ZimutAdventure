@@ -184,6 +184,16 @@ const QUESTS := {
 		"requires": "quest_camp",
 		"reward": {"item_stone": 4, "item_wood": 4},
 	},
+	# Quête donnée par un PNJ (`given_by`) : verrouillée jusqu'à acceptation dans le dialogue.
+	"quest_trapper": {
+		"title": "QUEST_TRAPPER_TITLE",
+		"description": "QUEST_TRAPPER_DESC",
+		"goal_item": "item_pelt",
+		"goal_count": 3,
+		"given_by": "npc_trapper",
+		"reward": {"arrow": 4, "item_berries": 3},
+		"xp": 60,
+	},
 	"quest_explore": {
 		"title": "QUEST_EXPLORE_TITLE",
 		"description": "QUEST_EXPLORE_DESC",
@@ -485,6 +495,9 @@ func _evaluate_all(announce: bool) -> void:
 func _unlock_available() -> void:
 	for quest_id in QUESTS:
 		if state_of(quest_id) != State.LOCKED:
+			continue
+		# Les quêtes de PNJ ne s'activent que dans le dialogue (accept_quest).
+		if QUESTS[quest_id].has("given_by"):
 			continue
 		var required: String = QUESTS[quest_id].get("requires", "")
 		if required == "" or state_of(required) == State.COMPLETED:

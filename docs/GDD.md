@@ -65,7 +65,7 @@ Chaque expédition est une **session de jeu autonome** : on choisit sa destinati
 - **Préparation d'expédition** : depuis un camp ou un village, choisir itinéraire, monture, équipement, ration de nourriture et d'eau estimée pour la durée.
 
 ### 4.6 Rencontres et narration environnementale
-- **PNJ** : trappeurs, guides autochtones (représentés avec respect et recherche documentaire), voyageurs, ermites, scientifiques.
+- **PNJ** : trappeurs, guides autochtones (représentés avec respect et recherche documentaire), voyageurs, ermites, scientifiques. **Premier PNJ implémenté** : le trappeur au départ (dialogue + quête offerte « 3 peaux », acceptée dans le dialogue).
 - **Quêtes** : missions données par les PNJ (retrouver un troupeau, escorter un convoi de chariots, étudier une espèce), résolues par l'exploration, pas par des marqueurs.
 - **Narration environnementale** : ruines de fermes abandonnées, carcasses, camps de mineurs, pétroglyphes — chaque site raconte une histoire lisible sans texte.
 - **Événements aléatoires** : attaque de loups, cheval blessé, tempête soudaine, découverte d'une source inconnue.

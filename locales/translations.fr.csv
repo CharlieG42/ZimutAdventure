@@ -295,6 +295,17 @@ TOAST_CHEST_STORED,%d objets rangés dans le coffre.
 TOAST_CHEST_TAKEN,%d objets repris.
 TOAST_CHEST_EMPTY,Le coffre est vide.
 TOAST_WAKE_POINT,Point de réveil enregistré ici.
+ACTION_TALK,Parler
+ACTION_ACCEPT_QUEST,Accepter la quête
+ACTION_BYE,Au revoir
+NPC_NAME,Habitant
+NPC_TRAPPER_NAME,Trappeur
+NPC_TRAPPER_LINE1,"Salut, étranger. Moi c'est le vieux trappeur : je connais chaque piste de ce canyon."
+NPC_TRAPPER_LINE2,"Les loups rôdent la nuit, et les peaux de cerf se revendent cher au vieux gué."
+NPC_TRAPPER_LINE3,Rapporte-moi 3 peaux et je t'équiperai en conséquence.
+QUEST_TRAPPER_TITLE,Les peaux du trappeur
+QUEST_TRAPPER_DESC,Parlez au trappeur près du départ et acceptez sa quête : rapportez-lui 3 peaux.
+TOAST_QUEST_ACCEPTED,Quête acceptée : %s
 QUEST_CAMP_TITLE,Un camp à soi
 QUEST_CAMP_DESC,"Fabriquez un feu de camp (niveau 2) et posez-le depuis le sac : il se nourrit de bois, cuit vos plats et tient les rôdeurs à distance."
 QUEST_CHEST_TITLE,Ranger ses affaires
