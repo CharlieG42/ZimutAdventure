@@ -303,9 +303,22 @@ TOAST_CHEST_STORED,%d items stored in the chest.
 TOAST_CHEST_TAKEN,%d items taken back.
 TOAST_CHEST_EMPTY,The chest is empty.
 TOAST_WAKE_POINT,Wake-up point saved here.
+<<<<<<< HEAD
 EVENT_WOLVES,Howling… a wolf pack is prowling nearby!
 EVENT_STORM,The sky darkens at once: a storm breaks out!
 EVENT_SOURCE,"Unknown water source found (%s, %d m)!"
+=======
+SKILLS_TITLE,Skills
+SKILL_ORIENTATION,Orientation
+SKILL_SURVIE,Survival
+SKILL_CHASSE,Hunting
+SKILL_EQUITATION,Riding
+SKILL_DESC_ORIENTATION,the map reveals further (+20 % per level)
+SKILL_DESC_SURVIE,hunger and thirst drain slower (−8 % per level)
+SKILL_DESC_CHASSE,bow spread reduced (−12 % per level)
+SKILL_DESC_EQUITATION,mount is faster (+5 % per level)
+TOAST_SKILL_UP,Skill %s: level %d!
+>>>>>>> origin/vibe/competences-d0900a
 QUEST_CAMP_TITLE,A camp of your own
 QUEST_CAMP_DESC,"Craft a campfire (level 2) and place it from the bag: it burns wood, cooks your dishes and keeps prowlers away."
 QUEST_CHEST_TITLE,Tidying up

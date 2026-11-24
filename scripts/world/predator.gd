@@ -219,6 +219,7 @@ func _die() -> void:
 	if progression != null:
 		progression.call("add_stat", "stat_predators", 1)
 		progression.call("add_xp_for", "hunt")
+		progression.call("add_skill_xp", "chasse", 2)
 	# Peau et viande se récupèrent en dépeçant la dépouille.
 	var carcass := CarcassScript.attach(self, species, {"item_pelt": int(_stats["pelts"]), "item_raw_meat": 1})
 	carcass.harvested.connect(_on_carcass_harvested)

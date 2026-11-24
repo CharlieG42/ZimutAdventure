@@ -73,7 +73,7 @@ Chaque expédition est une **session de jeu autonome** : on choisit sa destinati
 
 ### 4.7 Progression
 - **Réputation** par région : aide les habitants, cartographie la zone, leur ramène des spécimens → débloque accès à de meilleurs guides, montures, acheteurs.
-- **Compétences** : orientation (repères plus précis), survie (moins de consommation d'eau), chasse (traque plus efficace), équitation (cheval moins fatigué).
+- **Compétences** (implémentées, 5 niveaux chacune, carte « Compétences » dans le journal) : orientation (la carte se révèle +20 % plus largement par niveau), survie (faim/soif −8 % par niveau), chasse (dispersion de l'arc −12 % par niveau), équitation (monture +5 % de vitesse par niveau, XP accumulée à cheval).
 - **Déblocage de territoires** : chaque grande région est verrouillée au début (carte partielle, passages gardés) et s'ouvre par la progression ou une quête.
 - **Collection** : bestiaire, herbier, carte complétée, sites découverts — consultables dans le journal.
 

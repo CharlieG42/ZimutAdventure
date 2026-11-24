@@ -7,9 +7,15 @@ extends Node
 signal xp_changed(level: int, xp: int, needed: int)
 signal level_up(level: int)
 signal stat_changed(stat: String, value: int)
+signal skill_changed(skill: String, level: int)
 
 const SAVE_NAME := "progression.cfg"
 const MAX_LEVEL := 20
+## Compétences du GDD §4.7, montées par la pratique (0..SKILL_MAX).
+const SKILLS := ["orientation", "survie", "chasse", "equitation"]
+const SKILL_MAX := 5
+## XP de compétence pour passer du niveau i au suivant (indice = niveau actuel).
+const SKILL_XP := [4, 8, 14, 22, 32]
 ## XP gagnée par action.
 const XP := {
 	"collect": 2,
@@ -36,6 +42,8 @@ const BONUS_LOOT_PER_LEVEL := 0.06
 var level: int = 1
 var _xp: int = 0
 var _stats: Dictionary = {}
+## skill -> XP de compétence accumulée.
+var _skill_xp: Dictionary = {}
 ## Pas de sauvegarde en headless : les tests ne doivent pas se polluer d'un run à l'autre.
 var _autosave: bool = DisplayServer.get_name() != "headless"
 ## Les tests headless fabriquent sans condition de niveau (comme les récompenses de quêtes).
@@ -54,6 +62,7 @@ func reload_from_disk() -> void:
 	level = 1
 	_xp = 0
 	_stats.clear()
+	_skill_xp.clear()
 	_load()
 
 # --- Niveau --------------------------------------------------------------------------
@@ -125,6 +134,75 @@ func add_stat(stat: String, amount: int = 1) -> void:
 func get_stat(stat: String) -> int:
 	return int(_stats.get(stat, 0))
 
+# --- Compétences ----------------------------------------------------------------------
+
+func get_skill_level(skill: String) -> int:
+	var rest := int(_skill_xp.get(skill, 0))
+	var lvl := 0
+	for i in SKILL_XP.size():
+		if rest >= int(SKILL_XP[i]):
+			rest -= int(SKILL_XP[i])
+			lvl += 1
+		else:
+			break
+	return mini(lvl, SKILL_MAX)
+
+func get_skill_xp(skill: String) -> int:
+	return int(_skill_xp.get(skill, 0))
+
+## XP restant avant le niveau de compétence suivant (0 au max).
+func skill_xp_needed(skill: String) -> int:
+	var lvl := get_skill_level(skill)
+	return int(SKILL_XP[lvl]) if lvl < SKILL_MAX else 0
+
+## Progression 0..1 vers le niveau de compétence suivant (pour les barres).
+func skill_fraction(skill: String) -> float:
+	var lvl := get_skill_level(skill)
+	if lvl >= SKILL_MAX:
+		return 1.0
+	var needed := skill_xp_needed(skill)
+	if needed <= 0:
+		return 1.0
+	var spent := int(_skill_xp.get(skill, 0))
+	for i in lvl:
+		spent -= int(SKILL_XP[i])
+	return clampf(float(spent) / float(needed), 0.0, 1.0)
+
+func add_skill_xp(skill: String, amount: int) -> void:
+	if not SKILLS.has(skill) or amount <= 0:
+		return
+	var before := get_skill_level(skill)
+	_skill_xp[skill] = int(_skill_xp.get(skill, 0)) + amount
+	var after := get_skill_level(skill)
+	skill_changed.emit(skill, after)
+	if after > before:
+		_announce_skill(skill, after)
+	_save()
+
+## Orientation : la carte se révèle plus largement (×1.0 + 20 % par niveau).
+func orientation_reveal_bonus() -> float:
+	return 1.0 + 0.2 * float(get_skill_level("orientation"))
+
+## Survie : faim et soif s'usent moins vite (−8 % par niveau, max −40 %).
+func survie_drain_factor() -> float:
+	return maxf(0.6, 1.0 - 0.08 * float(get_skill_level("survie")))
+
+## Chasse : dispersion de l'arc réduite (−12 % par niveau, max −60 %).
+func chasse_spread_factor() -> float:
+	return maxf(0.4, 1.0 - 0.12 * float(get_skill_level("chasse")))
+
+## Équitation : la monture va plus vite (+5 % par niveau).
+func equitation_speed_factor() -> float:
+	return 1.0 + 0.05 * float(get_skill_level("equitation"))
+
+func _announce_skill(skill: String, new_level: int) -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	var hud := tree.get_first_node_in_group("hud") as Node
+	if hud != null and hud.has_method("show_toast"):
+		hud.show_toast(tr("TOAST_SKILL_UP") % [tr("SKILL_" + skill.to_upper()), new_level], 3.0)
+
 # --- Sources d'XP ------------------------------------------------------------------------
 
 func _on_item_added(item_id: String, _amount: int) -> void:
@@ -157,6 +235,8 @@ func _load() -> void:
 	_xp = maxi(int(config.get_value("progress", "xp", 0)), 0)
 	for key in config.get_section_keys("stats"):
 		_stats[key] = int(config.get_value("stats", key, 0))
+	for key in config.get_section_keys("skills"):
+		_skill_xp[key] = int(config.get_value("skills", key, 0))
 
 func _save() -> void:
 	if not _autosave:
@@ -166,6 +246,8 @@ func _save() -> void:
 	config.set_value("progress", "xp", _xp)
 	for key in _stats:
 		config.set_value("stats", key, int(_stats[key]))
+	for key in _skill_xp:
+		config.set_value("skills", key, int(_skill_xp[key]))
 	config.save(SaveSlots.file(SAVE_NAME))
 
 ## API de test : repart de zéro, sans écrire sur le disque ; `enforce` active les niveaux requis.
@@ -174,4 +256,5 @@ func clear_for_test(enforce: bool = false) -> void:
 	level = 1
 	_xp = 0
 	_stats.clear()
+	_skill_xp.clear()
 	_enforce_levels = enforce
