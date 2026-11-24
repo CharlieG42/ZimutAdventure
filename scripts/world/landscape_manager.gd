@@ -566,6 +566,9 @@ func _place_multimesh(mesh: Mesh, count: int, is_large_rock: bool,
 		var transforms: Array = buckets[cell]
 		var multimesh := MultiMesh.new()
 		multimesh.transform_format = MultiMesh.TRANSFORM_3D
+		# Teinte par instance (lue via COLOR dans les shaders de props) : casse la répétition.
+		# À définir AVANT instance_count (sinon le tampon de couleurs n'est pas alloué).
+		multimesh.use_colors = true
 		multimesh.mesh = mesh
 		multimesh.instance_count = transforms.size()
 		# Le nœud est posé au centre du bloc (les portées se mesurent depuis lui) ; les
@@ -576,6 +579,7 @@ func _place_multimesh(mesh: Mesh, count: int, is_large_rock: bool,
 		centre /= float(transforms.size())
 		for i in transforms.size():
 			var local: Transform3D = transforms[i]
+			multimesh.set_instance_color(i, _instance_tint(local.origin + centre))
 			local.origin -= centre
 			multimesh.set_instance_transform(i, local)
 		var instance := MultiMeshInstance3D.new()
@@ -589,6 +593,13 @@ func _place_multimesh(mesh: Mesh, count: int, is_large_rock: bool,
 			instance.visibility_range_end_margin = 10.0
 		instances.append(instance)
 	return instances
+
+## Teinte légèrement variable par instance, hash déterministe de la position monde.
+static func _instance_tint(world_pos: Vector3) -> Color:
+	var h1 := fmod(absf(sin(world_pos.x * 12.9898 + world_pos.z * 78.233) * 43758.5453), 1.0)
+	var h2 := fmod(absf(sin(world_pos.x * 39.3467 + world_pos.z * 11.135) * 24634.6345), 1.0)
+	var h3 := fmod(absf(sin(world_pos.x * 78.233 + world_pos.z * 12.9898) * 12543.123), 1.0)
+	return Color(0.86 + 0.28 * h1, 0.88 + 0.24 * h2, 0.82 + 0.36 * h3)
 
 func _add_prop_shape(pos: Vector3, scale_v: float, radius: float, height: float, sphere: bool, center_y: float) -> void:
 	var col := CollisionShape3D.new()

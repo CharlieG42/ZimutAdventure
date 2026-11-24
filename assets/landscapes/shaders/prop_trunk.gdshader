@@ -10,8 +10,11 @@ uniform float wind_strength : hint_range(0.0, 1.0) = 0.04;
 uniform float wind_speed : hint_range(0.0, 10.0) = 1.6;
 uniform float wind_scale : hint_range(0.01, 2.0) = 0.35;
 
+#include "res://assets/landscapes/shaders/prop_atmosphere.gdshaderinc"
+
 varying vec3 v_world_pos;
 varying vec3 v_normal;
+varying vec3 v_inst;
 
 float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -37,6 +40,7 @@ void vertex() {
 	float bend = pow(max(VERTEX.y, 0.0) * 0.5, 1.5);
 	VERTEX.x += sin(sway_phase) * wind_strength * bend;
 	VERTEX.z += cos(sway_phase * 0.8) * wind_strength * 0.6 * bend;
+	v_inst = COLOR.rgb; // teinte par instance (MultiMesh use_colors), blanc par défaut
 }
 
 void fragment() {
@@ -46,6 +50,10 @@ void fragment() {
 
 	float ndotl = max(dot(normalize(v_normal), vec3(0.4, 0.8, 0.3)), 0.0);
 	col = mix(albedo.rgb * 0.5, col, ndotl * 0.5 + 0.5);
+
+	// Variation de teinte par instance + rim light contre le soleil.
+	col *= mix(vec3(1.0), v_inst, 0.7);
+	col = rim_light(col, v_world_pos, normalize(v_normal), CAMERA_POSITION_WORLD);
 
 	ALBEDO = col;
 	ROUGHNESS = 0.95;
