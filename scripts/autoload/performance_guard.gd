@@ -71,8 +71,32 @@ func set_level(new_level: int) -> void:
 	if weather != null and weather.has_method("set_low_quality"):
 		weather.call("set_low_quality", level >= 1)
 	_apply_shadow_quality(level >= 2)
-	get_viewport().scaling_3d_scale = 0.8 if level >= 2 else 1.0
+	_apply_env_quality(level)
+	# Palier intermédiaire 0.9 au niveau 1, 0.8 au niveau 2.
+	get_viewport().scaling_3d_scale = 0.8 if level >= 2 else (0.9 if level == 1 else 1.0)
 	print("PerformanceGuard: qualité niveau %d" % level)
+
+## Passes plein écran chères en Compatibility : SSAO coupé dès le niveau 1, glow + MSAA
+## au niveau 2. Valeurs d'origine restaurées au niveau 0.
+var _env_defaults: Dictionary = {}
+
+func _apply_env_quality(lvl: int) -> void:
+	var env_node := get_tree().root.find_children("*", "WorldEnvironment", true, false)
+	if env_node.is_empty():
+		return
+	var environment := (env_node[0] as WorldEnvironment).environment
+	if environment == null:
+		return
+	if _env_defaults.is_empty():
+		_env_defaults = {
+			"ssao": environment.ssao_enabled,
+			"glow": environment.glow_enabled,
+			"msaa": int(ProjectSettings.get_setting_with_override("rendering/anti_aliasing/quality/msaa_3d")),
+		}
+	environment.ssao_enabled = bool(_env_defaults["ssao"]) if lvl < 1 else false
+	environment.glow_enabled = bool(_env_defaults["glow"]) if lvl < 2 else false
+	var msaa_default := int(_env_defaults["msaa"])
+	get_viewport().msaa_3d = msaa_default if lvl < 2 else Viewport.MSAA_DISABLED
 
 func _apply_shadow_quality(low: bool) -> void:
 	# Valeurs normales : celles du projet (avec les surcharges .mobile sur Android).
