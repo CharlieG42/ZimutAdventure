@@ -115,6 +115,8 @@ var _jump_buffer_left: float = 0.0
 var _sprint_lock: bool = false
 var _edge_sprint: bool = false
 var _sprinting: bool = false
+## Sac plein à plus de 100 % : la course est bloquée et la fatigue monte plus vite.
+var _overloaded: bool = false
 var _exhausted: bool = false
 var _regen_delay_left: float = 0.0
 var _last_emitted_stamina: float = 1.0
@@ -145,6 +147,8 @@ var _landscape_ref: Node3D
 const MOUNT_LIFT := 0.75
 const BOOTS_ITEM := "gear_hide_boots"
 const BOOTS_SPEED_FACTOR := 1.08
+## Surcharge (> 100 % du sac) : la course draine l'endurance 1.8 fois plus vite.
+const OVERLOAD_STAMINA_DRAIN := 1.8
 ## Hauteur (au-dessus du sol) du creux du dos du cheval, où se pose le bassin du cavalier.
 const MOUNT_SEAT_HEIGHT := 1.86
 ## Le bassin s'abaisse de 18 cm dans la pose « à cheval » (voir les modèles du personnage).
@@ -791,14 +795,19 @@ func _physics_process(delta: float) -> void:
 	var wish_len := wish.length()
 	var moving := wish_len > 0.001
 
-	_sprinting = moving and _wants_sprint() and not _exhausted and not _drawing
+	var inventory_now := InteractionManager.get_inventory()
+	_overloaded = inventory_now != null and inventory_now.has_method("is_overloaded") \
+		and bool(inventory_now.call("is_overloaded"))
+	_sprinting = moving and _wants_sprint() and not _exhausted and not _drawing and not _overloaded
 	_update_stamina(delta)
 
 	var top_speed := sprint_speed if _sprinting else walk_speed
 	# Bottes de peau : on marche et on court un peu plus vite.
-	var inventory_now := InteractionManager.get_inventory()
 	if inventory_now != null and bool(inventory_now.call("is_worn", BOOTS_ITEM)):
 		top_speed *= BOOTS_SPEED_FACTOR
+	# Poids du sac : au-delà de 60 % de la capacité, on ralentit (jusqu'à -50 %).
+	if inventory_now != null and inventory_now.has_method("get_speed_factor"):
+		top_speed *= float(inventory_now.call("get_speed_factor"))
 	if _mount != null:
 		top_speed *= MOUNT_SPEED_MULTIPLIER
 	elif _drawing:
@@ -910,7 +919,7 @@ func _wants_sprint() -> bool:
 
 func _update_stamina(delta: float) -> void:
 	if _sprinting:
-		stamina = maxf(0.0, stamina - stamina_drain * delta)
+		stamina = maxf(0.0, stamina - stamina_drain * delta * (OVERLOAD_STAMINA_DRAIN if _overloaded else 1.0))
 		_regen_delay_left = stamina_regen_delay
 		if stamina <= 0.0:
 			_exhausted = true

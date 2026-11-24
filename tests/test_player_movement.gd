@@ -26,6 +26,13 @@ func _init() -> void:
 	# --- Monde + joueur ---
 	var world := (load("res://scenes/world/canyon_playground.tscn") as PackedScene).instantiate()
 	root.add_child(world)
+	# Sac vide : sinon une sauvegarde locale polluée (lourde) bloquerait la course (poids du sac).
+	var inventory := root.get_node_or_null("Inventory")
+	if inventory == null:
+		inventory = load("res://scripts/autoload/inventory.gd").new()
+		inventory.name = "Inventory"
+		root.add_child(inventory)
+	inventory.call("clear_for_test")
 	await process_frame
 	await process_frame
 	var player := world.get_node("Player") as CharacterBody3D

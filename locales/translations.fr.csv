@@ -602,7 +602,9 @@ ACTION_TAKE_OFF,Retirer
 GEAR_EFFECT_HAT,protège du soleil : soif −20 %
 GEAR_EFFECT_CLOAK,"chaud, dégâts reçus −35 %"
 GEAR_EFFECT_BOOTS,vitesse +8 %
-GEAR_EFFECT_BACKPACK,pour le style (et les longues marches)
+GEAR_EFFECT_BACKPACK,"sac plus grand : +20 kg de capacité"
+HUD_WEIGHT,Sac %d/%d kg
+TOAST_OVERLOADED,Sac trop lourd : la course est bloquée !
 ACTION_RANCH,Ranch
 RANCH_TITLE,Ranch — gestion des enclos
 RANCH_NO_PEN,Aucun enclos : construisez-en un (onglet Fabrication).

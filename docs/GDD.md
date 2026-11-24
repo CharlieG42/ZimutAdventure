@@ -61,7 +61,7 @@ Chaque expédition est une **session de jeu autonome** : on choisit sa destinati
 
 ### 4.5 Camps, repos et préparation
 - **Campement** : installer une tente, allumer un feu, cuisiner, dormir (la nuit accélère le temps et restaure la fatigue).
-- **Poids du sac** : chaque objet a un poids. Trop chargé = déplacement ralenti, fatigue accélérée. Choix cornéliens : l'antidote ou la corde ?
+- **Poids du sac** (implémenté) : chaque objet a un poids (kg). Au-delà de 60 % de la capacité (30 kg, +20 kg avec le sac à dos) le déplacement ralentit jusqu'à −50 %, et au-delà de 100 % la course est bloquée et la fatigue accélérée. Choix cornéliens : l'antidote ou la corde ?
 - **Préparation d'expédition** : depuis un camp ou un village, choisir itinéraire, monture, équipement, ration de nourriture et d'eau estimée pour la durée.
 
 ### 4.6 Rencontres et narration environnementale

@@ -29,6 +29,7 @@ La course consomme de l'endurance (barre discrète en bas) ; la boussole en haut
 ### Objets et environnement
 
 - **Ramasser** : des pierres et des bûches de bois jonchent le canyon (E ou bouton interaction). Le sac (bouton Journal / touche C) liste l'inventaire, sauvegardé automatiquement.
+- **Poids du sac** : chaque objet pèse (pierre 2 kg, bois 1 kg…) ; au-delà de 60 % de la capacité (30 kg, 50 kg avec le sac à dos), la marche ralentit, et à plus de 100 % la course est bloquée et la fatigue monte plus vite. Le poids s'affiche sous les jauges quand il dépasse 45 %.
 - **Feu de camp** : près du départ, alimentez-le avec 4 bûches pour l'allumer (la lumière grandit à chaque bûche). Une fois allumé, « Se reposer » restaure l'endurance.
 - **Pancarte** : lisez le panneau au départ pour un message d'ambiance (affiché en toast, traduit FR/EN).
 - **Rochers cassables** : environ 25 petits rochers dans le canyon ont une vraie collision (impossible de les traverser) et se cassent à l'interaction en lâchant 2 à 4 pierres ramassables, avec éclats animés.

@@ -11,6 +11,42 @@ const TOOLS := ["tool_stone_axe", "tool_sickle", "tool_hoe", "tool_watering_can"
 
 const SAVE_NAME := "inventory.cfg"
 
+# --- Poids du sac ---------------------------------------------------------------------
+## Poids (kg) par objet ; un objet inconnu compte DEFAULT_WEIGHT kg.
+const DEFAULT_WEIGHT := 0.5
+const WEIGHTS := {
+	"item_wood": 1.0, "item_stone": 2.0, "item_pelt": 1.5, "item_wool": 0.5,
+	"item_berries": 0.3, "item_vegetables": 0.5, "item_wheat": 1.0, "item_seeds": 0.2,
+	"item_grain_seeds": 0.2, "item_raw_meat": 0.8, "item_cooked_meat": 0.6,
+	"item_fish": 0.8, "item_fish_big": 1.5, "item_grilled_fish": 0.6, "item_grilled_fish_big": 1.2,
+	"item_egg": 0.1, "item_boiled_egg": 0.2, "item_milk": 1.0, "item_bread": 0.5,
+	"item_soup": 1.0, "item_roast_vegetables": 0.5, "item_relic": 0.5, "arrow": 0.05,
+	"tool_stone_axe": 2.5, "tool_sickle": 1.5, "tool_hoe": 2.0, "tool_watering_can": 2.0,
+	"tool_hunting_bow": 1.5, "tool_fishing_rod": 1.5, "tool_knife": 0.5,
+	"gear_straw_hat": 0.3, "gear_wool_shirt": 1.0, "gear_wool_trousers": 1.0,
+	"gear_leather_gloves": 0.4, "gear_hide_boots": 0.8, "armor_fur_cloak": 3.0, "gear_backpack": 1.0,
+	"building_campfire": 5.0, "building_shelter": 12.0, "building_pen": 15.0,
+	"building_palisade": 8.0, "building_farm_plot": 6.0,
+	"furniture_chest": 10.0, "furniture_camp_bed": 6.0, "furniture_wool_bed": 8.0,
+}
+## Capacité du sac (kg) : de base, et avec le sac à dos porté.
+const BASE_CAPACITY := 30.0
+const BACKPACK_BONUS := 20.0
+## Au-delà de ce taux de remplissage, la vitesse baisse ; à 120 %, minimum.
+const COMFORT_FRACTION := 0.6
+const FULL_FRACTION := 1.2
+
+static func item_weight(item_id: String) -> float:
+	return float(WEIGHTS.get(item_id, DEFAULT_WEIGHT))
+
+## Facteur de vitesse selon le taux de remplissage : 1.0 à l'aise, 0.5 sac plein à craquer.
+static func speed_factor(fraction: float) -> float:
+	if fraction <= COMFORT_FRACTION:
+		return 1.0
+	if fraction >= FULL_FRACTION:
+		return 0.5
+	return lerpf(1.0, 0.5, (fraction - COMFORT_FRACTION) / (FULL_FRACTION - COMFORT_FRACTION))
+
 ## Emplacements de vêtements, dans l'ordre de la fenêtre Personnage.
 const GEAR_SLOTS := ["head", "torso", "body", "hands", "legs", "feet", "back"]
 ## Vêtement → emplacement (« body » = cape, par-dessus la chemise « torso »).
@@ -146,6 +182,29 @@ func has_item(item_id: String, amount: int = 1) -> bool:
 
 func get_all() -> Dictionary:
 	return _items.duplicate()
+
+# --- Poids -----------------------------------------------------------------------------
+
+func total_weight() -> float:
+	var total := 0.0
+	for item_id in _items:
+		total += item_weight(String(item_id)) * float(_items[item_id])
+	return total
+
+## Capacité actuelle du sac (kg) : le sac à dos porté ajoute BACKPACK_BONUS.
+func capacity() -> float:
+	return BASE_CAPACITY + (BACKPACK_BONUS if is_worn("gear_backpack") else 0.0)
+
+func weight_fraction() -> float:
+	var cap := capacity()
+	return total_weight() / cap if cap > 0.0 else 0.0
+
+func is_overloaded() -> bool:
+	return weight_fraction() > 1.0
+
+## Facteur de vitesse appliqué au joueur selon la charge actuelle.
+func get_speed_factor() -> float:
+	return speed_factor(weight_fraction())
 
 func _load() -> void:
 	var config := ConfigFile.new()
