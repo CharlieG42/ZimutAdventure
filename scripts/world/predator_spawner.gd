@@ -19,6 +19,7 @@ var _rng := RandomNumberGenerator.new()
 func _ready() -> void:
 	_rng.randomize()
 	_landscape = get_node_or_null("../Landscape") as Node3D
+	add_to_group("predator_spawner")
 
 func enable_for_test() -> void:
 	enabled = true

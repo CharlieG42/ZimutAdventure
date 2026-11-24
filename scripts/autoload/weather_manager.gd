@@ -144,9 +144,26 @@ func weather_for(day: int, slot: int) -> String:
 		return CLOUDY
 	return SNOW if season == "winter" else RAIN
 
+var _forced_weather: String = ""
+var _forced_until: float = -1.0
+
+## Force une météo (événement « tempête soudaine ») jusqu'à l'heure de jeu donnée.
+func force_weather(weather: String, until_hour: float) -> void:
+	_forced_weather = weather
+	_forced_until = until_hour
+	_weather = weather
+	if _effects:
+		_refresh_particles()
+		weather_changed.emit(_weather)
+		_announce_weather()
+
 func _current_target() -> String:
 	var clock := _clock()
 	var hour := float(clock.get("hour")) if clock != null else 12.0
+	if _forced_weather != "":
+		if hour < _forced_until:
+			return _forced_weather
+		_forced_weather = ""
 	return weather_for(_day, clampi(int(hour / 6.0), 0, 3))
 
 # --- Effets ---------------------------------------------------------------------------------------
@@ -180,6 +197,8 @@ func clear_for_test() -> void:
 	_day = 0
 	_season = "spring"
 	_weather = CLEAR
+	_forced_weather = ""
+	_forced_until = -1.0
 
 # --- Boucle -----------------------------------------------------------------------------------------
 

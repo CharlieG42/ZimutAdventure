@@ -68,7 +68,7 @@ Chaque expédition est une **session de jeu autonome** : on choisit sa destinati
 - **PNJ** : trappeurs, guides autochtones (représentés avec respect et recherche documentaire), voyageurs, ermites, scientifiques.
 - **Quêtes** : missions données par les PNJ (retrouver un troupeau, escorter un convoi de chariots, étudier une espèce), résolues par l'exploration, pas par des marqueurs.
 - **Narration environnementale** : ruines de fermes abandonnées, carcasses, camps de mineurs, pétroglyphes — chaque site raconte une histoire lisible sans texte.
-- **Événements aléatoires** : attaque de loups, cheval blessé, tempête soudaine, découverte d'une source inconnue.
+- **Événements aléatoires** (implémentés, toutes les ~2-3 min) : meute de loups la nuit (sauf près d'un feu de camp allumé), tempête/neige soudaine (~2 h), source d'eau inconnue révélée avec cap et distance. Évolution prévue : cheval blessé, pannes, rencontres.
 
 ### 4.7 Progression
 - **Réputation** par région : aide les habitants, cartographie la zone, leur ramène des spécimens → débloque accès à de meilleurs guides, montures, acheteurs.
