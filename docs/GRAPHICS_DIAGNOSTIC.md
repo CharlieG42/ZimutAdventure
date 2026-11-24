@@ -53,9 +53,10 @@ propositions classées par coût/bénéfice. Références au code actuel entre p
    `river_surface.gdshader`. `DayNightCycle` publie les paramètres globaux `sun_dir`,
    `sun_tint`, `sun_amount`, `sky_reflect`. Pas de réflexion réelle possible en
    Compatibility (pas de probes) — le Fresnel simule bien.
-6. **Feu de camp la nuit** : la lumière existe ; ajouter un halo émissif fort (capté
-   par le bloom) + particules de braises montantes (`flame_*.png` existent) +
-   éclairage orange pulsant. C'est le point focal nocturne du camp.
+6. **Feu de camp la nuit** ✅ **FAIT** : halo billboard additif (`flare_01.png`,
+   émission ×4 capté par le bloom) pulsé et renforcé la nuit, flicker de la teinte
+   de la lumière vers le rouge, braises montantes existantes (`SparkVfx`). Point focal
+   nocturne du camp.
 
 ### P2 — polish (quelques jours)
 
@@ -91,4 +92,4 @@ propositions classées par coût/bénéfice. Références au code actuel entre p
 
 Commencer par **P0 (MSAA + coupe SSAO/glow en low)** ✅ **FAIT** — puis **P1-4 (ciel
 custom nuit/lune/étoiles)** ✅ **FAIT** qui est le plus visible en screenshots.
-**P1-5 (eau : Fresnel ciel + reflet de soleil)** ✅ **FAIT**. P1-6 (feu de camp) suivit.
+**P1-5 (eau : Fresnel ciel + reflet de soleil)** ✅ **FAIT**. **P1-6 (feu de camp : halo bloom + flicker)** ✅ **FAIT**. Ensuite : P2 (rim light, backlight des feuilles, teintes par instance).

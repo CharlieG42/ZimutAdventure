@@ -23,6 +23,8 @@ signal changed(fire)
 var _stage: int = 0
 var _light: OmniLight3D
 var _mesh: MeshInstance3D
+var _halo: MeshInstance3D
+var _halo_mat: StandardMaterial3D
 var _flicker_t: float = 0.0
 
 func _ready() -> void:
@@ -30,6 +32,9 @@ func _ready() -> void:
 	prompt_text = "ACTION_STOKE_FIRE"
 	_light = get_node_or_null("FireLight") as OmniLight3D
 	_mesh = get_node_or_null("Flames") as MeshInstance3D
+	_halo = get_node_or_null("FireHalo") as MeshInstance3D
+	if _halo != null:
+		_halo_mat = _halo.get_active_material(0) as StandardMaterial3D
 	# Particules texturées (Kenney CC0) : flammes + fumée + braises au-dessus du cercle.
 	VfxParticles.campfire(self, Vector3(0.0, 0.3, 0.0))
 	_refresh()
@@ -123,10 +128,19 @@ func _process(delta: float) -> void:
 	var n := sin(_flicker_t * 11.3) * 0.5 + sin(_flicker_t * 23.7 + 1.7) * 0.3 + sin(_flicker_t * 5.1 + 0.4) * 0.2
 	if _light != null:
 		_light.light_energy = fire_light_energy * _stage / float(STAGES) * (1.0 + 0.16 * n)
+		# La teinte vire vers le rouge profond quand la flamme "souffle".
+		_light.light_color = Color(1.0, 0.65, 0.3).lerp(Color(1.0, 0.42, 0.12), 0.5 + 0.5 * n)
 	var ratio := clampf(maxf(0.4, _stage / float(STAGES)) * (1.0 + 0.22 * n), 0.0, 1.0)
 	for p in get_children():
 		if p is GPUParticles3D:
 			p.amount_ratio = ratio
+	# Halo émissif (bloom) : pulsation + plus fort la nuit, quand il est le point focal.
+	if _halo != null and _halo.visible:
+		var night := 1.0 - clampf(cos((DayNightCycle.hour - 12.0) / 24.0 * TAU), 0.0, 1.0)
+		var pulse := maxf(0.4, _stage / float(STAGES)) * (1.0 + 0.28 * n)
+		_halo.scale = Vector3.ONE * (0.9 * pulse + 0.25 * night)
+		if _halo_mat != null:
+			_halo_mat.emission_energy_multiplier = (2.5 + 3.5 * night) * (1.0 + 0.3 * n)
 
 func _refresh() -> void:
 	var lit := _stage > 0
@@ -137,6 +151,9 @@ func _refresh() -> void:
 	if _mesh != null:
 		_mesh.visible = lit
 		_mesh.scale = Vector3.ONE * scale_factor
+	if _halo != null:
+		_halo.visible = lit
+		_halo.scale = Vector3.ONE * scale_factor
 	# VFX : intensité des flammes/fumée/braises selon l'alimentation du feu.
 	for p in get_children():
 		if p is GPUParticles3D:
