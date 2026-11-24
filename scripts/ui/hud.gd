@@ -32,6 +32,8 @@ const BASE_MARGIN := 16
 @onready var journal_panel: Control = $InventoryCenter/JournalPanel
 @onready var map_panel: Control = $MapPanel
 @onready var quest_tracker: Label = $Overlay/QuestTracker
+@onready var bottom_bar: HBoxContainer = $SafeArea/VBox/BottomBar
+@onready var vbox: VBoxContainer = $SafeArea/VBox
 ## Consignes des premières minutes (créées en code, voir TutorialPanel).
 var tutorial_panel: TutorialPanel
 var build_panel: BuildPanel
@@ -55,6 +57,12 @@ var _camera_joystick_vector: Vector2 = Vector2.ZERO
 var _move_fixed: Vector2 = Vector2.ZERO
 var _move_float: Vector2 = Vector2.ZERO
 var _base_offsets: Dictionary = {}
+## Offsets d'ancrage d'origine des contrôles non capturés en absolu (ruban, toast).
+var _anchor_base: Dictionary = {}
+## (move_zone_width, look_only_top) d'origine du TouchLook, restaurés hors portrait.
+var _touch_look_base: Vector2 = Vector2(0.42, 0.28)
+## Index d'origine de la barre du bas dans le VBox (dernière rangée en paysage).
+var _bottom_bar_home_index: int = -1
 var _last_clock_minute: int = -1
 ## Température ressentie affichée à côté de l'heure (arrondie au degré).
 var _shown_temperature: int = 9999
@@ -769,6 +777,11 @@ func _capture_layout() -> void:
 		node.offset_right = rect.end.x
 		node.offset_bottom = rect.end.y
 		_base_offsets[node] = Vector4(rect.position.x, rect.position.y, rect.end.x, rect.end.y)
+	# Les contrôles restés en ancrage relatif gardent leurs offsets d'origine.
+	for node: Control in [compass_strip, toast]:
+		_anchor_base[node] = Vector4(node.offset_left, node.offset_top, node.offset_right, node.offset_bottom)
+	_touch_look_base = Vector2(touch_look.get("move_zone_width"), touch_look.get("look_only_top"))
+	_bottom_bar_home_index = bottom_bar.get_index()
 
 func _apply_safe_area() -> void:
 	var inset := _safe_insets()
@@ -792,17 +805,88 @@ func _shift(node: Control, offset: Vector2) -> void:
 
 # --- Mise en page selon la taille d'écran -----------------------------------------
 
-## Deux modes : "roomy" (grand écran) et "compact" (petit écran / portrait).
-## En compact : stick caméra masqué (glisser sur l'écran suffit), mini-carte, jauges
-## et hotbar réduits/replacés, pad d'actions au-dessus du stick de déplacement, badge
-## de niveau masqué — aucun contrôle tactile ne chevauche un autre.
+## Trois modes selon l'aspect de l'écran — la rotation du téléphone change la
+## taille du viewport, le mode est donc réappliqué automatiquement (size_changed
+## -> _apply_safe_area) :
+## - portrait (vp.x < vp.y) : jeu « une main » (bloc portrait ci-dessous) ;
+## - compact (petit écran paysage) : stick caméra masqué (glisser sur l'écran
+##   suffit), mini-carte, jauges et hotbar réduits/replacés, pad d'actions au-dessus
+##   du stick de déplacement, badge de niveau masqué ;
+## - roomy (grand écran paysage) : mise en page d'origine de la scène.
+## Dans tous les modes, aucun contrôle tactile ne chevauche un autre.
 ## `vp_override` sert aux tests (sinon taille réelle du viewport).
 func _fit_to_viewport(vp_override: Vector2 = Vector2.ZERO) -> void:
 	if _base_offsets.is_empty():
 		return
 	var vp := vp_override if vp_override.x > 0.0 else get_viewport().get_visible_rect().size
-	var compact := vp.x < 700.0 or vp.y < 800.0
-	if compact:
+	# On restaure d'abord l'état paysage, puis le mode actif réécrit par-dessus.
+	if _bottom_bar_home_index >= 0 and bottom_bar.get_index() != _bottom_bar_home_index:
+		vbox.move_child(bottom_bar, _bottom_bar_home_index)
+	bottom_bar.alignment = HBoxContainer.ALIGNMENT_CENTER
+	touch_look.set("move_zone_width", _touch_look_base.x)
+	touch_look.set("look_only_top", _touch_look_base.y)
+	for node: Control in _anchor_base.keys():
+		var a: Vector4 = _anchor_base[node]
+		node.offset_left = a.x
+		node.offset_top = a.y
+		node.offset_right = a.z
+		node.offset_bottom = a.w
+	var portrait := vp.x < vp.y
+	var compact := not portrait and (vp.x < 700.0 or vp.y < 800.0)
+	if portrait:
+		# Mode « une main » : téléphone tenu d'une main, le pouce joue en bas de
+		# l'écran. La barre de menus remonte en haut à droite pour libérer les coins.
+		var inset := _safe_insets()
+		if bottom_bar.get_index() != 0:
+			vbox.move_child(bottom_bar, 0)
+		bottom_bar.alignment = HBoxContainer.ALIGNMENT_END
+		touch_look.set("move_zone_width", 0.5)
+		touch_look.set("look_only_top", 0.24)
+		# Stick de déplacement fixe, en bas à gauche.
+		var joy := clampf(vp.x * 0.5 - 40.0, 170.0, 220.0)
+		_set_offsets(joystick, Vector4(24.0 + inset.x, vp.y - 8.0 - joy - inset.w, 24.0 + joy + inset.x, vp.y - 8.0 - inset.w))
+		# Stick caméra masqué : le glisser sur l'écran (TouchLook) fait office de visée.
+		camera_joystick.visible = false
+		# Colonne d'actions ancrée en bas à droite, dans la portée du pouce :
+		# Interagir en bas, puis Saut, Course, Frapper ; « Viser » à gauche de Frapper.
+		action_pad.scale = Vector2.ONE
+		var bs := clampf(vp.y * 0.09, 56.0, 76.0)
+		var pad_w := bs + 16.0
+		var pad_h := 4.0 * bs + 3.0 * 8.0 + 16.0
+		_set_offsets(action_pad, Vector4(vp.x - 12.0 - pad_w - inset.z, vp.y - 8.0 - pad_h - inset.w, vp.x - 12.0 - inset.z, vp.y - 8.0 - inset.w))
+		var pad_buttons: Array[Control] = [interact_button, jump_button, sprint_button, attack_button]
+		for i in range(pad_buttons.size()):
+			var y := pad_h - 8.0 - bs - float(i) * (bs + 8.0)
+			_set_offsets(pad_buttons[i], Vector4(8.0, y, 8.0 + bs, y + bs))
+		var fire_y := pad_h - 8.0 - bs - 3.0 * (bs + 8.0)
+		_set_offsets(aim_button, Vector4(-bs - 8.0, fire_y, -8.0, fire_y + bs))
+		# Haut d'écran : barre de menus (rangée du VBox) puis cap + horloge, d'où
+		# l'empilement boussole / quête / jauges / mini-carte en dessous.
+		var top := BASE_MARGIN + int(inset.y) + 120.0
+		var strip_w := clampf(vp.x - 250.0, 110.0, 460.0)
+		compass_strip.offset_left = -strip_w * 0.5
+		compass_strip.offset_top = top
+		compass_strip.offset_right = strip_w * 0.5
+		compass_strip.offset_bottom = top + 52.0
+		_set_offsets(quest_tracker, Vector4(16.0 + inset.x, top + 60.0, vp.x - 16.0 - inset.z, top + 104.0))
+		# Jauges sous la quête, réduites.
+		vitals.scale = Vector2(0.5, 0.5)
+		vitals.pivot_offset = Vector2.ZERO
+		var vitals_size := VitalsPanel.panel_size()
+		_set_offsets(vitals, Vector4(16.0 + inset.x, top + 112.0, 16.0 + inset.x + vitals_size.x, top + 112.0 + vitals_size.y))
+		# Mini-carte en haut à droite, réduite.
+		_set_offsets(minimap, Vector4(vp.x - 116.0 - inset.z, top + 112.0, vp.x - 16.0 - inset.z, top + 212.0))
+		# Hotbar au-dessus du stick de déplacement, à gauche.
+		var hb: Vector4 = _base_offsets[hotbar]
+		# On laisse aussi la place du bouton « Viser », qui dépasse à gauche du pad.
+		var hw := minf(200.0, vp.x - 48.0 - pad_w - bs - 24.0)
+		var h_bottom := vp.y - 8.0 - joy - 8.0 - inset.w
+		_set_offsets(hotbar, Vector4(24.0 + inset.x, h_bottom - (hb.w - hb.y), 24.0 + inset.x + hw, h_bottom))
+		# Badge de niveau masqué (le niveau reste visible dans le journal).
+		level_badge.visible = false
+		toast.offset_top = top + 112.0
+		toast.offset_bottom = top + 112.0
+	elif compact:
 		var joy := 200.0
 		# Stick de déplacement, en bas à gauche.
 		_set_offsets(joystick, Vector4(30.0, vp.y - joy, 30.0 + joy, vp.y))

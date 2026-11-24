@@ -17,7 +17,7 @@ Moteur : **Godot 4** (GDScript) · Cibles : PC (Windows / macOS / Linux) + **And
 |---|---|---|
 | Se déplacer | ZQSD / flèches | Stick gauche (vitesse proportionnelle à l'inclinaison) |
 | Courir | Maj | Stick à fond (course automatique), ou bouton course |
-| Regarder | Souris | Glisser sur l'écran, ou stick droit |
+| Regarder | Souris | Glisser sur l'écran, ou stick droit (paysage) |
 | Sauter | Espace | Bouton saut |
 | Interagir | E | Bouton interaction (s'allume face à un objet) |
 | Viser à l'arc | Clic droit maintenu | Visée automatique quand l'arc est équipé |
@@ -34,6 +34,7 @@ La course consomme de l'endurance (barre discrète en bas) ; la boussole en haut
 - **Rochers cassables** : environ 25 petits rochers dans le canyon ont une vraie collision (impossible de les traverser) et se cassent à l'interaction en lâchant 2 à 4 pierres ramassables, avec éclats animés.
 - **Premiers pas** : au premier lancement, six consignes guident le joueur (marcher, regarder, ramasser, ouvrir le journal puis la carte, suivre la boussole), avec des textes tactiles ou clavier. « Passer » les arrête ; Journal → Réglages → « Revoir le tutoriel ».
 - **Contrôles tactiles** : stick de déplacement flottant dans toute la moitié gauche, glisser caméra partout ailleurs (plus de zone morte), pouce gauche et droit simultanés ; Journal → Réglages → « Sensibilité de la caméra ».
+- **Deux modes selon la position du téléphone** (aucun verrou d'orientation, l'APK suit le capteur) : en **paysage** le jeu se joue à deux mains (stick de déplacement en bas à gauche, stick caméra en bas à droite, boutons d'action au-dessus) ; en **portrait** il se joue à une main (stick fixe en bas à gauche, colonne d'actions ancrée en bas à droite avec Interagir tout en bas, caméra au glisser sur le reste de l'écran, barre de menus remontée en haut à droite, FOV élargi). Le HUD se réorganise automatiquement à chaque rotation.
 - **Dépeçage** : un gibier ou un prédateur abattu laisse sa dépouille 2 minutes ; « Dépecer » donne la viande (et la peau du cerf, du loup, du coyote). Rien n’arrive plus automatiquement dans le sac.
 - **Sons** : pas selon le sol (sable, herbe, neige, eau ; sabots à cheval), vent qui forcit la nuit, par mauvais temps et en hauteur, pluie, rivière qu'on entend en s'approchant, oiseaux le jour, grillons et hurlements lointains la nuit, cris des animaux placés dans l'espace (et de temps en temps spontanés), coups de hache. Enregistrements CC0 (Kenney, Ninja Adventure, Freesound, OpenGameArt) ; voix synthétisées pour les animaux sans enregistrement libre. Crédits : `assets/audio/CREDITS.md`.
 - **Animaux animés** : cerfs, loups, coyotes, vaches, moutons, chevaux et chiens sont de vrais modèles 3D animés (Quaternius, CC0) — repos, broutage, marche, galop, morsure, chute. Le lièvre, la chèvre et la poule gardent leur modèle simple.

@@ -93,12 +93,32 @@ func _init() -> void:
 	if cam_received.is_empty() or cam_received[-1].x >= 0.0:
 		errors.append("camera joystick should emit -x on leftward drag, got %s" % (cam_received[-1] if not cam_received.is_empty() else "nothing"))
 
-	# --- Chevauchements à plusieurs tailles d'écran (fit explicite, testable) ---
-	for vp in [Vector2(360, 640), Vector2(1280, 720), Vector2(1280, 860), Vector2(800, 600)]:
+	# --- Mode selon l'orientation + chevauchements à plusieurs tailles d'écran ---
+	for vp in [Vector2(360, 640), Vector2(390, 844), Vector2(720, 1280), Vector2(1080, 2400),
+			Vector2(800, 600), Vector2(1280, 720), Vector2(1280, 860), Vector2(1920, 1080), Vector2(2400, 1080)]:
 		hud._fit_to_viewport(vp)
 		await process_frame
+		var action_pad := hud.get_node("Overlay/ActionPad") as Control
+		if vp.x < vp.y:
+			# Portrait « une main » : stick caméra masqué, pad d'actions ancré en bas
+			# à droite (portée du pouce), stick de déplacement en bas à gauche.
+			if camera_joystick.visible:
+				errors.append("portrait %s : le stick caméra devrait être masqué" % str(vp))
+			var pad_rect := action_pad.get_global_rect()
+			if pad_rect.end.y < vp.y - 40.0 or pad_rect.end.x < vp.x - 40.0 or pad_rect.position.x < vp.x * 0.5:
+				errors.append("portrait %s : le pad d'actions devrait être ancré en bas à droite, got %s" % [str(vp), str(pad_rect)])
+			var joy_rect := joystick.get_global_rect()
+			if joy_rect.position.x > vp.x * 0.5 or joy_rect.end.y < vp.y - 40.0:
+				errors.append("portrait %s : le stick devrait être ancré en bas à gauche, got %s" % [str(vp), str(joy_rect)])
+			if absf(float(touch_look.get("move_zone_width")) - 0.5) > 0.01:
+				errors.append("portrait %s : move_zone_width devrait valoir 0.5, got %f" % [str(vp), float(touch_look.get("move_zone_width"))])
+		else:
+			if vp.x >= 700.0 and vp.y >= 800.0 and not camera_joystick.visible:
+				errors.append("paysage %s : le stick caméra devrait être visible" % str(vp))
+			if absf(float(touch_look.get("move_zone_width")) - 0.42) > 0.01:
+				errors.append("paysage %s : move_zone_width devrait valoir 0.42, got %f" % [str(vp), float(touch_look.get("move_zone_width"))])
 		var tracked: Array[Control] = [
-			joystick, camera_joystick, hud.get_node("Overlay/ActionPad"),
+			joystick, camera_joystick, action_pad,
 			hud.get_node("Overlay/MiniMap"), hud.get_node("Overlay/Vitals"),
 			hud.get_node("Overlay/LevelBadge"), hud.get_node("Overlay/QuestTracker"),
 			hud.get_node("Overlay/Hotbar"),
@@ -115,6 +135,10 @@ func _init() -> void:
 					errors.append("chevauchement %s/%s à %s : %s ∩ %s" % [names[i], names[j], str(vp), str(rects[i]), str(rects[j])])
 	hud._fit_to_viewport()
 	await process_frame
+	# De retour en paysage, la barre du bas est restaurée en dernière rangée du VBox.
+	var bottom_bar := hud.get_node("SafeArea/VBox/BottomBar")
+	if bottom_bar.get_index() != bottom_bar.get_parent().get_child_count() - 1:
+		errors.append("paysage : la barre du bas devrait être restaurée en dernière rangée du VBox, got index %d" % bottom_bar.get_index())
 
 	# Panneau de déplacement : ne doit pas recouvrir Journal / 1P-3P.
 	var panel: Control = hud.get("build_panel")
