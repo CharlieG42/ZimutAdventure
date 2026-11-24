@@ -1,5 +1,7 @@
 extends Node
 
+var _fireflies: GPUParticles3D
+
 func _ready() -> void:
 	var root := get_parent()
 	if root == null:
@@ -15,6 +17,55 @@ func _ready() -> void:
 	_place_player_on_ground(root)
 	_place_interaction_props(root)
 	_add_ambient_dust(root)
+	_add_fireflies(root)
+
+## Lucioles la nuit : petites particules additives jaune-vert qui dérivent autour du joueur.
+func _add_fireflies(root: Node) -> void:
+	var player := root.get_node_or_null("Player") as Node3D
+	if player == null or DisplayServer.get_name() == "headless":
+		return
+	var p := GPUParticles3D.new()
+	p.name = "Fireflies"
+	p.amount = 26
+	p.lifetime = 6.0
+	p.preprocess = 6.0
+	p.local_coords = false
+	p.visibility_aabb = AABB(Vector3(-22, -6, -22), Vector3(44, 12, 44))
+	var process := ParticleProcessMaterial.new()
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	process.emission_box_extents = Vector3(18.0, 2.5, 18.0)
+	process.direction = Vector3(0.0, 0.12, 0.0)
+	process.spread = 180.0
+	process.initial_velocity_min = 0.15
+	process.initial_velocity_max = 0.5
+	process.gravity = Vector3(0.0, 0.05, 0.0)
+	process.scale_min = 0.05
+	process.scale_max = 0.11
+	p.process_material = process
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.16, 0.16)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mat.albedo_color = Color(0.75, 1.0, 0.35, 0.85)
+	mat.emission_enabled = true
+	mat.emission = Color(0.7, 1.0, 0.3)
+	mat.emission_energy_multiplier = 2.0
+	quad.material = mat
+	p.draw_pass_1 = quad
+	p.emitting = false
+	player.add_child(p)
+	_fireflies = p
+
+func _process(_delta: float) -> void:
+	if _fireflies == null:
+		return
+	var clock := get_node_or_null("/root/DayNightCycle")
+	if clock == null:
+		return
+	_fireflies.emitting = String(clock.call("get_phase")) == "night"
 
 ## Pose le feu de camp et la pancarte sur le sol, à quelques mètres du départ.
 func _place_interaction_props(root: Node) -> void:
