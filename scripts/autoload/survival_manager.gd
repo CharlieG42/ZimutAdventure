@@ -52,6 +52,8 @@ const FIRE_RADIUS := 7.0
 const SHELTER_HEAT := 9.0
 const SHELTER_RADIUS := 4.5
 const CLOAK_HEAT := 7.0
+## Chaleur des autres vêtements portés (°C ressentis).
+const GEAR_HEAT := {"gear_wool_shirt": 2.0, "gear_wool_trousers": 2.0, "gear_leather_gloves": 1.5}
 const WET_CHILL := 6.0
 ## Mouillé : sèche en une minute (quatre fois plus vite près d'un feu).
 const DRY_SECONDS := 60.0
@@ -151,6 +153,7 @@ func felt_temperature(context: Dictionary) -> float:
 		t += SHELTER_HEAT * (1.0 + 0.4 * float(maxi(int(context.get("shelter_level", 1)) - 1, 0)))
 	if bool(context.get("cloak", false)):
 		t += CLOAK_HEAT
+	t += float(context.get("gear_heat", 0.0))
 	return t - WET_CHILL * _wet
 
 ## Fait évoluer l'humidité et la chaleur corporelle pendant `delta` secondes.
@@ -221,6 +224,12 @@ func _gather_context(player: Node3D) -> Dictionary:
 			context["shelter_level"] = maxi(int(context.get("shelter_level", 1)), int(structure.get("level")))
 	var inventory := InteractionManager.get_inventory()
 	context["cloak"] = inventory != null and bool(inventory.call("is_worn", CLOAK_ITEM))
+	var gear_heat := 0.0
+	if inventory != null:
+		for item_id in GEAR_HEAT:
+			if bool(inventory.call("is_worn", item_id)):
+				gear_heat += float(GEAR_HEAT[item_id])
+	context["gear_heat"] = gear_heat
 	context["in_water"] = player.has_method("is_wading") and bool(player.call("is_wading"))
 	context["rain_exposed"] = context["weather"] == "rain" or context["weather"] == "snow"
 	return context

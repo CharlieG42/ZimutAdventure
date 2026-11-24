@@ -10,6 +10,9 @@ const MODELS := {
 	"male": "res://assets/characters/zimut_male.glb",
 	"female": "res://assets/characters/zimut_female.glb",
 }
+const SHIRT_COLOR := Color(0.86, 0.8, 0.66)
+const TROUSERS_COLOR := Color(0.3, 0.23, 0.17)
+const GLOVES_COLOR := Color(0.42, 0.27, 0.15)
 const FEMALE_LEGS := "res://assets/characters/zimut_female_legs.glb"
 const HEIGHTS := {"male": 1.86, "female": 1.75}
 
@@ -38,6 +41,10 @@ const GEAR_PARTS := {
 	"gear_straw_hat": ["Straw_Hat_Brim", "Straw_Hat_Crown"],
 	"gear_hide_boots": ["High_Boots"],
 	"gear_backpack": ["Backpack", "Backpack_Flap"],
+	# Chemise, pantalon et gants : pas de maillage dédié, ils changent les couleurs (voir _color_for).
+	"gear_wool_shirt": [],
+	"gear_wool_trousers": [],
+	"gear_leather_gloves": [],
 	"armor_fur_cloak": ["Fur_Cape", "Fur_Cape_Collar", "Fur_Cape_Sides"],
 }
 
@@ -162,8 +169,14 @@ func _apply_profile() -> void:
 	for n in CLOTHES.get(profile.gender, []):
 		shown[n] = true
 	var boots := gear.has("gear_hide_boots")
-	shown["High_Boots" if boots else "Shoes"] = true
-	if profile.gender == "female" and not boots:
+	# Les bottes du modèle n'ont pas de pied (tige de 10 à 59 cm) : on garde les chaussures
+	# dessous, sinon les jambes semblent coupées au-dessus de la cheville.
+	shown["Shoes"] = true
+	if boots:
+		shown["High_Boots"] = true
+	if profile.gender == "female" and gear.has("gear_wool_trousers"):
+		shown["Female_Trousers"] = true
+	elif profile.gender == "female" and not boots:
 		shown["Body_LowerLegs"] = true
 	for n in HAIR[profile.gender].get(profile.hair_style_name(), []):
 		shown[n] = true
@@ -191,6 +204,10 @@ func _recolor(mesh: MeshInstance3D) -> void:
 			continue
 		var key := String(base.resource_name)
 		var color := _color_for(key)
+		# Gants de cuir : les mains prennent une matière à part (la peau du visage ne change pas).
+		if mesh.name == "Body_Hands" and gear.has("gear_leather_gloves") and key == "skin":
+			key = "gloves"
+			color = GLOVES_COLOR
 		if not _mat_cache.has(key):
 			var copy := base.duplicate() as StandardMaterial3D
 			if copy == null:
@@ -209,9 +226,9 @@ func _color_for(material_name: String) -> Color:
 		"hair":
 			return profile.hair_color_value()
 		"tunic", "dress", "tunic_alt":
-			return profile.tunic_color()
+			return SHIRT_COLOR if gear.has("gear_wool_shirt") else profile.tunic_color()
 		"pants":
-			return profile.pants_color()
+			return TROUSERS_COLOR if gear.has("gear_wool_trousers") else profile.pants_color()
 		"eyes_brown":
 			return profile.eye_color()
 		_:

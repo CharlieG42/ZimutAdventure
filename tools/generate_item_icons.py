@@ -237,6 +237,52 @@ def _tool_fishing_rod(d, u, fill, _):
     _ellipse(d, 64 * u, 200 * u, 10 * u, 10 * u, fill)
 
 
+def _straw_hat(d, u, fill, _):
+    _ellipse(d, 128 * u, 158 * u, 92 * u, 26 * u, fill)
+    d.rounded_rectangle([82 * u, 88 * u, 174 * u, 162 * u], radius=30 * u, fill=fill)
+
+
+def _fur_cloak(d, u, fill, _):
+    d.polygon([(96 * u, 58 * u), (160 * u, 58 * u), (196 * u, 206 * u), (60 * u, 206 * u)], fill=fill)
+    _ellipse(d, 128 * u, 62 * u, 44 * u, 18 * u, fill)
+    for x in (76, 104, 132, 160, 186):
+        _ellipse(d, x * u, 204 * u, 14 * u, 10 * u, fill)
+
+
+def _boots(d, u, fill, _):
+    for x0 in (62, 136):
+        d.rectangle([x0 * u, 60 * u, (x0 + 34) * u, 176 * u], fill=fill)
+        d.rounded_rectangle([x0 * u, 154 * u, (x0 + 62) * u, 196 * u], radius=14 * u, fill=fill)
+
+
+def _backpack(d, u, fill, _):
+    d.rounded_rectangle([74 * u, 70 * u, 182 * u, 206 * u], radius=26 * u, fill=fill)
+    _arc(d, 128 * u, 74 * u, 30 * u, 180, 360, 12 * u, fill)
+    d.rectangle([92 * u, 140 * u, 164 * u, 150 * u], fill=OUTLINE if fill == WHITE else fill)
+
+
+def _shirt(d, u, fill, _):
+    d.polygon([(92 * u, 56 * u), (164 * u, 56 * u), (214 * u, 96 * u), (190 * u, 128 * u), (172 * u, 116 * u),
+               (172 * u, 206 * u), (84 * u, 206 * u), (84 * u, 116 * u), (66 * u, 128 * u), (42 * u, 96 * u)], fill=fill)
+    d.polygon([(110 * u, 56 * u), (146 * u, 56 * u), (128 * u, 84 * u)], fill=OUTLINE if fill == WHITE else fill)
+
+
+def _trousers(d, u, fill, _):
+    d.polygon([(80 * u, 50 * u), (176 * u, 50 * u), (190 * u, 210 * u), (140 * u, 210 * u), (128 * u, 110 * u),
+               (116 * u, 210 * u), (66 * u, 210 * u)], fill=fill)
+
+
+def _gloves(d, u, fill, _):
+    for dx, flip in ((-44, -1), (44, 1)):
+        cx = 128 + dx
+        d.rounded_rectangle([(cx - 26) * u, 96 * u, (cx + 26) * u, 186 * u], radius=16 * u, fill=fill)
+        for i in range(3):
+            fx = cx - 18 + i * 14
+            d.rounded_rectangle([fx * u, 60 * u, (fx + 11) * u, 110 * u], radius=6 * u, fill=fill)
+        tx = cx + 26 * flip
+        d.rounded_rectangle([min(tx, tx + 22 * flip) * u, 110 * u, max(tx, tx + 22 * flip) * u, 140 * u], radius=8 * u, fill=fill)
+
+
 ICONS = {
     "item_berries": _berry,
     "item_stone": _stone,
@@ -266,6 +312,13 @@ ICONS = {
     "tool_watering_can": _tool_watering_can,
     "tool_hunting_bow": _tool_bow,
     "tool_fishing_rod": _tool_fishing_rod,
+    "gear_straw_hat": _straw_hat,
+    "armor_fur_cloak": _fur_cloak,
+    "gear_hide_boots": _boots,
+    "gear_backpack": _backpack,
+    "gear_wool_shirt": _shirt,
+    "gear_wool_trousers": _trousers,
+    "gear_leather_gloves": _gloves,
 }
 
 

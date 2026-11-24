@@ -39,11 +39,12 @@ func _init() -> void:
 	for n in ["Female_Dress_Skirt", "Body_LowerLegs", "Shoes"]:
 		if not w_names.has(n):
 			errors.append("femme : %s attendu" % n)
-	# Équipement : bottes remplacent les chaussures et cachent les jambes nues.
+	# Équipement : les bottes (sans pied) se portent par-dessus les chaussures et cachent les
+	# jambes nues.
 	woman.call("set_gear", ["gear_hide_boots", "armor_fur_cloak", "gear_straw_hat", "gear_backpack", "inconnu"])
 	w_names = _visible_names(woman)
-	if not w_names.has("High_Boots") or w_names.has("Shoes") or w_names.has("Body_LowerLegs"):
-		errors.append("bottes : High_Boots remplace Shoes et les mollets nus")
+	if not w_names.has("High_Boots") or not w_names.has("Shoes") or w_names.has("Body_LowerLegs"):
+		errors.append("bottes : High_Boots par-dessus Shoes, mollets nus cachés")
 	for n in ["Fur_Cape", "Straw_Hat_Crown", "Backpack"]:
 		if not w_names.has(n):
 			errors.append("équipement : %s attendu" % n)

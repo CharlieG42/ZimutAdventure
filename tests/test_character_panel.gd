@@ -35,6 +35,14 @@ func _initialize() -> void:
 	await process_frame
 	_check(panel.visible, "la fenêtre s'ouvre")
 	_check(panel.call("preview_hero") != null, "aperçu 3D du personnage")
+	var slots := ["head", "torso", "body", "hands", "legs", "feet", "back"]
+	_check(slots.all(func(slot): return panel.find_child("Slot_" + slot, true, false) != null), "7 emplacements autour du personnage")
+	(panel.find_child("Slot_head", true, false) as Button).pressed.emit()
+	_check(panel.call("selected_slot") == "head", "emplacement Tête choisi")
+	var hat_icon := panel.find_child("Slot_head", true, false).get_node("Icon") as ItemIcon
+	_check(hat_icon.item_id == "gear_straw_hat" and hat_icon.modulate.a > 0.9, "icône du chapeau porté")
+	var shirt_icon := panel.find_child("Slot_torso", true, false).get_node("Icon") as ItemIcon
+	_check(shirt_icon.modulate.a < 0.5, "emplacement Chemise vide : icône estompée")
 	var take_off := panel.find_child("Wear_gear_straw_hat", true, false) as Button
 	_check(take_off != null and take_off.text == tr("ACTION_TAKE_OFF"), "bouton Retirer pour le chapeau")
 	take_off.pressed.emit()
@@ -47,6 +55,17 @@ func _initialize() -> void:
 	_check(inventory.call("is_worn", "gear_straw_hat"), "chapeau remis")
 	var preview: Node3D = panel.call("preview_hero")
 	_check(preview.get("gear").has("gear_straw_hat"), "l'aperçu porte le chapeau")
+
+	# Nouveaux vêtements : chemise, pantalon, gants (emplacements propres, chaleur).
+	inventory.call("add_item", "gear_wool_shirt", 1)
+	inventory.call("add_item", "gear_leather_gloves", 1)
+	_check(inventory.call("worn_in", "torso") == "gear_wool_shirt" and inventory.call("worn_in", "hands") == "gear_leather_gloves", "chemise et gants portés")
+	var context: Dictionary = survival.call("current_context") if survival.has_method("current_context") else {}
+	var cold := {"season": "winter", "hour": 3.0, "weather": "clear", "altitude": 0.0}
+	var with_gear := cold.duplicate()
+	with_gear["gear_heat"] = 3.5
+	_check(float(survival.call("felt_temperature", with_gear)) > float(survival.call("felt_temperature", cold)) + 3.0, "les vêtements de laine réchauffent")
+	_check(preview.get("gear").has("gear_leather_gloves"), "l'aperçu porte les gants")
 
 	# Effets : la cape protège seulement si elle est portée.
 	survival.call("reset_for_test") if survival.has_method("reset_for_test") else null
