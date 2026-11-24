@@ -209,6 +209,7 @@ func _roll_hunt_loot() -> Dictionary:
 				drops += 1
 				break
 		progression.call("add_xp_for", "hunt")
+		progression.call("add_skill_xp", "chasse", 2)
 	var loot := {"item_raw_meat": drops}
 	if species == "deer":
 		loot["item_pelt"] = 1

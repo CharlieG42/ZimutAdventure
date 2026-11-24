@@ -82,15 +82,18 @@ func is_cell_revealed(cx: int, cz: int) -> bool:
 
 ## Dévoile les cases dont le centre est à moins de `radius` mètres du point.
 func reveal(x: float, z: float, radius: float = REVEAL_RADIUS) -> void:
+	# Compétence Orientation : la carte se révèle plus largement.
+	var progression := InteractionManager.get_progression()
+	var eff_radius := radius * (float(progression.call("orientation_reveal_bonus")) if progression != null else 1.0)
 	var cell_size := world_size / float(GRID)
 	var changed := false
-	var span := int(ceil(radius / cell_size)) + 1
+	var span := int(ceil(eff_radius / cell_size)) + 1
 	var center := _cell_of(x, z)
 	for cz in range(maxi(center.y - span, 0), mini(center.y + span, GRID - 1) + 1):
 		for cx in range(maxi(center.x - span, 0), mini(center.x + span, GRID - 1) + 1):
 			var wx := (float(cx) + 0.5) / float(GRID) * world_size - world_size * 0.5
 			var wz := (float(cz) + 0.5) / float(GRID) * world_size - world_size * 0.5
-			if Vector2(wx - x, wz - z).length() <= radius and _cells[cz * GRID + cx] == 0:
+			if Vector2(wx - x, wz - z).length() <= eff_radius and _cells[cz * GRID + cx] == 0:
 				_cells[cz * GRID + cx] = 1
 				changed = true
 	if changed:
@@ -140,6 +143,7 @@ func discover(site_id: String, silent: bool = false) -> bool:
 		if progression != null:
 			progression.call("add_stat", "stat_discovered", 1)
 			progression.call("add_xp_for", "discover")
+			progression.call("add_skill_xp", "orientation", 2)
 		var sfx := InteractionManager.get_sfx()
 		if sfx != null and sfx.has_method("play_event"):
 			sfx.call("play_event", "chime")
@@ -171,6 +175,7 @@ func add_marker(x: float, z: float) -> int:
 	var progression := InteractionManager.get_progression()
 	if progression != null:
 		progression.call("add_stat", "stat_markers", 1)
+		progression.call("add_skill_xp", "orientation", 1)
 	_dirty = true
 	_save()
 	markers_changed.emit()

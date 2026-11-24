@@ -213,6 +213,7 @@ func _connect_live_updates() -> void:
 	if progression != null:
 		progression.connect("xp_changed", _on_data_changed)
 		progression.connect("stat_changed", _on_data_changed)
+		progression.connect("skill_changed", _on_data_changed)
 	if _notebook != null and _notebook.has_signal("entry_observed"):
 		_notebook.connect("entry_observed", _on_data_changed)
 
@@ -446,6 +447,7 @@ func _refresh_notebook() -> void:
 func _refresh_quests() -> void:
 	_clear(_quests_list)
 	_add_level_card(_quests_list)
+	_add_skills_card(_quests_list)
 	if _quest_manager == null:
 		return
 	var active: Array = _quest_manager.call("get_active")
@@ -490,6 +492,51 @@ func _add_level_card(parent: Container) -> void:
 	if level >= int(progression.get("MAX_LEVEL")):
 		detail = tr("LEVEL_MAX")
 	_add_label(box, detail, 15, DIM)
+	parent.add_child(card)
+
+## Carte « Compétences » (GDD §4.7) : les 4 compétences, leur niveau (pastilles) et
+## la progression vers le suivant, sous la carte de niveau.
+func _add_skills_card(parent: Container) -> void:
+	var progression := InteractionManager.get_progression()
+	if progression == null:
+		return
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", _box(Color(0.16, 0.12, 0.05, 0.9), ACCENT, 2, 12, 10))
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	card.add_child(box)
+	var title := Label.new()
+	title.text = tr("SKILLS_TITLE")
+	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_color_override("font_color", ACCENT)
+	box.add_child(title)
+	var skills: Array = progression.get("SKILLS")
+	for skill in skills:
+		var sid := String(skill)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		box.add_child(row)
+		var name_label := Label.new()
+		name_label.text = tr("SKILL_" + sid.to_upper())
+		name_label.add_theme_font_size_override("font_size", 20)
+		name_label.custom_minimum_size = Vector2(150, 0)
+		row.add_child(name_label)
+		var level := int(progression.call("get_skill_level", sid))
+		var max_level := int(progression.get("SKILL_MAX"))
+		var pips := Label.new()
+		pips.text = "●".repeat(level) + "○".repeat(maxi(0, max_level - level))
+		pips.add_theme_font_size_override("font_size", 18)
+		pips.add_theme_color_override("font_color", GOOD)
+		row.add_child(pips)
+		var bar := ProgressBar.new()
+		bar.theme_type_variation = &"StaminaBar"
+		bar.custom_minimum_size = Vector2(120, 12)
+		bar.max_value = 1.0
+		bar.value = float(progression.call("skill_fraction", sid))
+		bar.show_percentage = false
+		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(bar)
+		_add_label(box, tr("SKILL_DESC_" + sid.to_upper()), 14, DIM)
 	parent.add_child(card)
 
 func _quest_card(quest_id: String, done: bool) -> Control:

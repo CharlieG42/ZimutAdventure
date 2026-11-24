@@ -295,6 +295,16 @@ TOAST_CHEST_STORED,%d objets rangés dans le coffre.
 TOAST_CHEST_TAKEN,%d objets repris.
 TOAST_CHEST_EMPTY,Le coffre est vide.
 TOAST_WAKE_POINT,Point de réveil enregistré ici.
+SKILLS_TITLE,Compétences
+SKILL_ORIENTATION,Orientation
+SKILL_SURVIE,Survie
+SKILL_CHASSE,Chasse
+SKILL_EQUITATION,Équitation
+SKILL_DESC_ORIENTATION,la carte se révèle plus largement (+20 % par niveau)
+SKILL_DESC_SURVIE,faim et soif s'usent moins vite (−8 % par niveau)
+SKILL_DESC_CHASSE,dispersion de l'arc réduite (−12 % par niveau)
+SKILL_DESC_EQUITATION,la monture va plus vite (+5 % par niveau)
+TOAST_SKILL_UP,Compétence %s : niveau %d !
 QUEST_CAMP_TITLE,Un camp à soi
 QUEST_CAMP_DESC,"Fabriquez un feu de camp (niveau 2) et posez-le depuis le sac : il se nourrit de bois, cuit vos plats et tient les rôdeurs à distance."
 QUEST_CHEST_TITLE,Ranger ses affaires

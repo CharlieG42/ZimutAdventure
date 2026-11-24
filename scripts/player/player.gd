@@ -130,6 +130,8 @@ var _safe_position: Vector3 = Vector3.ZERO
 ## Monture actuelle (cheval apprivoisé) : le joueur est surélevé et va plus vite.
 var _mount: Node3D
 var _mount_lift: float = 0.0
+## Temps à cheval accumulé : toutes les 30 s, +1 XP de compétence Équitation.
+var _mount_xp_timer: float = 0.0
 ## Pieds au-dessus du sol en pente : surélévation lissée des visuels quand un pied s'enfoncerait.
 var _foot_lift: float = 0.0
 var _foot_skeleton: Skeleton3D = null
@@ -551,8 +553,11 @@ func shoot_arrow(charge: float) -> void:
 	host.add_child(arrow)
 	var from := _arrow_origin(camera)
 	var dir := ballistic_direction(from, _aim_point(camera, from, speed), speed, gravity * arrow.gravity_scale)
-	# Arc peu bandé : la flèche disperse un peu.
+	# Arc peu bandé : la flèche disperse un peu (moins avec la compétence Chasse).
 	var spread := hip_spread * (1.0 - charge)
+	var progression_spread := InteractionManager.get_progression()
+	if progression_spread != null:
+		spread *= float(progression_spread.call("chasse_spread_factor"))
 	if spread > 0.0:
 		dir = dir.rotated(Vector3.UP, randf_range(-spread, spread))
 		dir = dir.rotated(camera.global_transform.basis.x.normalized(), randf_range(-spread, spread)).normalized()
@@ -800,7 +805,12 @@ func _physics_process(delta: float) -> void:
 	if inventory_now != null and bool(inventory_now.call("is_worn", BOOTS_ITEM)):
 		top_speed *= BOOTS_SPEED_FACTOR
 	if _mount != null:
-		top_speed *= MOUNT_SPEED_MULTIPLIER
+		# Compétence Équitation : la monture va un peu plus vite.
+		var progression_mount := InteractionManager.get_progression()
+		var mount_factor := MOUNT_SPEED_MULTIPLIER
+		if progression_mount != null:
+			mount_factor *= float(progression_mount.call("equitation_speed_factor"))
+		top_speed *= mount_factor
 	elif _drawing:
 		top_speed *= DRAW_MOVE_FACTOR
 	_wading = _is_wading()
@@ -950,6 +960,14 @@ func _process(delta: float) -> void:
 		# Hors visée, le pivot caméra revient dans l'axe du personnage.
 		_pivot_yaw = lerpf(_pivot_yaw, 0.0, 1.0 - exp(-10.0 * delta))
 	_update_camera()
+	# Compétence Équitation : XP accumulée en restant à cheval.
+	if _mount != null:
+		_mount_xp_timer += delta
+		if _mount_xp_timer >= 30.0:
+			_mount_xp_timer = 0.0
+			var progression_ride := InteractionManager.get_progression()
+			if progression_ride != null:
+				progression_ride.call("add_skill_xp", "equitation", 1)
 	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
 	if _view_mode == ViewMode.FIRST_PERSON:
 		_update_head_bob(delta, horizontal_speed)

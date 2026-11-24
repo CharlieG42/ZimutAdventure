@@ -106,6 +106,10 @@ func _process(delta: float) -> void:
 	var thirst_weather := float(weather.call("thirst_factor")) if weather != null else 1.0
 	var exploration := InteractionManager.get_exploration()
 	var blessed := float(exploration.call("drain_factor")) if exploration != null else 1.0
+	# Compétence Survie : faim et soif s'usent moins vite.
+	var progression := InteractionManager.get_progression()
+	if progression != null:
+		blessed *= float(progression.call("survie_drain_factor"))
 	update_temperature(delta, _gather_context(player as Node3D))
 	var heat := HOT_THIRST if is_hot() else 1.0
 	# Le chapeau de paille protège du soleil : on a moins soif.
@@ -311,11 +315,18 @@ func can_sprint() -> bool:
 
 func eat(amount: float) -> void:
 	_hunger = minf(1.0, _hunger + amount)
+	# Compétence Survie : manger/boire rapporte de l'XP de survie.
+	var progression := InteractionManager.get_progression()
+	if progression != null:
+		progression.call("add_skill_xp", "survie", 1)
 	_reemit()
 	_save()
 
 func drink(amount: float) -> void:
 	_thirst = minf(1.0, _thirst + amount)
+	var progression := InteractionManager.get_progression()
+	if progression != null:
+		progression.call("add_skill_xp", "survie", 1)
 	_reemit()
 	_save()
 
