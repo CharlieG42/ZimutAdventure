@@ -47,10 +47,12 @@ propositions classées par coût/bénéfice. Références au code actuel entre p
    `shader_type sky`, le point d'entrée est `void sky()` (pas `fragment()`), `EYEDIR`
    n'existe que dans les fonctions d'entrée (pas dans les helpers) et `COLOR` est un
    `vec3`.
-5. **Eau améliorée** : ajouter un Fresnel avec teinte de ciel reflété + reflet du soleil
-   (specular directionnelle) dans `water_surface.gdshader`/`river_surface.gdshader` ;
-   éventuellement transparence accrue près des berges. Pas de réflexion réelle
-   possible en Compatibility (pas de probes) — le Fresnel simule bien.
+5. **Eau améliorée** ✅ **FAIT** : Fresnel teinté par la couleur du ciel à l’horizon +
+   reflet du soleil (glint : lobe serré dans la direction miroir des vaguelettes, amplifié
+   dans l’émission pour le bloom → traînée de soleil) dans `water_surface.gdshader` et
+   `river_surface.gdshader`. `DayNightCycle` publie les paramètres globaux `sun_dir`,
+   `sun_tint`, `sun_amount`, `sky_reflect`. Pas de réflexion réelle possible en
+   Compatibility (pas de probes) — le Fresnel simule bien.
 6. **Feu de camp la nuit** : la lumière existe ; ajouter un halo émissif fort (capté
    par le bloom) + particules de braises montantes (`flame_*.png` existent) +
    éclairage orange pulsant. C'est le point focal nocturne du camp.
@@ -89,4 +91,4 @@ propositions classées par coût/bénéfice. Références au code actuel entre p
 
 Commencer par **P0 (MSAA + coupe SSAO/glow en low)** ✅ **FAIT** — puis **P1-4 (ciel
 custom nuit/lune/étoiles)** ✅ **FAIT** qui est le plus visible en screenshots.
-P1-5 (eau) et P1-6 (feu de camp) suivent bien.
+**P1-5 (eau : Fresnel ciel + reflet de soleil)** ✅ **FAIT**. P1-6 (feu de camp) suivit.

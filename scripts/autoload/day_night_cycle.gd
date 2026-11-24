@@ -24,6 +24,10 @@ var sun: DirectionalLight3D
 ## Lune : lumière froide et bleutée qui éclaire la nuit (sans ombres, pour rester légère).
 var moon: DirectionalLight3D
 var environment: Environment
+## Dernières valeurs publiées en paramètres de shader globaux (reflets de l'eau) — aussi lisibles en test.
+var last_sun_dir: Vector3
+var last_sun_amount: float
+var last_sky_reflect: Color
 
 var _phase: String = PHASE_DAY
 var _base_sun_rotation: Vector3
@@ -91,18 +95,28 @@ func _apply() -> void:
 	if moon != null and is_instance_valid(moon):
 		moon.light_energy = lerp(1.1, 0.0, smoothstep(0.0, 0.25, day_factor)) * (1.0 - 0.5 * weather_dim)
 		moon.visible = moon.light_energy > 0.01
+	# Paramètres de shader globaux pour les reflets (eau) : direction/teinte du soleil
+	# et couleur du ciel à l'horizon, calquée sur le ciel affiché.
+	var sun_t: Transform3D = sun.global_transform if sun.is_inside_tree() else sun.transform
+	var horizon_day := Color(0.98, 0.80, 0.58).lerp(Color(1.0, 0.5, 0.24), low_sun)
+	var horizon_col := Color(0.20, 0.12, 0.30).lerp(horizon_day, smoothstep(0.0, 0.3, day_factor))
+	last_sun_dir = sun_t.basis.z.normalized()
+	last_sun_amount = clampf(sun.light_energy, 0.0, 1.0)
+	last_sky_reflect = horizon_col
+	RenderingServer.global_shader_parameter_set("sun_dir", last_sun_dir)
+	RenderingServer.global_shader_parameter_set("sun_tint", sun.light_color)
+	RenderingServer.global_shader_parameter_set("sun_amount", last_sun_amount)
+	RenderingServer.global_shader_parameter_set("sky_reflect", last_sky_reflect)
 	if environment != null:
 		var sky: Sky = environment.sky
 		if sky != null and sky.sky_material is ShaderMaterial:
 			# Ciel custom (assets/vfx/sky/sky.gdshader) : étoiles, lune, nuages animés.
 			var mat := sky.sky_material as ShaderMaterial
 			mat.set_shader_parameter("top_color", Color(0.09, 0.09, 0.27).lerp(Color(0.2, 0.45, 0.86), day_factor))
-			var horizon_day2 := Color(0.98, 0.80, 0.58).lerp(Color(1.0, 0.5, 0.24), low_sun)
-			mat.set_shader_parameter("horizon_color", Color(0.20, 0.12, 0.30).lerp(horizon_day2, smoothstep(0.0, 0.3, day_factor)))
+			mat.set_shader_parameter("horizon_color", horizon_col)
 			mat.set_shader_parameter("ground_color", Color(0.02, 0.02, 0.05).lerp(Color(0.35, 0.22, 0.14), day_factor))
 			mat.set_shader_parameter("day_factor", day_factor)
 			mat.set_shader_parameter("energy", lerp(0.3, 1.0, day_factor) * (1.0 - 0.35 * weather_dim))
-			var sun_t: Transform3D = sun.global_transform if sun.is_inside_tree() else sun.transform
 			mat.set_shader_parameter("sun_direction", sun_t.basis.z.normalized())
 			mat.set_shader_parameter("sun_color", sun.light_color)
 			if moon != null and is_instance_valid(moon):
@@ -115,8 +129,7 @@ func _apply() -> void:
 			var sky_mat: ProceduralSkyMaterial = sky.sky_material
 			sky_mat.sky_top_color = Color(0.09, 0.09, 0.27).lerp(Color(0.2, 0.45, 0.86), day_factor)
 			# Horizon : plus orangé quand le soleil est bas (aube, crépuscule).
-			var horizon_day := Color(0.98, 0.80, 0.58).lerp(Color(1.0, 0.5, 0.24), low_sun)
-			sky_mat.sky_horizon_color = Color(0.20, 0.12, 0.30).lerp(horizon_day, smoothstep(0.0, 0.3, day_factor))
+			sky_mat.sky_horizon_color = horizon_col
 			sky_mat.ground_bottom_color = Color(0.02, 0.02, 0.05).lerp(Color(0.35, 0.22, 0.14), day_factor)
 			sky_mat.ground_horizon_color = sky_mat.sky_horizon_color.lerp(Color(0.6, 0.4, 0.25), 0.35)
 			var night_factor := 1.0 - day_factor

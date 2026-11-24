@@ -9,6 +9,11 @@ uniform vec4 ice_color : source_color = vec4(0.78, 0.9, 0.97, 1.0);
 uniform float wave_speed = 0.9;
 
 global uniform float snow_amount;
+// Pilotés par DayNightCycle : reflet du soleil + teinte de ciel réfléchissante.
+global uniform vec3 sun_dir;
+global uniform vec4 sun_tint : source_color;
+global uniform float sun_amount;
+global uniform vec4 sky_reflect : source_color;
 
 varying vec3 v_local;
 
@@ -43,13 +48,20 @@ void fragment() {
 	col += vec3(0.5, 0.6, 0.7) * smoothstep(0.62, 0.78, h) * 0.35 * (1.0 - ice);
 	col = mix(col, ice_color.rgb * (0.9 + h * 0.1), ice);
 
+	// Fresnel teinté par la couleur du ciel à l'horizon (jour chaud, nuit froide).
 	float fresnel = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
-	col += vec3(0.5, 0.6, 0.7) * fresnel * 0.45;
+	col += sky_reflect.rgb * fresnel * 0.55 * (1.0 - ice * 0.5);
+	// Reflet du soleil (glint) : lobe serré dans la direction miroir des vaguelettes.
+	vec3 sun_view = (VIEW_MATRIX * vec4(sun_dir / max(length(sun_dir), 1e-4), 0.0)).xyz;
+	vec3 refl = reflect(-VIEW, NORMAL);
+	float glint = pow(max(dot(refl, sun_view), 0.0), 160.0) * (0.7 + 0.6 * h);
+	col += sun_tint.rgb * glint * 2.2 * sun_amount * (1.0 - ice);
 
 	ALBEDO = col;
 	ALPHA = mix(shallow_color.a, 1.0, ice);
 	ROUGHNESS = mix(0.08, 0.3, ice);
 	METALLIC = 0.0;
 	SPECULAR = 0.7;
-	EMISSION = col * 0.12;
+	// L'émission amplifie le reflet solaire pour le bloom (traînée de soleil).
+	EMISSION = col * 0.12 + sun_tint.rgb * glint * 1.2 * sun_amount * (1.0 - ice);
 }
