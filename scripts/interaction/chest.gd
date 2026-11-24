@@ -1,7 +1,9 @@
 class_name StorageChest
 extends Interactable
-## Coffre de camp : une interaction dépose tout ce qui peut l'être (ressources, nourriture, peaux...),
-## la suivante, sac vide de ces objets, reprend tout. Les outils, flèches et capes restent sur soi.
+## Coffre de camp : l'interaction ouvre le panneau de transfert (choix objet par objet,
+## voir ChestPanel). Hors HUD (tests headless), l'interaction reste tout-ou-rien :
+## dépose tout ce qui peut l'être (ressources, nourriture, peaux...), puis reprend tout.
+## Les outils, flèches et capes restent sur soi.
 
 signal changed(chest)
 
@@ -43,34 +45,68 @@ func storable_in_bag() -> Dictionary:
 	return result
 
 func get_prompt() -> String:
-	if not storable_in_bag().is_empty():
-		return "ACTION_CHEST_STORE"
-	return "ACTION_CHEST_TAKE" if not stock.is_empty() else "ACTION_CHEST_EMPTY"
+	return "ACTION_CHEST_OPEN"
+
+## Dépose jusqu'à `amount` exemplaires de `item_id` (sac -> coffre) ; renvoie le nombre déposé.
+func store_item(item_id: String, amount: int) -> int:
+	var inventory := InteractionManager.get_inventory()
+	if inventory == null or amount <= 0 or not _is_storable(item_id):
+		return 0
+	var movable := mini(amount, int(inventory.call("count_of", item_id)))
+	if movable <= 0:
+		return 0
+	if not inventory.remove_item(item_id, movable):
+		return 0
+	stock[item_id] = int(stock.get(item_id, 0)) + movable
+	changed.emit(self)
+	return movable
+
+## Reprend jusqu'à `amount` exemplaires de `item_id` (coffre -> sac) ; renvoie le nombre repris.
+func take_item(item_id: String, amount: int) -> int:
+	var inventory := InteractionManager.get_inventory()
+	if inventory == null or amount <= 0:
+		return 0
+	var available := int(stock.get(item_id, 0))
+	var movable := mini(amount, available)
+	if movable <= 0:
+		return 0
+	inventory.add_item(item_id, movable)
+	var left := available - movable
+	if left <= 0:
+		stock.erase(item_id)
+	else:
+		stock[item_id] = left
+	changed.emit(self)
+	return movable
+
+## Dépose tout ce qui est rangeable ; renvoie le nombre d'objets déposés.
+func store_all() -> int:
+	var bag := storable_in_bag()
+	var total := 0
+	for item_id in bag:
+		total += store_item(String(item_id), int(bag[item_id]))
+	return total
+
+## Reprend tout le contenu ; renvoie le nombre d'objets repris.
+func take_all() -> int:
+	var total := 0
+	for item_id in stock.keys():
+		total += take_item(String(item_id), int(stock[item_id]))
+	return total
 
 func _on_interact(_interactor: Node3D) -> void:
-	var inventory := InteractionManager.get_inventory()
-	if inventory == null:
+	var tree := get_tree()
+	var hud := tree.get_first_node_in_group("hud") if tree != null else null
+	if hud != null and hud.has_method("open_chest_panel"):
+		hud.call("open_chest_panel", self)
 		return
-	var to_store := storable_in_bag()
-	if not to_store.is_empty():
-		var total := 0
-		for item_id in to_store:
-			var count := int(to_store[item_id])
-			if inventory.remove_item(String(item_id), count):
-				stock[item_id] = int(stock.get(item_id, 0)) + count
-				total += count
-		_toast(tr("TOAST_CHEST_STORED") % total)
+	# Sans HUD (tests headless) : repli tout-ou-rien historique.
+	if not storable_in_bag().is_empty():
+		_toast(tr("TOAST_CHEST_STORED") % store_all())
 	elif not stock.is_empty():
-		var total := 0
-		for item_id in stock:
-			inventory.add_item(String(item_id), int(stock[item_id]))
-			total += int(stock[item_id])
-		stock.clear()
-		_toast(tr("TOAST_CHEST_TAKEN") % total)
+		_toast(tr("TOAST_CHEST_TAKEN") % take_all())
 	else:
 		_toast(tr("TOAST_CHEST_EMPTY"))
-		return
-	changed.emit(self)
 
 func total_stored() -> int:
 	var total := 0

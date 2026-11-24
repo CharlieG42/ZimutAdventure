@@ -170,6 +170,7 @@ func _ready() -> void:
 	_setup_build_panel()
 	_setup_whistle_button()
 	_setup_character_panel()
+	_setup_chest_panel()
 	_setup_character_creator()
 	if _player != null:
 		joystick.moved.connect(_on_fixed_move)
@@ -186,6 +187,7 @@ var character_panel: CharacterPanel
 var ranch_panel: RanchPanel
 var ranch_button: Button
 var character_button: Button
+var chest_panel: ChestPanel
 
 ## Fenêtre Personnage (vêtements portés, aperçu 3D) et son bouton dans la barre du bas.
 func _setup_character_panel() -> void:
@@ -227,6 +229,20 @@ func _refresh_ranch_button() -> void:
 	var available := not get_tree().get_nodes_in_group("pens").is_empty()
 	if ranch_button != null and ranch_button.visible != available:
 		ranch_button.visible = available
+
+## Panneau de transfert du coffre (déposer / reprendre objet par objet).
+func _setup_chest_panel() -> void:
+	chest_panel = ChestPanel.new()
+	chest_panel.name = "ChestPanel"
+	journal_panel.get_parent().add_child(chest_panel)
+
+## Ouvert par l'interaction « Ouvrir le coffre » : on ferme les autres panneaux plein écran.
+func open_chest_panel(chest: Node) -> void:
+	for other: Control in [journal_panel, map_panel, character_panel, ranch_panel]:
+		if other != null and other.visible:
+			other.call("close")
+	if chest_panel != null:
+		chest_panel.open(chest)
 
 func open_character_panel() -> void:
 	if journal_panel != null and journal_panel.visible:
@@ -343,7 +359,8 @@ func _process(delta: float) -> void:
 	# La mini-carte s'efface quand un panneau plein écran est ouvert.
 	var panel_open := (map_panel != null and map_panel.visible) or (journal_panel != null and journal_panel.visible) \
 			or (character_creator != null and character_creator.visible) \
-			or (character_panel != null and character_panel.visible) or (ranch_panel != null and ranch_panel.visible)
+			or (character_panel != null and character_panel.visible) or (ranch_panel != null and ranch_panel.visible) \
+			or (chest_panel != null and chest_panel.visible)
 	if panel_open != _panels_open:
 		_panels_open = panel_open
 		_sync_mouse_mode()
@@ -431,6 +448,8 @@ func _on_journal_pressed() -> void:
 		journal_requested.emit()
 		return
 	if journal_panel != null:
+		if chest_panel != null and chest_panel.visible:
+			chest_panel.close()
 		journal_panel.toggle()
 		if journal_panel.visible and map_panel != null and map_panel.visible:
 			map_panel.close()
@@ -442,6 +461,8 @@ func _on_map_pressed() -> void:
 		map_requested.emit()
 		return
 	if map_panel != null:
+		if chest_panel != null and chest_panel.visible:
+			chest_panel.close()
 		map_panel.toggle()
 		if map_panel.visible and journal_panel != null and journal_panel.visible:
 			journal_panel.close()

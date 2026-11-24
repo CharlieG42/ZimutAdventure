@@ -288,9 +288,17 @@ CRAFT_PALISADE,Palissade
 ITEM_BUILDING_CAMPFIRE,feu de camp
 ITEM_FURNITURE_CHEST,coffre
 ITEM_BUILDING_PALISADE,palissade
+ACTION_CHEST_OPEN,Ouvrir le coffre
 ACTION_CHEST_STORE,Déposer dans le coffre
 ACTION_CHEST_TAKE,Reprendre le contenu
 ACTION_CHEST_EMPTY,Coffre vide
+CHEST_PANEL_BAG,Sac
+CHEST_PANEL_STOCK,Contenu du coffre
+CHEST_EMPTY_LIST,Vide
+ACTION_STORE,Déposer
+ACTION_TAKE,Reprendre
+ACTION_STORE_ALL,Tout déposer
+ACTION_TAKE_ALL,Tout reprendre
 TOAST_CHEST_STORED,%d objets rangés dans le coffre.
 TOAST_CHEST_TAKEN,%d objets repris.
 TOAST_CHEST_EMPTY,Le coffre est vide.
