@@ -97,6 +97,8 @@ var _route_left: float = 0.0
 var _route_pen_on_arrival: bool = false
 const ROUTE_SECONDS := 90.0
 const ROUTE_STUCK_SECONDS := 1.5
+var _sidestep_left: float = 0.0
+var _sidestep_sign: float = 1.0
 
 var _interaction: Area3D
 var _indicator: MeshInstance3D
@@ -976,15 +978,18 @@ func _follow_route(delta: float) -> bool:
 	_track_stuck(wanted, delta)
 	# Bloquée (un autre animal sur le point de passage, un obstacle) : on passe au point suivant
 	# s'il reste proche, sinon on contourne en glissant de côté un instant.
+	# Le dernier point (dedans ou dehors de l'enclos) n'est jamais sauté : la bête finirait
+	# du mauvais côté de la barrière.
 	if _stuck_time > ROUTE_STUCK_SECONDS:
 		_stuck_time = 0.0
-		if distance < 3.5:
+		if distance < 2.5 and _route.size() > 1:
 			_route.pop_front()
-			if _route.is_empty():
-				_end_route(true)
-				return false
 			return true
-		wanted = wanted.rotated(Vector3.UP, PI * 0.5 * (1.0 if randf() < 0.5 else -1.0))
+		_sidestep_left = 0.6
+		_sidestep_sign = 1.0 if randf() < 0.5 else -1.0
+	if _sidestep_left > 0.0:
+		_sidestep_left -= delta
+		wanted = wanted.rotated(Vector3.UP, PI * 0.5 * _sidestep_sign)
 	velocity.x = move_toward(velocity.x, wanted.x, 30.0 * delta)
 	velocity.z = move_toward(velocity.z, wanted.z, 30.0 * delta)
 	_face_direction(wanted.normalized(), delta)
