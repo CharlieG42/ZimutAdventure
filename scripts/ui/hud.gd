@@ -946,6 +946,8 @@ func _fit_to_viewport(vp_override: Vector2 = Vector2.ZERO) -> void:
 		_set_offsets(vitals, Vector4(16.0 + inset.x, top + 112.0, 16.0 + inset.x + vitals_size.x, top + 112.0 + vitals_size.y))
 		# Mini-carte en haut à droite, réduite.
 		_set_offsets(minimap, Vector4(vp.x - 116.0 - inset.z, top + 112.0, vp.x - 16.0 - inset.z, top + 212.0))
+		# Poids du sac sous les jauges réduites.
+		_set_offsets(weight_label, Vector4(16.0 + inset.x, top + 224.0, 260.0 + inset.x, top + 256.0))
 		# Hotbar au-dessus du stick de déplacement, à gauche.
 		var hb: Vector4 = _base_offsets[hotbar]
 		# On laisse aussi la place du bouton « Viser », qui dépasse à gauche du pad.

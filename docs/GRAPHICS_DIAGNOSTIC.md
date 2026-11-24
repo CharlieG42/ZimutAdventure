@@ -28,18 +28,13 @@ propositions classées par coût/bénéfice. Références au code actuel entre p
 
 ## Propositions, par priorité
 
-### P0 — rapides, gros gain (quelques heures)
+### P0 — rapides, gros gain (quelques heures) — **implémenté**
 
-1. **MSAA 2x** : aucun `msaa_3d` n'est réglé → l'anti-aliasing est inactif. Activer
-   `viewport.msaa_3d = Viewport.MSAA_2X` au démarrage, et le couper au niveau de
-   qualité bas de `PerformanceGuard` (réglage runtime via le viewport). Nettement
-   meilleur rendu des arêtes (rochers, personnages, HUD 3D) pour un coût modéré.
-2. **Couper SSAO et glow en qualité basse** : `PerformanceGuard` level ≥ 2 ne touche
-   aujourd'hui que particules/ombres/rendu. En Compatibility, SSAO et bloom sont des
-   passes plein écran coûteuses : les désactiver via le `WorldEnvironment` en low
-   (garder en high sur PC). Gros gain FPS sur mobile milieu de gamme.
-3. **Niveau intermédiaire de rendu** : ajouter `scaling_3d_scale = 0.9` entre 1.0 et
-   0.8 pour adoucir la dégradation auto.
+1. **MSAA 2x** : `rendering/anti_aliasing/quality/msaa_3d=1` dans `project.godot` ;
+   `PerformanceGuard` le coupe au niveau 2 (`viewport.msaa_3d`, réglage runtime).
+2. **SSAO coupé au niveau 1, glow au niveau 2** via le `WorldEnvironment`
+   (`_apply_env_quality`), restaurés au niveau 0.
+3. **Palier intermédiaire** : `scaling_3d_scale` 1.0 → 0.9 (niveau 1) → 0.8 (niveau 2).
 
 ### P1 — fort impact visuel, coût moyen (1-3 jours)
 
