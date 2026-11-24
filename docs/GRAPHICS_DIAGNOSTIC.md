@@ -60,12 +60,18 @@ propositions classées par coût/bénéfice. Références au code actuel entre p
 
 ### P2 — polish (quelques jours)
 
-7. **Rim light** léger dans `prop_atmosphere.gdshaderinc` (fresnel contre le soleil) :
-   fait « pop » personnages et rochers au contre-jour, quasi gratuit.
-8. **Translucidité des feuilles** au contre-jour (backlight simple dans
-   `prop_foliage.gdshader`, pas de vrai SSS en Compatibility).
-9. **Variations de teinte par instance** sur les MultiMesh (déjà partiellement là via
-   les facettes) : hue shift léger par buisson/arbre pour casser la répétition.
+7. **Rim light** ✅ **FAIT** dans `prop_atmosphere.gdshaderinc` (`rim_light()` : fresnel du
+   contour teinté `sun_tint`, modulé par la face éclairée et `sun_amount`), inclus et appliqué
+   dans `prop_rock.gdshader` et `prop_trunk.gdshader` : les rochers/troncs « pop » au contre-jour.
+8. **Translucidité des feuilles** ✅ **FAIT** : backlight simple dans `prop_foliage.gdshader`
+   (`pow(dot(view, -sun_dir), 2)` teinté `sun_tint` × `sun_amount`, désactivé sous la neige) —
+   pas de vrai SSS en Compatibility.
+9. **Variations de teinte par instance** ✅ **FAIT** sur les MultiMesh : `use_colors` +
+   `set_instance_color` (hash déterministe de la position monde) dans
+   `landscape_manager._place_multimesh`, lu via `COLOR` (varying `v_inst`) dans
+   `prop_rock`/`prop_trunk`/`prop_foliage`. Note Godot 4.7 : `use_colors` doit être
+   activé AVANT `instance_count`, et les couleurs vivent dans le RenderingServer
+   (illisibles en headless dummy).
 10. **Ombres de contact du personnage** : le SSAO aide déjà ; en high, augmenter
     `ssao_radius`/`intensity` légèrement sur PC uniquement.
 
@@ -92,4 +98,4 @@ propositions classées par coût/bénéfice. Références au code actuel entre p
 
 Commencer par **P0 (MSAA + coupe SSAO/glow en low)** ✅ **FAIT** — puis **P1-4 (ciel
 custom nuit/lune/étoiles)** ✅ **FAIT** qui est le plus visible en screenshots.
-**P1-5 (eau : Fresnel ciel + reflet de soleil)** ✅ **FAIT**. **P1-6 (feu de camp : halo bloom + flicker)** ✅ **FAIT**. Ensuite : P2 (rim light, backlight des feuilles, teintes par instance).
+**P1-5 (eau : Fresnel ciel + reflet de soleil)** ✅ **FAIT**. **P1-6 (feu de camp : halo bloom + flicker)** ✅ **FAIT**. **P2 (rim light, backlight, teintes par instance)** ✅ **FAIT**. Reste : P2-10 (SSAO renforcé en high) et P3.

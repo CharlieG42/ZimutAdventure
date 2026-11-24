@@ -11,8 +11,11 @@ uniform float roughness_base : hint_range(0.0, 1.0) = 0.9;
 global uniform float snow_amount;
 global uniform float wetness;
 
+#include "res://assets/landscapes/shaders/prop_atmosphere.gdshaderinc"
+
 varying vec3 v_world_pos;
 varying vec3 v_normal;
+varying vec3 v_inst;
 
 float hash(vec3 p) {
 	return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453123);
@@ -51,6 +54,7 @@ float fbm3(vec3 p) {
 void vertex() {
 	v_world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	v_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+	v_inst = COLOR.rgb; // teinte par instance (MultiMesh use_colors), blanc par défaut
 }
 
 void fragment() {
@@ -78,6 +82,10 @@ void fragment() {
 	shaded *= 1.0 - 0.25 * wetness;
 	float snow_on = snow_amount * smoothstep(0.45, 0.8, up + (grain - 0.5) * 0.3);
 	shaded = mix(shaded, vec3(0.92, 0.95, 1.0), snow_on * 0.9);
+
+	// Variation de teinte par instance + rim light contre le soleil.
+	shaded *= mix(vec3(1.0), v_inst, 0.7);
+	shaded = rim_light(shaded, v_world_pos, normalize(v_normal), CAMERA_POSITION_WORLD);
 
 	ALBEDO = shaded;
 	ROUGHNESS = roughness_base;

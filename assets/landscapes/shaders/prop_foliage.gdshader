@@ -16,10 +16,15 @@ global uniform float snow_amount;
 global uniform float wetness;
 global uniform vec4 foliage_tint : source_color;
 global uniform float foliage_tint_amount;
+// Backlight : soleil derrière le feuillage (paramètres globaux DayNightCycle).
+global uniform vec3 sun_dir;
+global uniform vec4 sun_tint : source_color;
+global uniform float sun_amount;
 
 varying vec3 v_world_pos;
 varying vec3 v_normal;
 varying float v_y;
+varying vec3 v_inst;
 
 float hash(vec3 p) {
 	return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453123);
@@ -48,6 +53,7 @@ void vertex() {
 	v_world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	v_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
 	v_y = VERTEX.y;
+	v_inst = COLOR.rgb; // teinte par instance (MultiMesh use_colors), blanc par défaut
 
 	// Balancement au vent : déformation horizontale croissante avec la
 	// hauteur locale, animée par une onde qui parcourt le monde.
@@ -74,6 +80,13 @@ void fragment() {
 	float snow_on = snow_amount * (0.35 + 0.65 * season_response) * smoothstep(0.35, 0.85, up);
 	col = mix(col, vec3(0.93, 0.96, 1.0), snow_on * 0.85);
 	col *= 1.0 - 0.18 * wetness;
+
+	// Variation de teinte par instance (casse la répétition des buissons/arbres).
+	col *= mix(vec3(1.0), v_inst, 0.7);
+	// Backlight : le soleil derrière le feuillage transparaît (translucidité simple).
+	vec3 view_dir = normalize(CAMERA_POSITION_WORLD - v_world_pos);
+	float back = pow(max(dot(view_dir, -sun_dir / max(length(sun_dir), 1e-4)), 0.0), 2.0);
+	col += sun_tint.rgb * back * 0.55 * sun_amount * (1.0 - snow_on);
 
 	ALBEDO = col;
 	ROUGHNESS = 1.0;
