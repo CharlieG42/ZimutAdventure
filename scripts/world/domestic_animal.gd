@@ -77,6 +77,11 @@ const SUMMON_MAX_DISTANCE := 120.0
 var ready_at: float = 0.0
 ## Ranch : enclos vers lequel la bête est menée, et trajet (points de passage) en cours.
 var herd_pen: Node3D = null
+## Enclos où vit la bête (quand elle est « penned »).
+var _home_pen: Node3D = null
+var _fence_time: float = 0.0
+const PEN_INNER_MARGIN := 1.4
+const FENCE_RESCUE_SECONDS := 1.5
 ## Chien de garde : posté près de l'enclos (ou là où on l'a laissé), il chasse les prédateurs.
 var guarding: bool = false
 ## Enclos gardé (identifiant), vide si le chien garde un endroit quelconque.
@@ -474,12 +479,61 @@ func pen_production_factor() -> float:
 ## Entre dans un enclos : l'animal s'y installe et ne quitte plus ses abords.
 func enter_pen(spot: Vector3, radius: float) -> void:
 	penned = true
+	_home_pen = _pen_at(spot)
 	global_position = spot + Vector3(0.0, 0.5, 0.0)
 	velocity = Vector3.ZERO
 	_center = spot
 	wander_radius = radius
 	_start_walk()
 	state_changed.emit(self)
+
+## Enclos qui contient ce point (null sinon).
+func _pen_at(point: Vector3) -> Node3D:
+	if not is_inside_tree():
+		return null
+	for pen in get_tree().get_nodes_in_group("pens"):
+		if bool(pen.call("contains", point)):
+			return pen
+	return null
+
+## En enclos, la bête choisit ses buts à l'intérieur de la clôture (sinon elle pousse contre
+## la barrière et finit par s'y coincer).
+func _start_walk() -> void:
+	super._start_walk()
+	if penned and _home_pen != null and is_instance_valid(_home_pen):
+		var limit := float(_home_pen.call("half")) - PEN_INNER_MARGIN
+		var local: Vector3 = _home_pen.to_local(_target)
+		local.x = clampf(local.x, -limit, limit)
+		local.z = clampf(local.z, -limit, limit)
+		_target = _home_pen.to_global(local)
+
+## Coincée sur la clôture (ou passée par-dessus) : au bout d'un instant, on la remet dedans.
+func _keep_inside_pen(delta: float) -> void:
+	if not penned or not _route.is_empty() or mounted:
+		_fence_time = 0.0
+		return
+	if _home_pen == null or not is_instance_valid(_home_pen):
+		_home_pen = _pen_at(global_position)
+		if _home_pen == null:
+			return
+	var half := float(_home_pen.call("half"))
+	var local: Vector3 = _home_pen.to_local(global_position)
+	if absf(local.x) < half - 0.55 and absf(local.z) < half - 0.55:
+		_fence_time = 0.0
+		return
+	_fence_time += delta
+	if _fence_time < FENCE_RESCUE_SECONDS:
+		return
+	_fence_time = 0.0
+	var limit := half - PEN_INNER_MARGIN
+	local.x = clampf(local.x, -limit, limit)
+	local.z = clampf(local.z, -limit, limit)
+	local.y = 0.0
+	var spot: Vector3 = _home_pen.to_global(local)
+	global_position = Vector3(spot.x, _home_pen.global_position.y + 0.6, spot.z)
+	velocity = Vector3.ZERO
+	_center = _home_pen.global_position
+	_start_walk()
 
 ## Cherche un enclos de la région pour y installer l'animal qui vient d'être apprivoisé.
 func _try_join_pen() -> void:
@@ -564,6 +618,7 @@ func _physics_process(delta: float) -> void:
 	_update_idle_voice(delta)
 	_face_pips_to_camera()
 	super._physics_process(delta)
+	_keep_inside_pen(delta)
 	_indicator_time += delta
 	if _indicator_time > 0.5:
 		_indicator_time = 0.0

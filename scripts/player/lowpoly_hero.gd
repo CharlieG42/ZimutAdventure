@@ -9,7 +9,7 @@ const CHOP_TIME := 0.42
 const STRIDE_SPEED := 2.6
 const RUN_START := 4.9
 const RUN_FULL := 7.4
-const GEAR_IDS := ["gear_straw_hat", "gear_hide_boots", "gear_backpack", "armor_fur_cloak"]
+const GEAR_IDS := ["gear_straw_hat", "gear_hide_boots", "gear_backpack", "armor_fur_cloak", "gear_wool_shirt", "gear_wool_trousers", "gear_leather_gloves"]
 
 var profile: CharacterProfile = CharacterProfile.default_for("male")
 var gear: Array = []

@@ -12,11 +12,14 @@ const TOOLS := ["tool_stone_axe", "tool_sickle", "tool_hoe", "tool_watering_can"
 const SAVE_NAME := "inventory.cfg"
 
 ## Emplacements de vêtements, dans l'ordre de la fenêtre Personnage.
-const GEAR_SLOTS := ["head", "body", "feet", "back"]
-## Vêtement → emplacement.
+const GEAR_SLOTS := ["head", "torso", "body", "hands", "legs", "feet", "back"]
+## Vêtement → emplacement (« body » = cape, par-dessus la chemise « torso »).
 const GEAR := {
 	"gear_straw_hat": "head",
+	"gear_wool_shirt": "torso",
 	"armor_fur_cloak": "body",
+	"gear_leather_gloves": "hands",
+	"gear_wool_trousers": "legs",
 	"gear_hide_boots": "feet",
 	"gear_backpack": "back",
 }

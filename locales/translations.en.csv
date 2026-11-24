@@ -592,11 +592,11 @@ ACTION_CHARACTER,Character
 CHARACTER_TITLE,%s — level %d
 CHARACTER_TOOL,Tool in hand: %s
 SLOT_HEAD,Head
-SLOT_BODY,Body
+SLOT_BODY,Cloak
 SLOT_FEET,Feet
 SLOT_BACK,Back
 SLOT_EMPTY,none
-SLOT_NOTHING_OWNED,Nothing for this slot yet (craft it in the Crafting tab).
+SLOT_NOTHING_OWNED,Nothing for this slot yet.
 ACTION_WEAR,Wear
 ACTION_TAKE_OFF,Take off
 GEAR_EFFECT_HAT,shades you from the sun: thirst −20%
@@ -661,3 +661,17 @@ DIR_S,south
 DIR_SW,southwest
 DIR_W,west
 DIR_NW,northwest
+SLOT_TORSO,Shirt
+SLOT_HANDS,Hands
+SLOT_LEGS,Legs
+SLOT_RECIPE,"To craft: %s (%s, level %d)."
+CHARACTER_EFFECTS,Worn effects:
+CRAFT_WOOL_SHIRT,Wool shirt
+CRAFT_WOOL_TROUSERS,Wool trousers
+CRAFT_LEATHER_GLOVES,Leather gloves
+ITEM_GEAR_WOOL_SHIRT,wool shirt
+ITEM_GEAR_WOOL_TROUSERS,wool trousers
+ITEM_GEAR_LEATHER_GLOVES,leather gloves
+GEAR_EFFECT_SHIRT,warmth +2 °C
+GEAR_EFFECT_TROUSERS,warmth +2 °C
+GEAR_EFFECT_GLOVES,warmth +1.5 °C

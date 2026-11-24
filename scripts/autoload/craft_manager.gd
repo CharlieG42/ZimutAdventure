@@ -79,6 +79,24 @@ const RECIPES := {
 		"ingredients": {"item_pelt": 2, "item_wood": 2},
 		"level": 3,
 	},
+	"gear_wool_shirt": {
+		"name": "CRAFT_WOOL_SHIRT",
+		"category": "clothes",
+		"ingredients": {"item_wool": 3},
+		"level": 3,
+	},
+	"gear_wool_trousers": {
+		"name": "CRAFT_WOOL_TROUSERS",
+		"category": "clothes",
+		"ingredients": {"item_wool": 2, "item_pelt": 1},
+		"level": 3,
+	},
+	"gear_leather_gloves": {
+		"name": "CRAFT_LEATHER_GLOVES",
+		"category": "clothes",
+		"ingredients": {"item_pelt": 2},
+		"level": 2,
+	},
 	"furniture_camp_bed": {
 		"name": "CRAFT_CAMP_BED",
 		"category": "furniture",

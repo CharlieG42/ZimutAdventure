@@ -592,11 +592,11 @@ ACTION_CHARACTER,Personnage
 CHARACTER_TITLE,%s — niveau %d
 CHARACTER_TOOL,Outil en main : %s
 SLOT_HEAD,Tête
-SLOT_BODY,Corps
+SLOT_BODY,Cape
 SLOT_FEET,Pieds
 SLOT_BACK,Dos
 SLOT_EMPTY,aucun
-SLOT_NOTHING_OWNED,Rien pour cet emplacement (à fabriquer : onglet Fabrication).
+SLOT_NOTHING_OWNED,Rien pour cet emplacement.
 ACTION_WEAR,Porter
 ACTION_TAKE_OFF,Retirer
 GEAR_EFFECT_HAT,protège du soleil : soif −20 %
@@ -661,3 +661,17 @@ DIR_S,sud
 DIR_SW,sud-ouest
 DIR_W,ouest
 DIR_NW,nord-ouest
+SLOT_TORSO,Chemise
+SLOT_HANDS,Mains
+SLOT_LEGS,Jambes
+SLOT_RECIPE,"À fabriquer : %s (%s, niveau %d)."
+CHARACTER_EFFECTS,Effets portés :
+CRAFT_WOOL_SHIRT,Chemise de laine
+CRAFT_WOOL_TROUSERS,Pantalon de laine
+CRAFT_LEATHER_GLOVES,Gants de cuir
+ITEM_GEAR_WOOL_SHIRT,chemise de laine
+ITEM_GEAR_WOOL_TROUSERS,pantalon de laine
+ITEM_GEAR_LEATHER_GLOVES,gants de cuir
+GEAR_EFFECT_SHIRT,chaleur +2 °C
+GEAR_EFFECT_TROUSERS,chaleur +2 °C
+GEAR_EFFECT_GLOVES,chaleur +1.5 °C

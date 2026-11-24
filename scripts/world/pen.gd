@@ -154,7 +154,8 @@ func admit(animal: Node3D) -> bool:
 	if not occupants.has(animal) and occupants.size() >= capacity():
 		return false
 	var angle := randf() * TAU
-	var spot := global_position + Vector3(cos(angle), 0.0, sin(angle)) * randf_range(0.5, maxf(1.0, half() * 0.5))
+	var spot := global_position + Vector3(cos(angle), 0.0, sin(angle)) * randf_range(0.5, maxf(1.0, half() * 0.4))
+	animal.set("_home_pen", self)
 	animal.call("enter_pen", spot, wander())
 	return true
 
