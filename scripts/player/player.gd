@@ -56,6 +56,8 @@ enum ViewMode { FIRST_PERSON, THIRD_PERSON }
 @export var eye_height: float = 1.6
 @export var head_bob: bool = true
 @export var sprint_fov_boost: float = 6.0
+## En mode portrait (une main) le champ horizontal rétrécit : on élargit le FOV.
+@export var portrait_fov_boost: float = 10.0
 ## Lissage exponentiel de la visée (yaw/pitch) : mouvements de caméra fluides.
 @export var look_smoothing: float = 30.0
 
@@ -954,6 +956,10 @@ func _process(delta: float) -> void:
 	if _view_mode == ViewMode.FIRST_PERSON:
 		_update_head_bob(delta, horizontal_speed)
 	var fov_target := _base_fov + (sprint_fov_boost if _sprinting and horizontal_speed > walk_speed else 0.0)
+	# Portrait (téléphone tenu vertical) : on compense le rétrécissement horizontal.
+	var vp := get_viewport().get_visible_rect().size
+	if vp.x < vp.y:
+		fov_target += portrait_fov_boost
 	if _aiming:
 		fov_target = aim_fov
 	camera.fov = lerpf(camera.fov, fov_target, 1.0 - exp(-12.0 * delta))
