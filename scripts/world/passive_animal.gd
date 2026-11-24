@@ -33,6 +33,16 @@ const SPECIES := {
 		"scale": 0.36, "fur": Color(0.58, 0.5, 0.4), "belly": Color(0.9, 0.86, 0.78),
 		"ear": 0.42, "neck": 0.18, "hop": 0.22, "speed": 1.4, "spots": false,
 	},
+	# Outback australien : kangourou roux qui se déplace en bonds.
+	"kangaroo": {
+		"scale": 0.95, "fur": Color(0.62, 0.32, 0.16), "belly": Color(0.85, 0.68, 0.5),
+		"ear": 0.4, "neck": 0.3, "hop": 0.55, "speed": 1.7, "spots": false,
+	},
+	# Grand Nord canadien : orignal, grand cervidé sombre.
+	"moose": {
+		"scale": 1.9, "fur": Color(0.22, 0.15, 0.1), "belly": Color(0.45, 0.36, 0.26),
+		"ear": 0.3, "neck": 0.55, "hop": 0.0, "speed": 0.9, "spots": false,
+	},
 }
 
 @export var wander_radius: float = 20.0

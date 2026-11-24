@@ -8,6 +8,10 @@ func _ready() -> void:
 	var env_node := root.get_node_or_null("WorldEnvironment") as WorldEnvironment
 	if sun != null and env_node != null and env_node.environment != null:
 		DayNightCycle.bind_world(sun, env_node.environment)
+	# Région courante (météo, teintes du terrain, annonce) — lookup par nœud, pas par identifiant d'autoload.
+	var rm := get_node_or_null("/root/RegionManager")
+	if rm != null:
+		rm.call("apply_to_world", root)
 	_place_player_on_ground(root)
 	_place_interaction_props(root)
 	_add_ambient_dust(root)

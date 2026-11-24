@@ -17,6 +17,7 @@ var _inventory_list: VBoxContainer
 var _notebook_list: VBoxContainer
 var _animals_list: VBoxContainer
 var _buildings_list: VBoxContainer
+var _travel_list: VBoxContainer
 var _notebook: Node
 var _close_button: Button
 var _quest_manager: Node
@@ -78,6 +79,7 @@ func _build() -> void:
 	_notebook_list = _add_tab(tr("JOURNAL_NOTEBOOK"))
 	_animals_list = _add_tab(tr("JOURNAL_ANIMALS"))
 	_buildings_list = _add_tab(tr("JOURNAL_BUILDINGS"))
+	_travel_list = _add_tab(tr("JOURNAL_TRAVEL"))
 	_build_settings(_add_tab(tr("JOURNAL_SETTINGS")))
 
 	_close_button = Button.new()
@@ -241,6 +243,55 @@ func _refresh() -> void:
 	_refresh_notebook()
 	_refresh_animals()
 	_refresh_buildings()
+	_refresh_travel()
+
+# --- Voyage entre régions -----------------------------------------------------------------
+
+func _refresh_travel() -> void:
+	if _travel_list == null or not is_inside_tree():
+		return
+	_clear(_travel_list)
+	var rm := get_tree().root.get_node_or_null("RegionManager")
+	if rm == null:
+		return
+	var progression := InteractionManager.get_progression()
+	var player_level := int(progression.call("get_level")) if progression != null else 1
+	_add_label(_travel_list, tr("TRAVEL_INTRO") % player_level, 16, Color(1, 0.95, 0.85))
+	for region_id in rm.call("region_ids"):
+		_add_region_card(rm, region_id, player_level)
+
+func _add_region_card(rm: Node, region_id: String, player_level: int) -> void:
+	var d: Dictionary = rm.call("def", region_id)
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", _box(Color(0.18, 0.12, 0.07, 0.9), Color(ACCENT, 0.5), 2, 12, 10))
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	card.add_child(column)
+	var title := RichTextLabel.new()
+	title.bbcode_enabled = true
+	title.fit_content = true
+	title.scroll_active = false
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title.add_theme_font_size_override("normal_font_size", 18)
+	title.add_theme_font_size_override("bold_font_size", 19)
+	title.text = "[b][color=#e8c690]%s[/color][/b]" % tr(String(d.get("name_key", "")))
+	column.add_child(title)
+	_add_label(column, tr(String(d.get("desc_key", ""))), 15, Color(1, 1, 1, 0.75))
+	var button := Button.new()
+	button.focus_mode = Control.FOCUS_NONE
+	button.custom_minimum_size = Vector2(0, BUTTON_HEIGHT * 0.9)
+	var required := int(rm.call("unlock_level", region_id))
+	if region_id == String(rm.get("current_region")):
+		button.text = tr("TRAVEL_CURRENT")
+		button.disabled = true
+	elif player_level < required:
+		button.text = tr("TRAVEL_LOCKED_LEVEL") % required
+		button.disabled = true
+	else:
+		button.text = tr("TRAVEL_GO")
+		button.pressed.connect(func(): rm.call("travel_to", region_id))
+	column.add_child(button)
+	_travel_list.add_child(card)
 
 # --- Bâtiments améliorables ------------------------------------------------------------
 

@@ -25,15 +25,19 @@ func enable_for_test() -> void:
 	enabled = true
 
 ## Nombre et espèce voulus à ce moment de la journée pour ce niveau (espèce "" : aucun).
-static func plan(phase: String, level: int) -> Dictionary:
+## `preds` : prédateurs de la région courante (défaut Ouest américain : coyote puis loup).
+## (Pas de référence à l'autoload RegionManager ici : le script est aussi chargé via load() en test.)
+static func plan(phase: String, level: int, preds: Array = []) -> Dictionary:
+	if preds.is_empty():
+		preds = ["coyote", "wolf"]
 	if phase == "night":
 		if level >= 4:
-			return {"species": "wolf", "count": mini(MAX_PREDATORS, 1 + level / 6)}
+			return {"species": String(preds[mini(1, preds.size() - 1)]), "count": mini(MAX_PREDATORS, 1 + level / 6)}
 		if level >= 2:
-			return {"species": "coyote", "count": mini(MAX_PREDATORS, 1 + level / 4)}
+			return {"species": String(preds[0]), "count": mini(MAX_PREDATORS, 1 + level / 4)}
 	elif phase == "dusk" or phase == "dawn":
 		if level >= 2:
-			return {"species": "coyote", "count": 1}
+			return {"species": String(preds[0]), "count": 1}
 	return {"species": "", "count": 0}
 
 func _process(delta: float) -> void:
@@ -52,7 +56,10 @@ func update_population() -> void:
 	if clock == null or player == null:
 		return
 	var level := int(progression.call("get_level")) if progression != null else 1
-	var wanted := plan(String(clock.call("get_phase")), level)
+	# Faune de la région courante (lookup par nœud : script aussi chargé via load() en test).
+	var rm := get_node_or_null("/root/RegionManager")
+	var preds: Array = rm.call("animals", "predators", rm.get("current_region")) if rm != null else []
+	var wanted := plan(String(clock.call("get_phase")), level, preds)
 	var present := get_tree().get_nodes_in_group("predators")
 	if String(wanted["species"]) == "":
 		for predator in present:

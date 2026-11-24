@@ -89,6 +89,8 @@ Chaque expédition est une **session de jeu autonome** : on choisit sa destinati
 
 Chaque région = **une grande carte ouverte** (plusieurs dizaines de km² en jeu, représentées à échelle réduite) avec points d'intérêt procéduralement placés autour d'un squelette de contenu authored.
 
+> **Implémentation (v1)** : `RegionManager` (autoload) définit les 3 régions (scène, palette ciel/terrain, météo imposée, faune, niveau de déblocage : Outback niv. 4, Canada niv. 8). Le voyage se fait depuis l'onglet « Voyager » du journal et la région courante est persistée par emplacement de sauvegarde. L'Ouest américain garde exactement son rendu historique (palette = valeurs d'origine).
+
 ## 6. Interface et contrôles
 
 ### 6.1 PC (clavier/souris + manette)
@@ -152,7 +154,7 @@ Implémentation actuelle : `LandscapeManager` génère procéduralement un terra
 | **2 — Orientation** | Carte du monde, boussole, repères joueur, journal, se perdre | 1 mois |
 | **3 — Région 1 jouable** | Ouest américain complet : faune, PNJ de base, 3–4 quêtes, progression réputation | 2–3 mois |
 | **4 — Mobile** | Contrôles tactiles, UI adaptée, optimisation Android, export APK | 1 mois |
-| **5 — Régions 2 & 3** | Australie + Canada | 2–3 mois |
+| **5 — Régions 2 & 3** | Australie + Canada — ✅ FAIT (système de régions, déblocage par niveau, voyage via le journal, palettes/météo/faune par région) | 2–3 mois |
 | **6 — Polish & sortie** | Son, musique, équilibrage, localisation, itch.io + Play Store | 1–2 mois |
 
 ## 10. Risques et réponses

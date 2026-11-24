@@ -84,6 +84,11 @@ func set_hour(new_hour: float) -> void:
 func _apply() -> void:
 	if sun == null:
 		return
+	# Palette de la région courante (valeurs historiques pour l'Ouest américain).
+	# (Lookup par nœud : ce script est aussi chargé via load() dans les tests, où les
+	# identifiants d'autoload ne sont pas résolus.)
+	var rm := get_node_or_null("/root/RegionManager")
+	var pal: Dictionary = rm.call("palette") as Dictionary if rm != null else {}
 	var day_factor := _day_factor()
 	sun.rotation.x = _base_sun_rotation.x + (hour - 12.0) / 24.0 * TAU
 	sun.visible = day_factor > 0.02
@@ -98,8 +103,10 @@ func _apply() -> void:
 	# Paramètres de shader globaux pour les reflets (eau) : direction/teinte du soleil
 	# et couleur du ciel à l'horizon, calquée sur le ciel affiché.
 	var sun_t: Transform3D = sun.global_transform if sun.is_inside_tree() else sun.transform
-	var horizon_day := Color(0.98, 0.80, 0.58).lerp(Color(1.0, 0.5, 0.24), low_sun)
-	var horizon_col := Color(0.20, 0.12, 0.30).lerp(horizon_day, smoothstep(0.0, 0.3, day_factor))
+	var horizon_day: Color = pal.get("horizon_day_a", Color(0.98, 0.80, 0.58)).lerp(
+		pal.get("horizon_day_b", Color(1.0, 0.5, 0.24)), low_sun)
+	var horizon_col: Color = pal.get("horizon_night", Color(0.20, 0.12, 0.30)).lerp(
+		horizon_day, smoothstep(0.0, 0.3, day_factor))
 	last_sun_dir = sun_t.basis.z.normalized()
 	last_sun_amount = clampf(sun.light_energy, 0.0, 1.0)
 	last_sky_reflect = horizon_col
@@ -112,9 +119,11 @@ func _apply() -> void:
 		if sky != null and sky.sky_material is ShaderMaterial:
 			# Ciel custom (assets/vfx/sky/sky.gdshader) : étoiles, lune, nuages animés.
 			var mat := sky.sky_material as ShaderMaterial
-			mat.set_shader_parameter("top_color", Color(0.09, 0.09, 0.27).lerp(Color(0.2, 0.45, 0.86), day_factor))
+			mat.set_shader_parameter("top_color", pal.get("top_night", Color(0.09, 0.09, 0.27)).lerp(
+				pal.get("top_day", Color(0.2, 0.45, 0.86)), day_factor))
 			mat.set_shader_parameter("horizon_color", horizon_col)
-			mat.set_shader_parameter("ground_color", Color(0.02, 0.02, 0.05).lerp(Color(0.35, 0.22, 0.14), day_factor))
+			mat.set_shader_parameter("ground_color", pal.get("ground_night", Color(0.02, 0.02, 0.05)).lerp(
+				pal.get("ground_day", Color(0.35, 0.22, 0.14)), day_factor))
 			mat.set_shader_parameter("day_factor", day_factor)
 			mat.set_shader_parameter("energy", lerp(0.3, 1.0, day_factor) * (1.0 - 0.35 * weather_dim))
 			mat.set_shader_parameter("sun_direction", sun_t.basis.z.normalized())
@@ -127,10 +136,12 @@ func _apply() -> void:
 			mat.set_shader_parameter("cloud_cover", weather_dim)
 		elif sky != null and sky.sky_material is ProceduralSkyMaterial:
 			var sky_mat: ProceduralSkyMaterial = sky.sky_material
-			sky_mat.sky_top_color = Color(0.09, 0.09, 0.27).lerp(Color(0.2, 0.45, 0.86), day_factor)
+			sky_mat.sky_top_color = pal.get("top_night", Color(0.09, 0.09, 0.27)).lerp(
+				pal.get("top_day", Color(0.2, 0.45, 0.86)), day_factor)
 			# Horizon : plus orangé quand le soleil est bas (aube, crépuscule).
 			sky_mat.sky_horizon_color = horizon_col
-			sky_mat.ground_bottom_color = Color(0.02, 0.02, 0.05).lerp(Color(0.35, 0.22, 0.14), day_factor)
+			sky_mat.ground_bottom_color = pal.get("ground_night", Color(0.02, 0.02, 0.05)).lerp(
+				pal.get("ground_day", Color(0.35, 0.22, 0.14)), day_factor)
 			sky_mat.ground_horizon_color = sky_mat.sky_horizon_color.lerp(Color(0.6, 0.4, 0.25), 0.35)
 			var night_factor := 1.0 - day_factor
 			sky_mat.sky_cover_modulate = Color(0.15, 0.18, 0.30, 1.0).lerp(Color(0.9, 0.85, 0.8, 1.0), day_factor)
@@ -139,11 +150,13 @@ func _apply() -> void:
 		if environment.background_mode == Environment.BG_SKY:
 			# Ombres froides (violet-bleu) sous une lumière chaude : le contraste de la direction artistique.
 			var ambient_day := Color(0.60, 0.56, 0.82).lerp(Color(0.50, 0.42, 0.88), low_sun)
-			environment.ambient_light_color = Color(0.36, 0.46, 0.80).lerp(ambient_day, smoothstep(0.0, 0.3, day_factor))
+			environment.ambient_light_color = pal.get("ambient_night", Color(0.36, 0.46, 0.80)).lerp(
+				ambient_day, smoothstep(0.0, 0.3, day_factor))
 			environment.ambient_light_energy = lerp(0.95, 0.65, day_factor) * (1.0 - 0.2 * weather_dim)
 			var nf := 1.0 - day_factor
-			var fog_day := Color(0.86, 0.66, 0.5).lerp(Color(1.0, 0.5, 0.3), low_sun * 0.75)
-			environment.fog_light_color = (Color(0.12, 0.10, 0.26).lerp(fog_day, day_factor) * season_tint).clamp()
+			var fog_day: Color = pal.get("fog_day_a", Color(0.86, 0.66, 0.5)).lerp(
+				pal.get("fog_day_b", Color(1.0, 0.5, 0.3)), low_sun * 0.75)
+			environment.fog_light_color = (pal.get("fog_night", Color(0.12, 0.10, 0.26)).lerp(fog_day, day_factor) * season_tint).clamp()
 			environment.fog_light_color = environment.fog_light_color.lerp(Color(0.62, 0.66, 0.72) * lerp(0.25, 1.0, day_factor), weather_fog * 0.6)
 			environment.fog_light_energy = lerp(0.25, 0.65, day_factor)
 			environment.fog_density = lerp(0.0012, 0.0024, day_factor) + weather_fog * 0.004

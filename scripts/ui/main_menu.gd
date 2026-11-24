@@ -192,7 +192,11 @@ func _on_new_character(profile: CharacterProfile) -> void:
 func _start(slot: int) -> void:
 	started_slot = slot
 	if change_scene_enabled:
-		get_tree().change_scene_to_file(GAME_SCENE)
+		# Reprend la région où la partie s'est arrêtée (lookup par nœud : ce script class_name
+		# est aussi compilé tôt par les tests, où les identifiants d'autoload ne résolvent pas).
+		var rm := get_tree().root.get_node_or_null("RegionManager")
+		var scene := String(rm.call("scene_for", rm.get("current_region"))) if rm != null else GAME_SCENE
+		get_tree().change_scene_to_file(scene)
 
 func _ask_delete(slot: int) -> void:
 	_close_confirm()

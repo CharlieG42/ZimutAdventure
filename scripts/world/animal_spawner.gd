@@ -29,8 +29,12 @@ func _spawn_all() -> void:
 		if y < min_terrain_height or _in_water(x, z):
 			continue
 		var animal := animal_scene.instantiate() as Node3D
-		# Un lièvre sur trois, le reste des cerfs (l'espèce se choisit avant _ready).
-		animal.set("species", "rabbit" if spawned % 3 == 2 else "deer")
+		# Faune de la région courante (Ouest américain : cerfs et lièvres).
+		var rm := get_node_or_null("/root/RegionManager")
+		var species_list: Array = rm.call("animals", "passive") if rm != null else []
+		if species_list.is_empty():
+			species_list = ["deer"]
+		animal.set("species", String(species_list[spawned % species_list.size()]))
 		# Position AVANT add_child : l'animal prend son point d'apparition comme territoire.
 		animal.position = Vector3(x, y + 1.0, z)
 		add_child(animal)
