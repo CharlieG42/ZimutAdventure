@@ -35,6 +35,17 @@ func _place_interaction_props(root: Node) -> void:
 		node.global_position = Vector3(pos.x, ground, pos.z)
 		if node_name == "Signpost":
 			node.look_at(node.global_position + Vector3(0, 0, 1), Vector3.UP)
+	# PNJ au départ : le trappeur (dialogue + quête), tourné vers le joueur.
+	# En différé : le parent est encore en cours de setup dans _ready.
+	_place_npc.call_deferred(root, landscape, base)
+
+## Pose le PNJ du départ sur le sol, face au joueur.
+func _place_npc(root: Node, landscape: Node3D, base: Vector3) -> void:
+	var npc := Npc.create("npc_trapper")
+	root.add_child(npc)
+	var npc_pos := base + Vector3(-3.0, 0.0, 6.0)
+	npc.global_position = Vector3(npc_pos.x, landscape.terrain_height_at(npc_pos.x, npc_pos.z), npc_pos.z)
+	npc.look_at(Vector3(base.x, npc.global_position.y, base.z), Vector3.UP)
 
 ## Pose le joueur au sol à son point de départ (la scène le place en hauteur).
 func _place_player_on_ground(root: Node) -> void:

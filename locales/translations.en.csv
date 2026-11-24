@@ -316,6 +316,17 @@ SKILL_DESC_SURVIE,hunger and thirst drain slower (−8 % per level)
 SKILL_DESC_CHASSE,bow spread reduced (−12 % per level)
 SKILL_DESC_EQUITATION,mount is faster (+5 % per level)
 TOAST_SKILL_UP,Skill %s: level %d!
+ACTION_TALK,Talk
+ACTION_ACCEPT_QUEST,Accept quest
+ACTION_BYE,Goodbye
+NPC_NAME,Villager
+NPC_TRAPPER_NAME,Trapper
+NPC_TRAPPER_LINE1,"Howdy, stranger. I'm the old trapper — I know every trail in this canyon."
+NPC_TRAPPER_LINE2,"Wolves prowl at night, and deer pelts sell well at the old ford."
+NPC_TRAPPER_LINE3,Bring me 3 pelts and I'll gear you up for it.
+QUEST_TRAPPER_TITLE,The trapper's pelts
+QUEST_TRAPPER_DESC,Talk to the trapper near the start and accept his quest: bring him 3 pelts.
+TOAST_QUEST_ACCEPTED,Quest accepted: %s
 QUEST_CAMP_TITLE,A camp of your own
 QUEST_CAMP_DESC,"Craft a campfire (level 2) and place it from the bag: it burns wood, cooks your dishes and keeps prowlers away."
 QUEST_CHEST_TITLE,Tidying up
