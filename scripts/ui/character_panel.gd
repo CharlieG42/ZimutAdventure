@@ -318,7 +318,7 @@ func _recipe_hint(item_id: String) -> String:
 func _add_effects_summary() -> void:
 	var effects: PackedStringArray = []
 	for item_id in _inventory.call("get_worn"):
-		effects.append("• %s : %s" % [_cap(tr("ITEM_" + String(item_id).to_upper())), tr(GEAR_EFFECTS.get(item_id, ""))])
+		effects.append(tr("GEAR_EFFECT_LINE") % [_cap(tr("ITEM_" + String(item_id).to_upper())), int(_inventory.call("gear_level", item_id)), effect_text(item_id, int(_inventory.call("gear_level", item_id)))])
 	var label := Label.new()
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.text = tr("CHARACTER_EFFECTS") + "\n" + "\n".join(effects)
@@ -348,7 +348,8 @@ func _add_slot(slot: String) -> void:
 		var text := Label.new()
 		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		text.text = "%s — %s" % [_cap(tr("ITEM_" + String(item_id).to_upper())), tr(GEAR_EFFECTS.get(item_id, ""))]
+		var level := int(_inventory.call("gear_level", item_id))
+		text.text = "%s — %s\n%s" % [_cap(tr("ITEM_" + String(item_id).to_upper())), tr("GEAR_LEVEL") % [level, 3], effect_text(item_id, level)]
 		text.add_theme_font_size_override("font_size", 17)
 		line.add_child(text)
 		var button := Button.new()
@@ -363,3 +364,75 @@ func _add_slot(slot: String) -> void:
 			button.pressed.connect(func(): _inventory.call("wear", item_id))
 		line.add_child(button)
 		_slots_box.add_child(line)
+		_add_upgrade_row(item_id)
+
+
+## « chaleur +3 °C, dégâts reçus −45 % » : effets d'un vêtement à un niveau donné.
+func effect_text(item_id: String, level: int) -> String:
+	var parts: PackedStringArray = []
+	var stats: Dictionary = _inventory.get("GEAR_STATS").get(item_id, {})
+	for stat in stats:
+		var value: float = _inventory.call("gear_stat_value", item_id, stat, level)
+		match String(stat):
+			"heat":
+				parts.append(tr("GEAR_STAT_HEAT") % _num(value))
+			"damage":
+				parts.append(tr("GEAR_STAT_DAMAGE") % int(round(value * 100.0)))
+			"thirst":
+				parts.append(tr("GEAR_STAT_THIRST") % int(round(value * 100.0)))
+			"speed":
+				parts.append(tr("GEAR_STAT_SPEED") % int(round(value * 100.0)))
+			"capacity":
+				parts.append(tr("GEAR_STAT_CAPACITY") % int(value))
+	return ", ".join(parts)
+
+static func _num(value: float) -> String:
+	return str(int(value)) if is_equal_approx(value, round(value)) else ("%.1f" % value).replace(".", ",")
+
+## Amélioration d'un vêtement : coût (vert / rouge), niveau de joueur requis, bouton.
+func _add_upgrade_row(item_id: String) -> void:
+	var level := int(_inventory.call("gear_level", item_id))
+	if level >= int(_inventory.get("GEAR_MAX_LEVEL")):
+		return
+	var cost: Dictionary = _inventory.call("gear_upgrade_cost", item_id)
+	var required := int(_inventory.call("gear_upgrade_required_level", item_id))
+	var progression := get_node_or_null("/root/Progression")
+	var player_level := int(progression.call("get_level")) if progression != null else 1
+	var parts: PackedStringArray = []
+	var enough := true
+	for ingredient in cost:
+		var have := int(_inventory.call("count_of", ingredient))
+		var need := int(cost[ingredient])
+		enough = enough and have >= need
+		parts.append("[color=%s]%d/%d %s[/color]" % ["#8fe08f" if have >= need else "#ff8a7a", have, need, tr("ITEM_" + String(ingredient).to_upper())])
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var info := RichTextLabel.new()
+	info.bbcode_enabled = true
+	info.fit_content = true
+	info.scroll_active = false
+	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.add_theme_font_size_override("normal_font_size", 15)
+	info.text = tr("GEAR_UPGRADE_INFO") % [level + 1, effect_text(item_id, level + 1), ", ".join(parts),
+			"#8fe08f" if player_level >= required else "#ff8a7a", required]
+	row.add_child(info)
+	var button := Button.new()
+	button.name = "Upgrade_" + item_id
+	button.focus_mode = Control.FOCUS_NONE
+	button.custom_minimum_size = Vector2(130, BUTTON_HEIGHT * 0.85)
+	button.text = tr("ACTION_UPGRADE_SHORT")
+	button.disabled = not enough or player_level < required
+	button.pressed.connect(func():
+		var error: String = _inventory.call("upgrade_gear", item_id)
+		var hud := get_tree().get_first_node_in_group("hud")
+		if hud != null and hud.has_method("show_toast"):
+			if error == "":
+				hud.show_toast(tr("TOAST_UPGRADED") % int(_inventory.call("gear_level", item_id)))
+			elif error == "TOAST_UPGRADE_LEVEL":
+				hud.show_toast(tr(error) % required)
+			elif error != "TOAST_UPGRADE_MISSING":
+				hud.show_toast(tr(error))
+		refresh())
+	row.add_child(button)
+	_slots_box.add_child(row)

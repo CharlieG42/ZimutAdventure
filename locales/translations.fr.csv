@@ -726,3 +726,13 @@ ANIMAL_KANGAROO,Le kangourou
 ANIMAL_MOOSE,L'orignal
 ANIMAL_DINGO,Le dingo
 ANIMAL_BEAR,L'ours
+GEAR_LEVEL,niveau %d/%d
+GEAR_STAT_HEAT,chaleur +%s °C
+GEAR_STAT_DAMAGE,dégâts reçus −%d %%
+GEAR_STAT_THIRST,soif −%d %%
+GEAR_STAT_SPEED,vitesse +%d %%
+GEAR_STAT_CAPACITY,sac +%d kg
+GEAR_UPGRADE_INFO,"Niveau %d : %s — %s · [color=%s]niveau %d[/color]"
+ACTION_UPGRADE_SHORT,Améliorer
+TOAST_CANNOT_UPGRADE,Impossible d'améliorer cet objet.
+GEAR_EFFECT_LINE,"• %s (niv. %d) : %s"

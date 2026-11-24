@@ -810,8 +810,8 @@ func _physics_process(delta: float) -> void:
 
 	var top_speed := sprint_speed if _sprinting else walk_speed
 	# Bottes de peau : on marche et on court un peu plus vite.
-	if inventory_now != null and bool(inventory_now.call("is_worn", BOOTS_ITEM)):
-		top_speed *= BOOTS_SPEED_FACTOR
+	if inventory_now != null:
+		top_speed *= 1.0 + float(inventory_now.call("worn_stat", "speed"))
 	# Poids du sac : au-delà de 60 % de la capacité, on ralentit (jusqu'à -50 %).
 	if inventory_now != null and inventory_now.has_method("get_speed_factor"):
 		top_speed *= float(inventory_now.call("get_speed_factor"))

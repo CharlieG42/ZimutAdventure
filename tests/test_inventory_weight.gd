@@ -1,5 +1,5 @@
 extends SceneTree
-## Poids du sac : poids par objet, capacité (sac à dos porté = +20 kg), facteur de
+## Poids du sac : poids par objet, capacité (40 kg + niveau ; sac à dos porté = +25 kg), facteur de
 ## vitesse selon la charge, surcharge (> 100 %) qui bloque la course, affichage HUD.
 
 func _init() -> void:
@@ -12,21 +12,24 @@ func _init() -> void:
 		inventory.name = "Inventory"
 		root.add_child(inventory)
 	inventory.call("clear_for_test")
+	var progression := root.get_node_or_null("Progression")
+	if progression != null:
+		progression.call("clear_for_test", true)
 	var script := load("res://scripts/autoload/inventory.gd") as GDScript
 
 	# Poids par objet et poids inconnu par défaut.
-	if absf(script.item_weight("item_stone") - 2.0) > 0.001:
-		errors.append("item_stone devrait peser 2 kg, got %f" % script.item_weight("item_stone"))
+	if absf(script.item_weight("item_stone") - 0.8) > 0.001:
+		errors.append("item_stone devrait peser 0,8 kg, got %f" % script.item_weight("item_stone"))
 	if absf(script.item_weight("item_qqchose_inconnu") - 0.5) > 0.001:
 		errors.append("poids par défaut devrait être 0.5 kg")
 
-	inventory.call("add_item", "item_stone", 3)
-	if absf(float(inventory.call("total_weight")) - 6.0) > 0.001:
-		errors.append("3 pierres = 6 kg, got %f" % float(inventory.call("total_weight")))
-	if absf(float(inventory.call("capacity")) - 30.0) > 0.001:
-		errors.append("capacité de base = 30 kg, got %f" % float(inventory.call("capacity")))
+	inventory.call("add_item", "item_stone", 10)
+	if absf(float(inventory.call("total_weight")) - 8.0) > 0.001:
+		errors.append("10 pierres = 8 kg, got %f" % float(inventory.call("total_weight")))
+	if absf(float(inventory.call("capacity")) - 40.0) > 0.001:
+		errors.append("capacité de base = 40 kg, got %f" % float(inventory.call("capacity")))
 	if absf(float(inventory.call("weight_fraction")) - 0.2) > 0.001:
-		errors.append("fraction = 6/30 = 0.2, got %f" % float(inventory.call("weight_fraction")))
+		errors.append("fraction = 8/40 = 0.2, got %f" % float(inventory.call("weight_fraction")))
 
 	# Courbe du facteur de vitesse : à l'aise jusqu'à 60 %, minimum 0.5 à 120 %.
 	if absf(script.speed_factor(0.2) - 1.0) > 0.001 or absf(script.speed_factor(0.6) - 1.0) > 0.001:
@@ -39,15 +42,15 @@ func _init() -> void:
 
 	# Le sac à dos porté (auto-porté au premier exemplaire) augmente la capacité.
 	inventory.call("add_item", "gear_backpack", 1)
-	if absf(float(inventory.call("capacity")) - 50.0) > 0.001:
-		errors.append("sac à dos porté : capacité 50 kg, got %f" % float(inventory.call("capacity")))
+	if absf(float(inventory.call("capacity")) - 65.0) > 0.001:
+		errors.append("sac à dos porté : capacité 65 kg, got %f" % float(inventory.call("capacity")))
 
-	# Surcharge : 60 pierres (120 kg) + sac à dos (1 kg) = 121 kg sur 50 kg.
-	inventory.call("add_item", "item_stone", 57)
-	if absf(float(inventory.call("total_weight")) - 121.0) > 0.01:
-		errors.append("poids total attendu 121 kg, got %f" % float(inventory.call("total_weight")))
+	# Surcharge : 100 pierres (80 kg) sur 65 kg (le sac à dos porté ne pèse rien).
+	inventory.call("add_item", "item_stone", 90)
+	if absf(float(inventory.call("total_weight")) - 80.0) > 0.01:
+		errors.append("poids total attendu 80 kg, got %f" % float(inventory.call("total_weight")))
 	if not bool(inventory.call("is_overloaded")):
-		errors.append("121/50 kg devrait être une surcharge")
+		errors.append("80/65 kg devrait être une surcharge")
 	if absf(float(inventory.call("get_speed_factor")) - 0.5) > 0.001:
 		errors.append("surcharge : facteur de vitesse 0.5, got %f" % float(inventory.call("get_speed_factor")))
 

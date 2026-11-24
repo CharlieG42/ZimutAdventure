@@ -10,6 +10,8 @@ const MODELS := {
 	"male": "res://assets/characters/zimut_male.glb",
 	"female": "res://assets/characters/zimut_female.glb",
 }
+const BOOTS_COLOR := Color(0.24, 0.14, 0.08)
+const SHOES_COLOR := Color(0.16, 0.1, 0.06)
 const SHIRT_COLOR := Color(0.86, 0.8, 0.66)
 const TROUSERS_COLOR := Color(0.3, 0.23, 0.17)
 const GLOVES_COLOR := Color(0.42, 0.27, 0.15)
@@ -227,6 +229,11 @@ func _color_for(material_name: String) -> Color:
 			return profile.hair_color_value()
 		"tunic", "dress", "tunic_alt":
 			return SHIRT_COLOR if gear.has("gear_wool_shirt") else profile.tunic_color()
+		# Bottes et chaussures foncées : couleur d'origine trop proche du sable (jambes « effacées »).
+		"boots":
+			return BOOTS_COLOR
+		"leather":
+			return SHOES_COLOR
 		"pants":
 			return TROUSERS_COLOR if gear.has("gear_wool_trousers") else profile.pants_color()
 		"eyes_brown":
