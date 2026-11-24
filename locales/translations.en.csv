@@ -398,6 +398,10 @@ MAP_MARKER_REMOVE,Remove marker
 MAP_MARKER_INFO,Bearing %03d° · %d m
 TOAST_MARKERS_FULL,Eight markers at most: remove one first.
 SETTING_MINIMAP,Minimap (turn off for explorer mode)
+SETTING_ORIENTATION,Screen orientation (mobile)
+SETTING_ORIENTATION_AUTO,Automatic (follows the phone)
+SETTING_ORIENTATION_LANDSCAPE,Locked landscape
+SETTING_ORIENTATION_PORTRAIT,Locked portrait
 VITAL_WARMTH,Warmth
 TOAST_COLD_HINT,"You are getting cold: stand near a lit fire or a shelter, or wear a fur cloak. Being wet chills you faster."
 JOURNAL_NOTEBOOK,Notebook

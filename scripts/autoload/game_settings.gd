@@ -6,6 +6,8 @@ signal changed
 
 const SAVE_PATH := "user://settings.cfg"
 const QUALITIES := ["auto", "high", "low"]
+## auto = capteur (paysage et portrait selon la position du téléphone), sinon verrou.
+const ORIENTATIONS := ["auto", "landscape", "portrait"]
 const LOOK_SENSITIVITY_MIN := 0.4
 const LOOK_SENSITIVITY_MAX := 2.5
 
@@ -15,6 +17,8 @@ var quality: String = "auto"
 var show_fps: bool = false
 ## Mini-carte du HUD. Désactivée = mode explorateur : on s'oriente à la boussole et à la carte.
 var minimap: bool = true
+## Orientation de l'écran sur mobile : "auto" (capteur), "landscape" ou "portrait".
+var orientation: String = "auto"
 ## Multiplicateur de la vitesse de rotation de la caméra (glisser tactile et stick caméra).
 var look_sensitivity: float = 1.0
 var _persist: bool = DisplayServer.get_name() != "headless"
@@ -47,6 +51,10 @@ func set_minimap(value: bool) -> void:
 	minimap = value
 	_commit()
 
+func set_orientation(value: String) -> void:
+	orientation = value if ORIENTATIONS.has(value) else "auto"
+	_commit()
+
 func _commit() -> void:
 	apply()
 	_save()
@@ -67,6 +75,14 @@ func apply() -> void:
 	if guard != null:
 		guard.call("set_mode", quality)
 		guard.call("set_overlay_visible", show_fps)
+	# Le verrou d'orientation ne s'applique que sur mobile (les fenêtres PC tournent librement).
+	if OS.has_feature("android") or OS.has_feature("ios"):
+		var screen_orientation := DisplayServer.SCREEN_SENSOR
+		if orientation == "landscape":
+			screen_orientation = DisplayServer.SCREEN_SENSOR_LANDSCAPE
+		elif orientation == "portrait":
+			screen_orientation = DisplayServer.SCREEN_SENSOR_PORTRAIT
+		DisplayServer.screen_set_orientation(screen_orientation)
 
 func _load() -> void:
 	if not _persist:
@@ -82,6 +98,9 @@ func _load() -> void:
 	show_fps = bool(config.get_value("video", "show_fps", false))
 	minimap = bool(config.get_value("hud", "minimap", true))
 	look_sensitivity = clampf(float(config.get_value("controls", "look_sensitivity", 1.0)), LOOK_SENSITIVITY_MIN, LOOK_SENSITIVITY_MAX)
+	orientation = String(config.get_value("display", "orientation", "auto"))
+	if not ORIENTATIONS.has(orientation):
+		orientation = "auto"
 
 func _save() -> void:
 	if not _persist:
@@ -93,4 +112,5 @@ func _save() -> void:
 	config.set_value("video", "show_fps", show_fps)
 	config.set_value("hud", "minimap", minimap)
 	config.set_value("controls", "look_sensitivity", look_sensitivity)
+	config.set_value("display", "orientation", orientation)
 	config.save(SAVE_PATH)

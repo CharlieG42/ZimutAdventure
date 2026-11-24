@@ -109,6 +109,7 @@ Chaque région = **une grande carte ouverte** (plusieurs dizaines de km² en jeu
 - Carte du monde et journal adaptés au tactile (pinch-to-zoom sur la carte).
 - Mode **portrait déconseillé** : jeu conçu en paysage ; l'interface s'adapte mais le paysage est recommandé.
 - Pas de pub, pas de micro-transactions.
+- **Orientation réglable** (Journal → Réglages) : « automatique » suit le capteur (paysage = deux mains, portrait = une main), ou verrou « paysage » / « portrait ».
 
 ## 7. Direction artistique
 

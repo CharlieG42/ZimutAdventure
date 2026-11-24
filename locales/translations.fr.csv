@@ -398,6 +398,10 @@ MAP_MARKER_REMOVE,Retirer le repère
 MAP_MARKER_INFO,Azimut %03d° · %d m
 TOAST_MARKERS_FULL,Huit repères au plus : retirez-en un d'abord.
 SETTING_MINIMAP,Mini-carte (désactiver : mode explorateur)
+SETTING_ORIENTATION,Orientation de l'écran (mobile)
+SETTING_ORIENTATION_AUTO,Automatique (suit le téléphone)
+SETTING_ORIENTATION_LANDSCAPE,Paysage verrouillé
+SETTING_ORIENTATION_PORTRAIT,Portrait verrouillé
 VITAL_WARMTH,Chaleur
 TOAST_COLD_HINT,"Vous avez froid : approchez-vous d'un feu allumé, d'un abri, ou portez une cape de fourrure. Mouillé, on se refroidit plus vite."
 JOURNAL_NOTEBOOK,Carnet
