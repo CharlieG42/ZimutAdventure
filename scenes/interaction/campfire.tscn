@@ -1,6 +1,7 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/interaction/campfire.gd" id="1_fire"]
+[ext_resource type="Texture2D" path="res://assets/vfx/particles/flare_01.png" id="2_halo"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_hit"]
 radius = 1.2
@@ -35,6 +36,19 @@ emission_enabled = true
 emission = Color(1, 0.55, 0.15, 1)
 emission_energy_multiplier = 3.0
 
+[sub_resource type="QuadMesh" id="QuadMesh_halo"]
+size = Vector2(2.6, 2.6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_halo"]
+blend_mode = 1
+shading_mode = 0
+billboard_mode = 1
+disable_fog = true
+albedo_texture = ExtResource("2_halo")
+emission_enabled = true
+emission = Color(1, 0.55, 0.2, 1)
+emission_energy_multiplier = 4.0
+
 [node name="Campfire" type="Area3D"]
 collision_layer = 4
 collision_mask = 0
@@ -62,6 +76,11 @@ surface_material_override/0 = SubResource("StandardMaterial3D_log")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
 mesh = SubResource("CylinderMesh_flame")
 surface_material_override/0 = SubResource("StandardMaterial3D_flame")
+
+[node name="FireHalo" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+mesh = SubResource("QuadMesh_halo")
+surface_material_override/0 = SubResource("StandardMaterial3D_halo")
 
 [node name="FireLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
