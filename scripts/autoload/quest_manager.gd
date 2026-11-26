@@ -282,6 +282,22 @@ const QUESTS := {
 		"requires": "quest_river",
 		"reward": {"arrow": 4, "item_berries": 3},
 	},
+	"quest_iron_ore": {
+		"title": "QUEST_IRON_ORE_TITLE",
+		"description": "QUEST_IRON_ORE_DESC",
+		"goal_item": "item_iron_ore",
+		"goal_count": 6,
+		"requires": "quest_shelter",
+		"reward": {"item_wood": 6},
+	},
+	"quest_iron_ingot": {
+		"title": "QUEST_IRON_INGOT_TITLE",
+		"description": "QUEST_IRON_INGOT_DESC",
+		"goal_item": "item_iron_ingot",
+		"goal_count": 3,
+		"requires": "quest_iron_ore",
+		"reward": {"item_iron_ore": 4, "item_wood": 4},
+	},
 	"quest_tamer_3": {
 		"title": "QUEST_TAMER_3_TITLE",
 		"description": "QUEST_TAMER_3_DESC",

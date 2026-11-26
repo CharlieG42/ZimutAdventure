@@ -7,7 +7,7 @@ signal equipped_changed(item_id: String)
 signal worn_changed()
 
 ## Outils qui peuvent être équipés (un seul à la fois, dans la barre d'outils du HUD).
-const TOOLS := ["tool_stone_axe", "tool_sickle", "tool_hoe", "tool_watering_can", "tool_hunting_bow", "tool_fishing_rod", "tool_knife"]
+const TOOLS := ["tool_stone_axe", "tool_sickle", "tool_hoe", "tool_watering_can", "tool_hunting_bow", "tool_fishing_rod", "tool_knife", "tool_pickaxe"]
 
 const SAVE_NAME := "inventory.cfg"
 
@@ -24,7 +24,8 @@ const WEIGHTS := {
 	"item_egg": 0.05, "item_boiled_egg": 0.05, "item_milk": 0.5, "item_bread": 0.3,
 	"item_soup": 0.5, "item_roast_vegetables": 0.3, "item_relic": 0.3, "arrow": 0.02,
 	"tool_stone_axe": 1.5, "tool_sickle": 0.8, "tool_hoe": 1.2, "tool_watering_can": 1.2,
-	"tool_hunting_bow": 0.8, "tool_fishing_rod": 0.8, "tool_knife": 0.3,
+	"tool_hunting_bow": 0.8, "tool_fishing_rod": 0.8, "tool_knife": 0.3, "tool_pickaxe": 1.5,
+	"item_iron_ore": 1.0, "item_iron_ingot": 0.8, "building_furnace": 8.0,
 	"gear_straw_hat": 0.3, "gear_wool_shirt": 0.6, "gear_wool_trousers": 0.6,
 	"gear_leather_gloves": 0.3, "gear_hide_boots": 0.6, "armor_fur_cloak": 1.5, "gear_backpack": 0.8,
 	"building_campfire": 3.0, "building_shelter": 6.0, "building_pen": 8.0,

@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/interaction/breakable_rock.tscn" id="1_rock"]
+[ext_resource type="Script" path="res://scripts/interaction/iron_vein.gd" id="2_vein"]
+
+[node name="IronVein" instance=ExtResource("1_rock")]
+script = ExtResource("2_vein")

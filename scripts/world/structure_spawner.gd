@@ -26,6 +26,7 @@ const PLACEABLE := {
 	"building_farm_plot": "farm_plot",
 	"building_pen": "pen",
 	"furniture_wool_bed": "wool_bed",
+	"building_furnace": "furnace",
 }
 
 var _landscape: Node3D
@@ -314,6 +315,8 @@ func _spawn(kind: String, position: Vector3, yaw: float) -> Node3D:
 			structure = Palisade.create()
 		"campfire":
 			structure = (load("res://scenes/interaction/campfire.tscn") as PackedScene).instantiate()
+		"furnace":
+			structure = Furnace.create()
 		_:
 			structure = PlacedStructure.create(kind)
 	structure.position = position

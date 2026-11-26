@@ -16,7 +16,7 @@ const VIEW_RADIUS := 55.0
 const REFRESH_PERIOD := 0.12
 const FRAME := Color(0.88, 0.64, 0.36, 1.0)
 const OUTLINE := Color(0.08, 0.05, 0.03, 0.9)
-const GROUPS := ["breakable", "wood", "stone", "animals", "campfire", "structures", "choppable", "berries", "domestic", "sites", "fishing"]
+const GROUPS := ["breakable", "wood", "stone", "animals", "campfire", "structures", "choppable", "berries", "domestic", "iron_veins", "sites", "fishing"]
 
 var _landscape: Node3D
 var _player: Node3D
@@ -148,6 +148,9 @@ func _draw_marker(kind: String, pos: Vector2) -> void:
 		"breakable":
 			draw_colored_polygon(PackedVector2Array([pos + Vector2(0, -6), pos + Vector2(6, 0), pos + Vector2(0, 6), pos + Vector2(-6, 0)]), OUTLINE)
 			draw_colored_polygon(PackedVector2Array([pos + Vector2(0, -4), pos + Vector2(4, 0), pos + Vector2(0, 4), pos + Vector2(-4, 0)]), Color(0.55, 0.52, 0.5))
+		"iron_veins":
+			draw_colored_polygon(PackedVector2Array([pos + Vector2(0, -6), pos + Vector2(6, 0), pos + Vector2(0, 6), pos + Vector2(-6, 0)]), OUTLINE)
+			draw_colored_polygon(PackedVector2Array([pos + Vector2(0, -4), pos + Vector2(4, 0), pos + Vector2(0, 4), pos + Vector2(-4, 0)]), Color(0.78, 0.42, 0.24))
 		"animals":
 			draw_circle(pos, 4.0, OUTLINE)
 			draw_circle(pos, 2.6, Color(1.0, 0.95, 0.7))
