@@ -292,10 +292,14 @@ func refresh() -> void:
 		_add_effects_summary()
 	var tool_id := String(_inventory.call("get_equipped"))
 	var tool_label := Label.new()
-	tool_label.text = tr("CHARACTER_TOOL") % (tr("ITEM_" + tool_id.to_upper()) if tool_id != "" else tr("SLOT_EMPTY"))
+	var tool_name := tr("ITEM_" + tool_id.to_upper()) if tool_id != "" else tr("SLOT_EMPTY")
+	if tool_id != "" and bool(_inventory.call("is_iron_tool", tool_id)):
+		tool_name = tr("TOOL_IRON_NAME") % tool_name
+	tool_label.text = tr("CHARACTER_TOOL") % tool_name
 	tool_label.add_theme_font_size_override("font_size", 17)
 	tool_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.7))
 	_slots_box.add_child(tool_label)
+	_add_forge_row(tool_id)
 
 static func _cap(text: String) -> String:
 	return text.substr(0, 1).to_upper() + text.substr(1) if text != "" else text
@@ -429,6 +433,55 @@ func _add_upgrade_row(item_id: String) -> void:
 		if hud != null and hud.has_method("show_toast"):
 			if error == "":
 				hud.show_toast(tr("TOAST_UPGRADED") % int(_inventory.call("gear_level", item_id)))
+			elif error == "TOAST_UPGRADE_LEVEL":
+				hud.show_toast(tr(error) % required)
+			elif error != "TOAST_UPGRADE_MISSING":
+				hud.show_toast(tr(error))
+		refresh())
+	row.add_child(button)
+	_slots_box.add_child(row)
+
+
+## Forger l'outil en main en fer : coût (vert / rouge), niveau requis, effet, bouton.
+func _add_forge_row(tool_id: String) -> void:
+	var iron_tools: Dictionary = _inventory.get("IRON_TOOLS")
+	if tool_id == "" or not iron_tools.has(tool_id) or bool(_inventory.call("is_iron_tool", tool_id)):
+		return
+	var cost: Dictionary = iron_tools[tool_id]
+	var required := int(_inventory.get("IRON_TOOL_PLAYER_LEVEL"))
+	var progression := get_node_or_null("/root/Progression")
+	var player_level := int(progression.call("get_level")) if progression != null else 1
+	var parts: PackedStringArray = []
+	var enough := true
+	for ingredient in cost:
+		var have := int(_inventory.call("count_of", ingredient))
+		var need := int(cost[ingredient])
+		enough = enough and have >= need
+		parts.append("[color=%s]%d/%d %s[/color]" % ["#8fe08f" if have >= need else "#ff8a7a", have, need, tr("ITEM_" + String(ingredient).to_upper())])
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var info := RichTextLabel.new()
+	info.bbcode_enabled = true
+	info.fit_content = true
+	info.scroll_active = false
+	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.add_theme_font_size_override("normal_font_size", 15)
+	info.text = tr("TOOL_FORGE_INFO") % [tr("TOOL_IRON_EFFECT_" + tool_id.to_upper()), ", ".join(parts),
+			"#8fe08f" if player_level >= required else "#ff8a7a", required]
+	row.add_child(info)
+	var button := Button.new()
+	button.name = "Forge_" + tool_id
+	button.focus_mode = Control.FOCUS_NONE
+	button.custom_minimum_size = Vector2(130, BUTTON_HEIGHT * 0.85)
+	button.text = tr("ACTION_FORGE")
+	button.disabled = not enough or player_level < required
+	button.pressed.connect(func():
+		var error: String = _inventory.call("forge_iron_tool", tool_id)
+		var hud := get_tree().get_first_node_in_group("hud")
+		if hud != null and hud.has_method("show_toast"):
+			if error == "":
+				hud.show_toast(tr("TOAST_FORGED") % tr("ITEM_" + tool_id.to_upper()))
 			elif error == "TOAST_UPGRADE_LEVEL":
 				hud.show_toast(tr(error) % required)
 			elif error != "TOAST_UPGRADE_MISSING":

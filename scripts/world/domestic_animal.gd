@@ -431,6 +431,9 @@ func harvest() -> Dictionary:
 	if tool_id != "" and not inventory.is_equipped(tool_id):
 		return {}
 	var amount := int(product["amount"])
+	# Faucille en fer : une laine de plus.
+	if tool_id != "" and bool(inventory.call("is_iron_tool", tool_id)):
+		amount += 1
 	var progression := InteractionManager.get_progression()
 	if progression != null:
 		amount = int(progression.call("roll_loot", amount))

@@ -307,6 +307,29 @@ def _furnace(d, u, fill, _):
     d.rounded_rectangle([100 * u, 140 * u, 156 * u, 196 * u], radius=16 * u, fill=OUTLINE if fill == WHITE else fill)
 
 
+def _rifle(d, u, fill, _):
+    # Carabine à levier : crosse, boîtier, canon, levier.
+    d.polygon([(28 * u, 150 * u), (92 * u, 122 * u), (104 * u, 146 * u), (36 * u, 176 * u)], fill=fill)
+    d.rectangle([92 * u, 116 * u, 136 * u, 144 * u], fill=fill)
+    d.rectangle([132 * u, 118 * u, 236 * u, 128 * u], fill=fill)
+    d.rectangle([132 * u, 130 * u, 204 * u, 138 * u], fill=fill)
+    _arc(d, 112 * u, 156 * u, 14 * u, 0, 180, 6 * u, fill)
+
+
+def _cartridge(d, u, fill, _):
+    for i, x in enumerate((80, 128, 176)):
+        d.rounded_rectangle([(x - 14) * u, 96 * u, (x + 14) * u, 206 * u], radius=4 * u, fill=fill)
+        d.pieslice([(x - 14) * u, 64 * u, (x + 14) * u, 124 * u], 180, 360, fill=fill)
+        d.rectangle([(x - 16) * u, 196 * u, (x + 16) * u, 206 * u], fill=OUTLINE if fill == WHITE else fill)
+
+
+def _iron_arrows(d, u, fill, _):
+    for dx in (-26, 0, 26):
+        d.line([((70 + dx) * u, 210 * u), ((170 + dx) * u, 60 * u)], fill=fill, width=int(9 * u))
+        tip = ((176 + dx) * u, 50 * u)
+        d.polygon([tip, ((150 + dx) * u, 70 * u), ((172 + dx) * u, 84 * u)], fill=fill)
+
+
 ICONS = {
     "item_berries": _berry,
     "item_stone": _stone,
@@ -338,6 +361,9 @@ ICONS = {
     "tool_hunting_bow": _tool_bow,
     "tool_fishing_rod": _tool_fishing_rod,
     "item_iron_ore": _iron_ore,
+    "tool_rifle": _rifle,
+    "item_cartridge": _cartridge,
+    "arrow_iron": _iron_arrows,
     "item_iron_ingot": _iron_ingot,
     "building_furnace": _furnace,
     "gear_straw_hat": _straw_hat,

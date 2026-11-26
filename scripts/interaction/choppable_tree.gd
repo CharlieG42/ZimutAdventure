@@ -90,6 +90,10 @@ func _fell(interactor: Node3D) -> void:
 		body.collision_layer = 0
 	var progression := InteractionManager.get_progression()
 	var amount := randi_range(WOOD_MIN, WOOD_MAX)
+	# Hache en fer : une bûche de plus.
+	var inventory_tier := InteractionManager.get_inventory()
+	if inventory_tier != null and bool(inventory_tier.call("is_iron_tool", TOOL_ID)):
+		amount += 1
 	if progression != null:
 		amount = int(progression.call("roll_loot", amount))
 		progression.call("add_stat", "stat_trees", 1)

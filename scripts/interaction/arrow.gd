@@ -13,6 +13,8 @@ var _timer: float = 0.0
 var _stuck_time: float = 0.0
 var _pickup_check: float = 0.0
 var _hit_shape: CollisionShape3D
+## Flèche à pointe de fer : deux fois plus de dégâts aux prédateurs.
+var iron: bool = false
 
 func _ready() -> void:
 	contact_monitor = true
@@ -62,10 +64,7 @@ func _proximity_check() -> void:
 		var point: Vector3 = target.call("get_aim_point") if target.has_method("get_aim_point") else target.global_position + Vector3(0.0, 0.6, 0.0)
 		if global_position.distance_to(point) < PROXIMITY_RADIUS:
 			var origin := global_position - linear_velocity.normalized() * 4.0 if linear_velocity.length_squared() > 0.01 else global_position
-			if target.has_method("take_arrow_hit"):
-				target.call("take_arrow_hit", origin)
-			elif target.has_method("hit"):
-				target.call("hit", 2, origin)
+			_strike(target, origin)
 			_notify_hit(target)
 			queue_free()
 			return
@@ -78,7 +77,7 @@ func _on_body_entered(body: Node) -> void:
 	if body.has_method("take_arrow_hit"):
 		_stick()
 		var origin := global_position - velocity.normalized() * 4.0 if velocity.length_squared() > 0.01 else global_position
-		body.call("take_arrow_hit", origin)
+		_strike(body, origin)
 		_notify_hit(body)
 		queue_free()
 		return
@@ -88,6 +87,14 @@ func _on_body_entered(body: Node) -> void:
 		freeze = true
 		add_to_group("arrow_stuck")
 		set_process(true)
+
+func _strike(target: Node, origin: Vector3) -> void:
+	if iron and target.has_method("hit") and target.is_in_group("predators"):
+		target.call("hit", 4, origin)
+	elif target.has_method("take_arrow_hit"):
+		target.call("take_arrow_hit", origin)
+	elif target.has_method("hit"):
+		target.call("hit", 2, origin)
 
 func _notify_hit(body: Node) -> void:
 	var tree := get_tree()
@@ -118,7 +125,7 @@ func _process(delta: float) -> void:
 func pickup() -> void:
 	var inventory := InteractionManager.get_inventory()
 	if inventory != null:
-		inventory.add_item("arrow", 1)
+		inventory.add_item("arrow_iron" if iron else "arrow", 1)
 	queue_free()
 
 func _stick() -> void:

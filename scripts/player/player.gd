@@ -369,8 +369,10 @@ func begin_attack() -> void:
 	var inventory := InteractionManager.get_inventory()
 	if inventory == null:
 		return
-	if inventory.is_equipped("tool_hunting_bow"):
-		if int(inventory.call("count_of", "arrow")) <= 0:
+	if inventory.is_equipped(RIFLE):
+		fire_rifle()
+	elif inventory.is_equipped("tool_hunting_bow"):
+		if arrow_count() <= 0:
 			_hud_toast(tr("TOAST_NO_ARROWS"))
 			return
 		_drawing = true
@@ -408,15 +410,25 @@ func get_bow_state() -> Dictionary:
 		"drawing": _drawing,
 		"charge": get_draw_charge(),
 		"target": target,
-		"arrows": int(inventory.call("count_of", "arrow")) if inventory != null else 0,
+		"arrows": (int(inventory.call("count_of", CARTRIDGE)) if inventory.is_equipped(RIFLE) else arrow_count()) if inventory != null else 0,
+		"weapon": "rifle" if inventory != null and inventory.is_equipped(RIFLE) else "bow",
 	}
+
+## Flèches dans le sac (pointe de fer comprises).
+func arrow_count() -> int:
+	var inventory := InteractionManager.get_inventory()
+	if inventory == null:
+		return 0
+	return int(inventory.call("count_of", "arrow")) + int(inventory.call("count_of", IRON_ARROW))
 
 ## Attaque immédiate (sans maintien) : tir rapide à l'arc ou coup de hache.
 func try_attack() -> void:
 	var inventory := InteractionManager.get_inventory()
 	if inventory == null:
 		return
-	if inventory.is_equipped("tool_hunting_bow"):
+	if inventory.is_equipped(RIFLE):
+		fire_rifle()
+	elif inventory.is_equipped("tool_hunting_bow"):
 		try_shoot_arrow()
 	elif inventory.is_equipped("tool_stone_axe"):
 		try_melee()
@@ -453,7 +465,9 @@ func try_melee() -> bool:
 		if best.has_method("take_arrow_hit"):
 			best.call("take_arrow_hit", global_position)
 		else:
-			best.call("hit", 2, global_position)
+			# Hache en fer : coup deux fois plus fort.
+			var iron_axe: bool = bool(InteractionManager.get_inventory().call("is_iron_tool", "tool_stone_axe"))
+			best.call("hit", 4 if iron_axe else 2, global_position)
 		var sfx := InteractionManager.get_sfx()
 		if sfx != null and sfx.has_method("play_event"):
 			sfx.call("play_event", "hit", -4.0, randf_range(0.9, 1.1))
@@ -540,6 +554,116 @@ func _try_interact() -> void:
 	try_interact()
 
 ## Tir immédiat : pleine tension si l'on vise, tir rapide sinon.
+# --- Carabine à levier (western) --------------------------------------------------------
+
+const RIFLE := "tool_rifle"
+const CARTRIDGE := "item_cartridge"
+const IRON_ARROW := "arrow_iron"
+## Un coup de levier entre deux tirs.
+const RIFLE_COOLDOWN := 1.1
+const RIFLE_RANGE := 90.0
+const RIFLE_DAMAGE := 6
+## Tolérance autour de la ligne de mire (m) pour toucher un animal.
+const RIFLE_AIM_RADIUS := 1.1
+var _rifle_cooldown: float = 0.0
+
+## Tir de carabine : instantané, portée 90 m, une cartouche. Touche la cible verrouillée,
+## sinon l'animal le plus proche de la ligne de mire (pas à travers le relief).
+## Renvoie l'animal touché (ou null).
+func fire_rifle() -> Node3D:
+	var inventory := InteractionManager.get_inventory()
+	if inventory == null or not inventory.is_equipped(RIFLE) or _rifle_cooldown > 0.0:
+		return null
+	if not inventory.remove_item(CARTRIDGE, 1):
+		_hud_toast(tr("TOAST_NO_CARTRIDGES"))
+		return null
+	_rifle_cooldown = RIFLE_COOLDOWN
+	var camera := get_viewport().get_camera_3d()
+	var from := _arrow_origin(camera) if camera != null else global_position + Vector3(0, 1.4, 0)
+	var dir := -camera.global_transform.basis.z if camera != null else -global_transform.basis.z
+	var target := rifle_target(from, dir)
+	_rifle_effects(from, dir)
+	if target == null:
+		return null
+	var origin := global_position
+	if target.has_method("hit") and target.is_in_group("predators"):
+		target.call("hit", RIFLE_DAMAGE, origin)
+	elif target.has_method("take_arrow_hit"):
+		target.call("take_arrow_hit", origin)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud != null and hud.has_method("notify_hit"):
+		hud.call("notify_hit", target)
+	return target
+
+func rifle_target(from: Vector3, dir: Vector3) -> Node3D:
+	if _bow_target != null and is_instance_valid(_bow_target) and _bow_target.is_inside_tree() \
+			and from.distance_to(_bow_target.global_position) <= RIFLE_RANGE and _clear_shot(from, _target_point(_bow_target)):
+		return _bow_target
+	var best: Node3D = null
+	var best_score := INF
+	var targets: Array = get_tree().get_nodes_in_group("predators") + get_tree().get_nodes_in_group("huntable")
+	for target in targets:
+		if not is_instance_valid(target) or bool(target.get("_dead")):
+			continue
+		var point := _target_point(target)
+		var along := (point - from).dot(dir)
+		if along <= 0.5 or along > RIFLE_RANGE:
+			continue
+		var miss := (point - (from + dir * along)).length()
+		var tolerance := RIFLE_AIM_RADIUS + along * 0.02
+		if miss > tolerance:
+			continue
+		var score := miss + along * 0.01
+		if score < best_score and _clear_shot(from, point):
+			best_score = score
+			best = target
+	return best
+
+## Le relief (couche 1) ne cache pas la cible.
+func _clear_shot(from: Vector3, to: Vector3) -> bool:
+	var query := PhysicsRayQueryParameters3D.create(from, to)
+	query.collision_mask = 1
+	query.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	return hit.is_empty() or (hit["position"] as Vector3).distance_to(to) < 1.5
+
+## Détonation, éclair au canon et petit nuage de fumée.
+func _rifle_effects(from: Vector3, dir: Vector3) -> void:
+	var sfx := InteractionManager.get_sfx()
+	if sfx != null:
+		var stream := load("res://assets/audio/sfx/rifle_shot.wav") as AudioStream
+		if stream != null:
+			sfx.call("play", stream, -2.0, randf_range(0.95, 1.05))
+	var host := get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	if host == null:
+		return
+	var flash := OmniLight3D.new()
+	flash.light_color = Color(1.0, 0.8, 0.45)
+	flash.light_energy = 6.0
+	flash.omni_range = 5.0
+	host.add_child(flash)
+	flash.global_position = from + dir * 0.6
+	var smoke := MeshInstance3D.new()
+	var puff := SphereMesh.new()
+	puff.radius = 0.12
+	puff.height = 0.24
+	smoke.mesh = puff
+	var smoke_mat := StandardMaterial3D.new()
+	smoke_mat.albedo_color = Color(0.85, 0.85, 0.82, 0.7)
+	smoke_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	smoke.material_override = smoke_mat
+	host.add_child(smoke)
+	smoke.global_position = from + dir * 0.7
+	var tween := smoke.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(flash, "light_energy", 0.0, 0.12)
+	tween.tween_property(smoke, "scale", Vector3.ONE * 4.0, 0.9)
+	tween.tween_property(smoke, "global_position", smoke.global_position + Vector3(0, 0.5, 0) + dir * 0.6, 0.9)
+	tween.tween_property(smoke_mat, "albedo_color:a", 0.0, 0.9)
+	tween.chain().tween_callback(func():
+		flash.queue_free()
+		smoke.queue_free())
+
 func try_shoot_arrow() -> void:
 	shoot_arrow(1.0 if _aiming else QUICK_SHOT_CHARGE)
 
@@ -557,12 +681,15 @@ func shoot_arrow(charge: float) -> void:
 	var host := get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	if camera == null or arrow_scene == null or host == null:
 		return
-	if not inventory.remove_item("arrow", 1):
+	# Les flèches à pointe de fer partent d'abord.
+	var ammo := IRON_ARROW if int(inventory.call("count_of", IRON_ARROW)) > 0 else "arrow"
+	if not inventory.remove_item(ammo, 1):
 		_hud_toast(tr("TOAST_NO_ARROWS"))
 		return
 	charge = clampf(charge, 0.0, 1.0)
 	var speed := lerpf(arrow_speed, full_draw_speed, charge)
 	var arrow := arrow_scene.instantiate() as RigidBody3D
+	arrow.set("iron", ammo == IRON_ARROW)
 	host.add_child(arrow)
 	var from := _arrow_origin(camera)
 	var dir := ballistic_direction(from, _aim_point(camera, from, speed), speed, gravity * arrow.gravity_scale)
@@ -750,8 +877,9 @@ func _physics_process(delta: float) -> void:
 	_melee_cooldown = maxf(0.0, _melee_cooldown - delta)
 	# Visée à l'arc : bouton droit (PC) ou visée automatique au tactile quand l'arc est équipé.
 	var inventory := InteractionManager.get_inventory()
-	var bow_equipped: bool = inventory != null and inventory.is_equipped("tool_hunting_bow")
+	var bow_equipped: bool = inventory != null and (inventory.is_equipped("tool_hunting_bow") or inventory.is_equipped(RIFLE))
 	_bow_equipped = bow_equipped
+	_rifle_cooldown = maxf(0.0, _rifle_cooldown - delta)
 	if _drawing:
 		if bow_equipped:
 			_draw_time += delta

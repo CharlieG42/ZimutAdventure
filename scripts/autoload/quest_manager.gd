@@ -298,6 +298,14 @@ const QUESTS := {
 		"requires": "quest_iron_ore",
 		"reward": {"item_iron_ore": 4, "item_wood": 4},
 	},
+	"quest_rifle": {
+		"title": "QUEST_RIFLE_TITLE",
+		"description": "QUEST_RIFLE_DESC",
+		"goal_item": "tool_rifle",
+		"goal_count": 1,
+		"requires": "quest_iron_ingot",
+		"reward": {"item_cartridge": 12},
+	},
 	"quest_tamer_3": {
 		"title": "QUEST_TAMER_3_TITLE",
 		"description": "QUEST_TAMER_3_DESC",

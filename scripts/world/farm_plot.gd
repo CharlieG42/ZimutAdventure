@@ -166,6 +166,9 @@ func _water(by_player: bool = true) -> void:
 func _harvest(inventory: Node) -> void:
 	var is_grain := crop_seed == "item_grain_seeds"
 	var amount := randi_range(VEGETABLES_MIN, VEGETABLES_MAX) + (1 if is_grain else 0)
+	# Houe en fer : terre mieux travaillée, une récolte de plus.
+	if bool(inventory.call("is_iron_tool", TOOL_ID)):
+		amount += 1
 	var progression := InteractionManager.get_progression()
 	if progression != null:
 		amount = int(progression.call("roll_loot", amount))

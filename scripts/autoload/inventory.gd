@@ -7,7 +7,7 @@ signal equipped_changed(item_id: String)
 signal worn_changed()
 
 ## Outils qui peuvent être équipés (un seul à la fois, dans la barre d'outils du HUD).
-const TOOLS := ["tool_stone_axe", "tool_sickle", "tool_hoe", "tool_watering_can", "tool_hunting_bow", "tool_fishing_rod", "tool_knife", "tool_pickaxe"]
+const TOOLS := ["tool_stone_axe", "tool_sickle", "tool_hoe", "tool_watering_can", "tool_hunting_bow", "tool_fishing_rod", "tool_knife", "tool_pickaxe", "tool_rifle"]
 
 const SAVE_NAME := "inventory.cfg"
 
@@ -26,6 +26,7 @@ const WEIGHTS := {
 	"tool_stone_axe": 1.5, "tool_sickle": 0.8, "tool_hoe": 1.2, "tool_watering_can": 1.2,
 	"tool_hunting_bow": 0.8, "tool_fishing_rod": 0.8, "tool_knife": 0.3, "tool_pickaxe": 1.5,
 	"item_iron_ore": 1.0, "item_iron_ingot": 0.8, "building_furnace": 8.0,
+	"tool_rifle": 3.5, "item_cartridge": 0.03, "arrow_iron": 0.03,
 	"gear_straw_hat": 0.3, "gear_wool_shirt": 0.6, "gear_wool_trousers": 0.6,
 	"gear_leather_gloves": 0.3, "gear_hide_boots": 0.6, "armor_fur_cloak": 1.5, "gear_backpack": 0.8,
 	"building_campfire": 3.0, "building_shelter": 6.0, "building_pen": 8.0,
@@ -90,6 +91,16 @@ const GEAR_UPGRADE_COSTS := {
 }
 const GEAR_UPGRADE_PLAYER_LEVEL := {2: 4, 3: 8}
 
+## Outils forgés en fer (palier 2) : plus efficaces. Coût et niveau de joueur requis.
+const IRON_TOOLS := {
+	"tool_stone_axe": {"item_iron_ingot": 2, "item_wood": 2},
+	"tool_pickaxe": {"item_iron_ingot": 3, "item_wood": 2},
+	"tool_knife": {"item_iron_ingot": 1, "item_wood": 1},
+	"tool_sickle": {"item_iron_ingot": 1, "item_wood": 1},
+	"tool_hoe": {"item_iron_ingot": 2, "item_wood": 1},
+}
+const IRON_TOOL_PLAYER_LEVEL := 6
+
 var _items: Dictionary = {}
 var _autosave: bool = true
 var _equipped: String = ""
@@ -97,6 +108,8 @@ var _equipped: String = ""
 var _worn: Dictionary = {}
 ## vêtement → niveau (1 par défaut)
 var _gear_levels: Dictionary = {}
+## outil → 2 s'il est forgé en fer
+var _tool_tiers: Dictionary = {}
 
 func _ready() -> void:
 	_load()
@@ -108,6 +121,8 @@ func reload_from_disk() -> void:
 	_worn.clear()
 	_worn.clear()
 	_gear_levels.clear()
+	_tool_tiers.clear()
+	_tool_tiers.clear()
 	_load()
 
 func add_item(item_id: String, amount: int = 1) -> void:
@@ -171,6 +186,34 @@ func take_off(slot: String) -> void:
 	_worn.erase(slot)
 	worn_changed.emit()
 	_save()
+
+# --- Outils en fer ------------------------------------------------------------------------
+
+func is_iron_tool(tool_id: String) -> bool:
+	return int(_tool_tiers.get(tool_id, 1)) >= 2
+
+func can_forge_iron(tool_id: String) -> bool:
+	return IRON_TOOLS.has(tool_id) and has_item(tool_id, 1) and not is_iron_tool(tool_id)
+
+## Forge l'outil en fer. Renvoie "" ou la clé d'erreur.
+func forge_iron_tool(tool_id: String) -> String:
+	if not IRON_TOOLS.has(tool_id) or not has_item(tool_id, 1):
+		return "TOAST_CANNOT_UPGRADE"
+	if is_iron_tool(tool_id):
+		return "TOAST_MAX_LEVEL"
+	var progression := get_node_or_null("/root/Progression")
+	if progression != null and int(progression.call("get_level")) < IRON_TOOL_PLAYER_LEVEL:
+		return "TOAST_UPGRADE_LEVEL"
+	var cost: Dictionary = IRON_TOOLS[tool_id]
+	for ingredient in cost:
+		if count_of(ingredient) < int(cost[ingredient]):
+			return "TOAST_UPGRADE_MISSING"
+	for ingredient in cost:
+		remove_item(ingredient, int(cost[ingredient]))
+	_tool_tiers[tool_id] = 2
+	equipped_changed.emit(_equipped)
+	_save()
+	return ""
 
 # --- Amélioration des vêtements ----------------------------------------------------------
 
@@ -307,6 +350,11 @@ func _load() -> void:
 	var saved_tool := String(config.get_value("state", "equipped", ""))
 	if TOOLS.has(saved_tool) and has_item(saved_tool, 1):
 		_equipped = saved_tool
+	var tiers = config.get_value("state", "tool_tiers", {})
+	if tiers is Dictionary:
+		for tool_id in tiers:
+			if IRON_TOOLS.has(tool_id):
+				_tool_tiers[tool_id] = clampi(int(tiers[tool_id]), 1, 2)
 	var levels = config.get_value("state", "gear_levels", {})
 	if levels is Dictionary:
 		for item_id in levels:
@@ -331,6 +379,7 @@ func _save() -> void:
 	config.set_value("state", "equipped", _equipped)
 	config.set_value("state", "worn", get_worn())
 	config.set_value("state", "gear_levels", _gear_levels)
+	config.set_value("state", "tool_tiers", _tool_tiers)
 	config.save(SaveSlots.file(SAVE_NAME))
 
 func clear_for_test() -> void:
@@ -339,3 +388,4 @@ func clear_for_test() -> void:
 	_equipped = ""
 	_worn.clear()
 	_gear_levels.clear()
+	_tool_tiers.clear()

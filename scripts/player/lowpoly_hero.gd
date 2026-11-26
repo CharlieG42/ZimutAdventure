@@ -395,6 +395,16 @@ func _build_held() -> void:
 		"tool_stone_axe":
 			_part(_held, _prism(6, 0.02, 0.02, 0.6), wood, Vector3(0, 0.12, 0))
 			_part(_held, _box(Vector3(0.05, 0.14, 0.17)), stone, Vector3(0, 0.36, 0.05))
+		"tool_rifle":
+			# Carabine à levier, tenue comme la hache (axe Y = longueur) : crosse sous la main,
+			# boîtier laiton, canon et fût vers l'avant.
+			var steel := Color(0.2, 0.2, 0.22)
+			var brass := Color(0.7, 0.55, 0.22)
+			_part(_held, _box(Vector3(0.045, 0.3, 0.08)), wood.darkened(0.15), Vector3(0, -0.16, -0.02))
+			_part(_held, _box(Vector3(0.05, 0.12, 0.07)), brass, Vector3(0, 0.04, 0.0))
+			_part(_held, _box(Vector3(0.04, 0.32, 0.045)), wood, Vector3(0, 0.26, -0.005))
+			_part(_held, _prism(8, 0.013, 0.013, 0.62), steel, Vector3(0, 0.39, 0.03))
+			_part(_held, _box(Vector3(0.012, 0.07, 0.05)), steel, Vector3(0, 0.0, 0.06))
 		"tool_pickaxe":
 			_part(_held, _prism(6, 0.02, 0.02, 0.62), wood, Vector3(0, 0.13, 0))
 			_part(_held, _box(Vector3(0.04, 0.05, 0.36)), stone, Vector3(0, 0.42, 0.02))

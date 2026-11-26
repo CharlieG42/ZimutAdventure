@@ -17,6 +17,13 @@ func _draw() -> void:
 			var head := PackedVector2Array([c + Vector2(4, -26) * u, c + Vector2(24, -8) * u, c + Vector2(14, -2) * u, c + Vector2(-2, -14) * u])
 			draw_colored_polygon(_grow(head, c, 1.15), DARK)
 			draw_colored_polygon(head, METAL)
+		"tool_rifle":
+			var stock := PackedVector2Array([c + Vector2(-30, 12) * u, c + Vector2(-8, 2) * u, c + Vector2(-4, 10) * u, c + Vector2(-28, 20) * u])
+			draw_colored_polygon(_grow(stock, c, 1.1), DARK)
+			draw_colored_polygon(stock, WOOD)
+			_line(c + Vector2(-8, 0) * u, c + Vector2(30, -8) * u, Color(0.3, 0.3, 0.33), 5.0 * u)
+			_line(c + Vector2(-6, 4) * u, c + Vector2(18, -1) * u, WOOD, 4.0 * u)
+			draw_arc(c + Vector2(-4, 10) * u, 5.0 * u, 0.0, PI, 10, METAL, 2.5 * u, true)
 		"tool_pickaxe":
 			_line(c + Vector2(-16, 22) * u, c + Vector2(10, -14) * u, WOOD, 6.0 * u)
 			draw_arc(c + Vector2(8, -6) * u, 22.0 * u, deg_to_rad(200.0), deg_to_rad(340.0), 18, DARK, 10.0 * u, true)
