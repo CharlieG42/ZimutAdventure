@@ -15,6 +15,8 @@ var _detail: VBoxContainer
 var _name_edit: LineEdit
 var _selected: Node3D = null
 var _refresh_left: float = 0.0
+## Filtre : n'afficher que les bêtes hors enclos (et les chiens sans garde).
+var only_free: bool = false
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -183,6 +185,17 @@ func _build_detail(pen: Node3D) -> void:
 	_action(actions, "RanchRelease", tr("RANCH_RELEASE"), func(): pen.call("release_all"))
 	_action(actions, "RanchCollect", tr("RANCH_COLLECT"), func(): _collect(pen))
 
+	var filter := CheckButton.new()
+	filter.name = "OnlyFreeFilter"
+	filter.text = tr("RANCH_FILTER_FREE")
+	filter.focus_mode = Control.FOCUS_NONE
+	filter.button_pressed = only_free
+	filter.custom_minimum_size = Vector2(0, BUTTON_HEIGHT * 0.8)
+	filter.toggled.connect(func(on: bool):
+		only_free = on
+		refresh())
+	_detail.add_child(filter)
+
 	_add_header(tr("RANCH_GUARDS"))
 	var dogs: Array = []
 	for animal in get_tree().get_nodes_in_group("tamed"):
@@ -191,6 +204,10 @@ func _build_detail(pen: Node3D) -> void:
 	if dogs.is_empty():
 		_add_text(_detail, tr("RANCH_NO_DOG"), 16, Color(1, 1, 1, 0.55))
 	var guards: Array = pen.call("guard_dogs")
+	if only_free:
+		dogs = dogs.filter(func(d): return not bool(d.get("guarding")))
+		if dogs.is_empty():
+			_add_text(_detail, tr("RANCH_FILTER_NONE"), 16, Color(1, 1, 1, 0.55))
 	for i in dogs.size():
 		var dog: Node = dogs[i]
 		var here := guards.has(dog)
@@ -208,10 +225,14 @@ func _build_detail(pen: Node3D) -> void:
 	_add_header(tr("RANCH_LIVESTOCK"))
 	var livestock: Array = []
 	for animal in get_tree().get_nodes_in_group("tamed"):
-		if is_instance_valid(animal) and bool(animal.get("is_livestock")):
+		if is_instance_valid(animal) and animal.has_method("can_be_penned") and bool(animal.call("can_be_penned")):
 			livestock.append(animal)
 	if livestock.is_empty():
 		_add_text(_detail, tr("RANCH_NO_LIVESTOCK"), 16, Color(1, 1, 1, 0.55))
+	elif only_free:
+		livestock = livestock.filter(func(a): return not bool(a.get("penned")) and a.get("herd_pen") == null)
+		if livestock.is_empty():
+			_add_text(_detail, tr("RANCH_FILTER_NONE"), 16, Color(1, 1, 1, 0.55))
 	livestock.sort_custom(func(a, b): return String(a.get("species")) < String(b.get("species")))
 	for i in livestock.size():
 		var animal: Node = livestock[i]
@@ -224,7 +245,7 @@ func _build_detail(pen: Node3D) -> void:
 					else:
 						_report(pen.call("assign_animal", animal))
 					refresh(),
-				inside or int(pen.call("free_slots")) > 0)
+				inside or (int(pen.call("free_slots")) > 0 and not bool(animal.get("mounted"))))
 
 func _dog_status(dog: Node) -> String:
 	if bool(dog.get("following")):

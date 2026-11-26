@@ -405,7 +405,7 @@ func unassign_guard(dog: Node) -> void:
 ## Met une bête d'élevage dans cet enclos : elle quitte son enclos actuel et vient à pied
 ## (de très loin, elle est ramenée devant la barrière). Renvoie "" ou la clé d'erreur.
 func assign_animal(animal: Node) -> String:
-	if animal == null or not bool(animal.get("tamed")) or not bool(animal.get("is_livestock")):
+	if animal == null or not bool(animal.get("tamed")) or not animal.has_method("can_be_penned") or not bool(animal.call("can_be_penned")):
 		return "TOAST_CANNOT_ASSIGN"
 	if get_occupants().has(animal) or animal.get("herd_pen") == self:
 		return ""

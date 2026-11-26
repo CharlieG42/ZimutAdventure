@@ -546,6 +546,17 @@ func _try_join_pen() -> void:
 			_toast(tr("TOAST_PENNED"))
 			return
 
+func answers_whistle() -> bool:
+	if species == "horse":
+		return not penned and herd_pen == null
+	if species == "dog":
+		return not guarding
+	return false
+
+## Bêtes qu'on peut mettre en enclos : le bétail, et les chevaux (par la fenêtre Ranch).
+func can_be_penned() -> bool:
+	return is_livestock or species == "horse"
+
 func _refresh_tamed_state() -> void:
 	is_livestock = LIVESTOCK.has(species)
 	if tamed:
@@ -565,6 +576,12 @@ func _is_grazing() -> bool:
 func mount(rider: Node3D) -> void:
 	if rider == null or not rider.has_method("mount"):
 		return
+	# Monter un cheval de l'enclos le fait sortir de l'enclos.
+	if penned:
+		penned = false
+		auto_penned = false
+		_home_pen = null
+		state_changed.emit(self)
 	mounted = true
 	_player = rider
 	collision_layer = 0
@@ -897,6 +914,9 @@ func _build_chicken() -> void:
 func call_to_player(player: Node3D) -> bool:
 	if (species != "horse" and species != "dog") or not tamed or mounted or player == null:
 		return false
+	# Un cheval en enclos ou un chien de garde ne répondent pas : il faut d'abord les libérer.
+	if not answers_whistle():
+		return false
 	var gap := player.global_position - global_position
 	gap.y = 0.0
 	if gap.length() > SUMMON_MAX_DISTANCE:
@@ -920,7 +940,7 @@ func call_to_player(player: Node3D) -> bool:
 
 ## Mène la bête jusqu'à l'enclos : elle contourne jusqu'à la barrière, entre, puis s'installe.
 func herd_to(pen: Node3D, automatic: bool = false, via: Array = []) -> bool:
-	if not tamed or not is_livestock or mounted or penned or pen == null:
+	if not tamed or not can_be_penned() or mounted or penned or pen == null:
 		return false
 	herd_pen = pen
 	auto_penned = automatic
