@@ -38,10 +38,23 @@ var _selected_site: String = ""
 var _marker_button: Button
 var _selected_marker: int = -1
 var _pending_point: Vector2 = Vector2.INF
+## Zoom (1 = monde entier) et point du monde au centre de la carte ; on fait glisser pour
+## se déplacer, on zoome avec les boutons + / − (ou la molette).
+const ZOOMS := [1.0, 2.0, 3.0]
+var zoom_index: int = 0
+var _focus: Vector2 = Vector2.ZERO
+var _press_at: Vector2 = Vector2.INF
+var _dragged: bool = false
+const DRAG_THRESHOLD := 14.0
+var _zoom_in_button: Button
+var _zoom_out_button: Button
+var _center_button: Button
 
 func _ready() -> void:
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	# Relief lissé quand on zoome (la texture fait 160 px).
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_close_button = Button.new()
 	_close_button.text = tr("ACTION_CLOSE")
 	_close_button.focus_mode = Control.FOCUS_NONE
@@ -60,7 +73,50 @@ func _ready() -> void:
 	_marker_button.visible = false
 	_marker_button.pressed.connect(_on_marker_pressed)
 	add_child(_marker_button)
+	_zoom_in_button = _small_button("+", "MapZoomIn", func(): set_zoom(zoom_index + 1))
+	_zoom_out_button = _small_button("−", "MapZoomOut", func(): set_zoom(zoom_index - 1))
+	_center_button = _small_button("◎", "MapCenter", center_on_player)
 	_layout_close_button()
+
+func _small_button(text: String, node_name: String, callback: Callable) -> Button:
+	var button := Button.new()
+	button.name = node_name
+	button.text = text
+	button.focus_mode = Control.FOCUS_NONE
+	button.custom_minimum_size = Vector2(64, 64)
+	button.add_theme_font_size_override("font_size", 30)
+	button.pressed.connect(callback)
+	add_child(button)
+	return button
+
+func zoom() -> float:
+	return float(ZOOMS[zoom_index])
+
+## Change le zoom en gardant le joueur (ou le point actuel) au centre.
+func set_zoom(index: int) -> void:
+	zoom_index = clampi(index, 0, ZOOMS.size() - 1)
+	if zoom_index == 0:
+		_focus = Vector2.ZERO
+	_clamp_focus()
+	_layout_close_button()
+	queue_redraw()
+
+func center_on_player() -> void:
+	if _player != null and is_instance_valid(_player):
+		_focus = Vector2(_player.global_position.x, _player.global_position.z)
+	if zoom_index == 0:
+		set_zoom(1)
+	_clamp_focus()
+	queue_redraw()
+
+func focus() -> Vector2:
+	return _focus
+
+## Le cadre ne sort jamais du monde.
+func _clamp_focus() -> void:
+	var half_span := _terrain_size() * 0.5 / zoom()
+	var limit := maxf(0.0, _terrain_size() * 0.5 - half_span)
+	_focus = _focus.clamp(Vector2(-limit, -limit), Vector2(limit, limit))
 
 func toggle() -> void:
 	if visible:
@@ -70,6 +126,8 @@ func toggle() -> void:
 
 func open() -> void:
 	visible = true
+	# Toujours le monde entier à l'ouverture.
+	set_zoom(0)
 	if not _terrain_ready:
 		_build_terrain_texture()
 	queue_redraw()
@@ -201,16 +259,48 @@ func _show_toast(message: String) -> void:
 		hud.show_toast(message, 2.4)
 
 func _gui_input(event: InputEvent) -> void:
-	var pressed := false
-	var at := Vector2.ZERO
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		pressed = true
-		at = event.position
-	elif event is InputEventScreenTouch and event.pressed:
-		pressed = true
-		at = event.position
-	if not pressed:
+	# Molette : zoom.
+	if event is InputEventMouseButton and event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
+		set_zoom(zoom_index + (1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1))
+		accept_event()
 		return
+	var down := false
+	var up := false
+	var at := Vector2.ZERO
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		down = event.pressed
+		up = not event.pressed
+		at = event.position
+	elif event is InputEventScreenTouch:
+		down = event.pressed
+		up = not event.pressed
+		at = event.position
+	elif (event is InputEventScreenDrag or (event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_MASK_LEFT)) and _press_at != Vector2.INF:
+		if not _dragged and event.position.distance_to(_press_at) > DRAG_THRESHOLD:
+			_dragged = true
+		if _dragged and zoom_index > 0:
+			var scale := _world_to_map_transform(_map_rect()).get_scale().x
+			_focus -= event.relative / scale
+			_clamp_focus()
+			queue_redraw()
+		accept_event()
+		return
+	if down:
+		_press_at = at
+		_dragged = false
+		accept_event()
+		return
+	if not up or _press_at == Vector2.INF:
+		return
+	var was_drag := _dragged
+	_press_at = Vector2.INF
+	_dragged = false
+	if was_drag:
+		return
+	tap_at(at)
+
+## Toucher bref sur la carte : site découvert (voyage) ou repère du joueur.
+func tap_at(at: Vector2) -> void:
 	var exploration := InteractionManager.get_exploration()
 	if exploration == null:
 		return
@@ -263,6 +353,15 @@ func _notification(what: int) -> void:
 func _layout_close_button() -> void:
 	if _close_button != null:
 		_close_button.position = Vector2(size.x - _close_button.custom_minimum_size.x - 16.0, 72.0)
+	# Zoom à droite de la carte, en colonne.
+	if _zoom_in_button != null:
+		var rect := _map_rect()
+		var x := minf(rect.end.x + 12.0, size.x - 76.0)
+		_zoom_in_button.position = Vector2(x, rect.position.y + 70.0)
+		_zoom_out_button.position = Vector2(x, rect.position.y + 142.0)
+		_center_button.position = Vector2(x, rect.position.y + 214.0)
+		_zoom_in_button.disabled = zoom_index >= ZOOMS.size() - 1
+		_zoom_out_button.disabled = zoom_index <= 0
 
 # --- Terrain ---------------------------------------------------------------------
 
@@ -339,7 +438,12 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 
 	var rect := _map_rect()
-	draw_texture_rect(_terrain_image, rect, false)
+	# Partie visible du monde (tout le monde au zoom 1).
+	var terrain := _terrain_size()
+	var span := terrain / zoom()
+	var tex_size := Vector2(_terrain_image.get_size())
+	var src_origin := (_focus - Vector2(span, span) * 0.5 + Vector2(terrain, terrain) * 0.5) / terrain * tex_size
+	draw_texture_rect_region(_terrain_image, rect, Rect2(src_origin, tex_size / zoom()))
 	draw_rect(rect, COLORS["frame"], false, 3.0)
 	var to_map := _world_to_map_transform(rect)
 	_draw_resources(to_map, rect)
@@ -354,8 +458,8 @@ func _draw() -> void:
 	_draw_legend(rect, font)
 
 func _world_to_map_transform(rect: Rect2) -> Transform2D:
-	var scale := rect.size.x / _terrain_size()
-	return Transform2D(Vector2(scale, 0.0), Vector2(0.0, scale), rect.get_center())
+	var scale := rect.size.x / _terrain_size() * zoom()
+	return Transform2D(Vector2(scale, 0.0), Vector2(0.0, scale), rect.get_center() - _focus * scale)
 
 func _draw_resources(to_map: Transform2D, rect: Rect2) -> void:
 	var tree := get_tree()
@@ -379,8 +483,12 @@ func _draw_fog(rect: Rect2) -> void:
 	if exploration == null:
 		return
 	var grid := int(exploration.get("GRID"))
-	var cell := rect.size.x / float(grid)
-	var veil := Color(0.04, 0.03, 0.03, 0.86)
+	var terrain := _terrain_size()
+	var to_map := _world_to_map_transform(rect)
+	var world_origin := to_map * Vector2(-terrain * 0.5, -terrain * 0.5)
+	var cell := terrain / float(grid) * to_map.get_scale().x
+	# Voile assez léger pour que la forme du monde (relief, rivière) reste lisible.
+	var veil := Color(0.04, 0.03, 0.03, 0.62)
 	for cz in grid:
 		var run_start := -1
 		for cx in grid + 1:
@@ -388,7 +496,10 @@ func _draw_fog(rect: Rect2) -> void:
 			if hidden and run_start < 0:
 				run_start = cx
 			elif not hidden and run_start >= 0:
-				draw_rect(Rect2(rect.position + Vector2(float(run_start) * cell, float(cz) * cell), Vector2(float(cx - run_start) * cell + 0.5, cell + 0.5)), veil)
+				var band := Rect2(world_origin + Vector2(float(run_start) * cell, float(cz) * cell), Vector2(float(cx - run_start) * cell + 1.0, cell + 1.0))
+				band = band.intersection(rect)
+				if band.has_area():
+					draw_rect(band, veil)
 				run_start = -1
 
 func _draw_sites(to_map: Transform2D, rect: Rect2, font: Font) -> void:
