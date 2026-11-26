@@ -24,6 +24,12 @@ const RECIPES := {
 		"ingredients": {"item_wood": 3, "item_stone": 5},
 		"level": 3,
 	},
+	"tool_rifle": {
+		"name": "CRAFT_RIFLE",
+		"category": "weapons",
+		"ingredients": {"item_iron_ingot": 5, "item_wood": 3, "item_pelt": 1},
+		"level": 10,
+	},
 	"tool_sickle": {
 		"name": "CRAFT_SICKLE",
 		"category": "tools",
@@ -66,6 +72,20 @@ const RECIPES := {
 		"ingredients": {"item_wood": 1, "item_stone": 1},
 		"batch": 4,
 		"level": 2,
+	},
+	"arrow_iron": {
+		"name": "CRAFT_IRON_ARROWS",
+		"category": "weapons",
+		"ingredients": {"item_wood": 2, "item_iron_ingot": 1},
+		"batch": 8,
+		"level": 6,
+	},
+	"item_cartridge": {
+		"name": "CRAFT_CARTRIDGES",
+		"category": "weapons",
+		"ingredients": {"item_iron_ingot": 1, "item_stone": 1},
+		"batch": 6,
+		"level": 10,
 	},
 	"gear_straw_hat": {
 		"name": "CRAFT_STRAW_HAT",

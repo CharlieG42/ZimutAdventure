@@ -646,16 +646,17 @@ func _on_item_removed(_item_id: String, _amount: int) -> void:
 func _refresh_attack_button() -> void:
 	if _inventory == null:
 		return
-	if aim_button.button_pressed and not _inventory.is_equipped("tool_hunting_bow"):
+	var ranged: bool = _inventory.is_equipped("tool_hunting_bow") or _inventory.is_equipped("tool_rifle")
+	if aim_button.button_pressed and not ranged:
 		# Arc rangé : la visée s'arrête (sinon elle reprendrait au prochain équipement).
 		aim_button.set_pressed_no_signal(false)
 		_on_aim_toggled(false)
 	if not PlatformInfo.is_touch():
 		return
-	var ready_to_shoot: bool = _inventory.is_equipped("tool_hunting_bow") or _inventory.is_equipped("tool_stone_axe")
+	var ready_to_shoot: bool = ranged or _inventory.is_equipped("tool_stone_axe")
 	if attack_button.visible != ready_to_shoot:
 		attack_button.visible = ready_to_shoot
-	var bow: bool = _inventory.is_equipped("tool_hunting_bow")
+	var bow: bool = ranged
 	if aim_button.visible != bow:
 		aim_button.visible = bow
 

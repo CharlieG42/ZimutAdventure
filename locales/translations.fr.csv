@@ -758,3 +758,21 @@ QUEST_IRON_ORE_TITLE,Le filon
 QUEST_IRON_ORE_DESC,"Fabriquez une pioche, puis extrayez 6 minerais de fer (filons rouillés, au pied des mesas)."
 QUEST_IRON_INGOT_TITLE,Le feu de la forge
 QUEST_IRON_INGOT_DESC,Construisez un four et fondez 3 lingots de fer.
+CRAFT_RIFLE,Carabine à levier
+ITEM_TOOL_RIFLE,carabine à levier
+CRAFT_CARTRIDGES,Cartouches
+ITEM_ITEM_CARTRIDGE,cartouche
+CRAFT_IRON_ARROWS,Flèches à pointe de fer
+ITEM_ARROW_IRON,flèche à pointe de fer
+TOAST_NO_CARTRIDGES,Plus de cartouches : fabriquez-en (onglet Fabrication).
+TOOL_IRON_NAME,%s en fer
+TOOL_FORGE_INFO,"Forger en fer : %s — %s · [color=%s]niveau %d[/color]"
+ACTION_FORGE,Forger
+TOAST_FORGED,Outil forgé en fer : %s.
+TOOL_IRON_EFFECT_TOOL_STONE_AXE,"une bûche de plus par arbre, coups deux fois plus forts"
+TOOL_IRON_EFFECT_TOOL_PICKAXE,un minerai de plus par filon
+TOOL_IRON_EFFECT_TOOL_KNIFE,une peau de plus au dépeçage
+TOOL_IRON_EFFECT_TOOL_SICKLE,une laine de plus à la tonte
+TOOL_IRON_EFFECT_TOOL_HOE,une récolte de plus au potager
+QUEST_RIFLE_TITLE,La carabine
+QUEST_RIFLE_DESC,"Au niveau 10, forgez une carabine à levier (5 lingots de fer, 3 bois, 1 peau)."

@@ -48,6 +48,9 @@ func harvest() -> bool:
 		var amount: int = int(loot[item_id])
 		if with_knife and item_id == "item_raw_meat" and amount > 0:
 			amount += 1
+		# Couteau en fer : une peau de plus.
+		if with_knife and item_id == "item_pelt" and amount > 0 and bool(inventory.call("is_iron_tool", "tool_knife")):
+			amount += 1
 		if amount <= 0:
 			continue
 		if inventory != null:

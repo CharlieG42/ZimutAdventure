@@ -758,3 +758,21 @@ QUEST_IRON_ORE_TITLE,The vein
 QUEST_IRON_ORE_DESC,"Craft a pickaxe, then mine 6 iron ore (rusty veins at the foot of the mesas)."
 QUEST_IRON_INGOT_TITLE,Forge fire
 QUEST_IRON_INGOT_DESC,Build a furnace and smelt 3 iron ingots.
+CRAFT_RIFLE,Lever-action rifle
+ITEM_TOOL_RIFLE,lever-action rifle
+CRAFT_CARTRIDGES,Cartridges
+ITEM_ITEM_CARTRIDGE,cartridge
+CRAFT_IRON_ARROWS,Iron-tipped arrows
+ITEM_ARROW_IRON,iron-tipped arrow
+TOAST_NO_CARTRIDGES,Out of cartridges: craft some (Crafting tab).
+TOOL_IRON_NAME,iron %s
+TOOL_FORGE_INFO,"Forge in iron: %s — %s · [color=%s]level %d[/color]"
+ACTION_FORGE,Forge
+TOAST_FORGED,Tool forged in iron: %s.
+TOOL_IRON_EFFECT_TOOL_STONE_AXE,"one more log per tree, twice as strong blows"
+TOOL_IRON_EFFECT_TOOL_PICKAXE,one more ore per vein
+TOOL_IRON_EFFECT_TOOL_KNIFE,one more pelt when butchering
+TOOL_IRON_EFFECT_TOOL_SICKLE,one more wool when shearing
+TOOL_IRON_EFFECT_TOOL_HOE,one more crop from the farm plot
+QUEST_RIFLE_TITLE,The rifle
+QUEST_RIFLE_DESC,"At level 10, forge a lever-action rifle (5 iron ingots, 3 wood, 1 pelt)."

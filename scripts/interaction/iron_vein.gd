@@ -61,4 +61,8 @@ func _on_interact(interactor: Node3D) -> void:
 	var progression := InteractionManager.get_progression()
 	if progression != null:
 		progression.call("add_stat", "stat_iron_ore", 1)
+	# Pioche en fer : un minerai de plus.
+	if bool(inventory.call("is_iron_tool", PICKAXE)):
+		drops_min += 1
+		drops_max += 1
 	break_rock(interactor)
