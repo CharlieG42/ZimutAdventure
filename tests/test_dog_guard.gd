@@ -66,11 +66,9 @@ func _initialize() -> void:
 			break
 	_check(not is_instance_valid(coyote) or bool(coyote.get("_dead")) or int(coyote.get("_hp")) < hp_before, "le chien de garde a mordu le prédateur")
 
-	# Le sifflet annule la garde.
-	_check(player.call("whistle"), "sifflet : le chien répond")
-	_check(dog.following and not dog.guarding, "le sifflet met fin à la garde")
-	dog.call("interact_with", player)
-	dog.call("interact_with", player)
+	# Un chien de garde ne répond pas au sifflet : il faut d'abord le libérer.
+	_check(not player.call("whistle"), "sifflet : le chien de garde reste à son poste")
+	_check(dog.guarding and not dog.following, "toujours de garde")
 	_check(dog.get("guarding") and dog.call("get_state").get("guarding") == true, "la garde est sauvegardée")
 	var restored = scene.instantiate()
 	restored.species = "dog"
@@ -81,5 +79,7 @@ func _initialize() -> void:
 	_check(restored.guarding and not restored.following, "la garde est restaurée")
 	dog.call("interact_with", player)
 	_check(dog.following and not dog.guarding, "troisième clic : le chien suit à nouveau")
+	dog.following = false
+	_check(player.call("whistle") and dog.following, "libéré, il répond au sifflet")
 	print("TEST_DOG_GUARD: ", "PASS" if _failures == 0 else "FAIL")
 	quit(1 if _failures > 0 else 0)

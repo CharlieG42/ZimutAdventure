@@ -484,15 +484,22 @@ func _choppable_in_reach(forward: Vector3) -> Node3D:
 func whistle() -> bool:
 	var horses: Array = []
 	var dogs: Array = []
+	var busy := 0
 	for node in get_tree().get_nodes_in_group("domestic"):
 		if not is_instance_valid(node) or not bool(node.get("tamed")) or bool(node.get("mounted")):
 			continue
+		if node.get("species") != "horse" and node.get("species") != "dog":
+			continue
+		# En enclos (cheval) ou de garde (chien) : il faut d'abord le libérer.
+		if node.has_method("answers_whistle") and not bool(node.call("answers_whistle")):
+			busy += 1
+			continue
 		if node.get("species") == "horse":
 			horses.append(node)
-		elif node.get("species") == "dog":
+		else:
 			dogs.append(node)
 	if horses.is_empty() and dogs.is_empty():
-		_hud_toast(tr("TOAST_WHISTLE_NONE"))
+		_hud_toast(tr("TOAST_WHISTLE_BUSY") if busy > 0 else tr("TOAST_WHISTLE_NONE"))
 		return false
 	var by_distance := func(a, b): return a.global_position.distance_to(global_position) < b.global_position.distance_to(global_position)
 	horses.sort_custom(by_distance)

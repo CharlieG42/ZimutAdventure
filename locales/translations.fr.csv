@@ -656,7 +656,7 @@ RANCH_DOG_HERE,garde cet enclos
 RANCH_GUARDS_OTHER,garde « %s »
 ACTION_ASSIGN_GUARD,Affecter
 ACTION_UNASSIGN,Retirer
-RANCH_LIVESTOCK,Bétail apprivoisé
+RANCH_LIVESTOCK,Bétail et chevaux apprivoisés
 RANCH_NO_LIVESTOCK,Aucune bête d'élevage apprivoisée.
 RANCH_ON_THE_WAY,en route
 RANCH_HERE,dans cet enclos
@@ -737,3 +737,6 @@ ACTION_UPGRADE_SHORT,Améliorer
 TOAST_CANNOT_UPGRADE,Impossible d'améliorer cet objet.
 GEAR_EFFECT_LINE,"• %s (niv. %d) : %s"
 MENU_VERSION,Version %s
+TOAST_WHISTLE_BUSY,"Votre cheval est en enclos ou votre chien monte la garde : libérez-les d'abord (fenêtre Ranch)."
+RANCH_FILTER_FREE,Seulement les animaux hors enclos
+RANCH_FILTER_NONE,Aucun animal hors enclos.
