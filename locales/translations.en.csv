@@ -740,3 +740,21 @@ MENU_VERSION,Version %s
 TOAST_WHISTLE_BUSY,"Your horse is in a pen or your dog is on guard: release them first (Ranch window)."
 RANCH_FILTER_FREE,Only animals outside a pen
 RANCH_FILTER_NONE,No animal outside a pen.
+ACTION_MINE_IRON,Mine iron
+ACTION_MINE_IRON_NEED_PICKAXE,Iron vein (pickaxe required)
+TOAST_NEED_PICKAXE,You need a pickaxe in hand to mine iron.
+ACTION_SMELT,Smelt ore (%d ingot(s))
+ACTION_SMELT_EMPTY,Furnace (2 iron ore + 1 wood = 1 ingot)
+TOAST_SMELTED,%d iron ingot(s).
+TOAST_SMELT_NEED,You need %d iron ore and %d wood per ingot.
+CRAFT_PICKAXE,Pickaxe
+ITEM_TOOL_PICKAXE,pickaxe
+CRAFT_FURNACE,Furnace
+ITEM_BUILDING_FURNACE,furnace
+ITEM_ITEM_IRON_ORE,iron ore
+ITEM_ITEM_IRON_INGOT,iron ingot
+MAP_LEGEND_IRON,Iron vein
+QUEST_IRON_ORE_TITLE,The vein
+QUEST_IRON_ORE_DESC,"Craft a pickaxe, then mine 6 iron ore (rusty veins at the foot of the mesas)."
+QUEST_IRON_INGOT_TITLE,Forge fire
+QUEST_IRON_INGOT_DESC,Build a furnace and smelt 3 iron ingots.

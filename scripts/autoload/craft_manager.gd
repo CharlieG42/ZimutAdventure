@@ -18,6 +18,12 @@ const RECIPES := {
 		"ingredients": {"item_stone": 2, "item_wood": 1},
 		"level": 1,
 	},
+	"tool_pickaxe": {
+		"name": "CRAFT_PICKAXE",
+		"category": "tools",
+		"ingredients": {"item_wood": 3, "item_stone": 5},
+		"level": 3,
+	},
 	"tool_sickle": {
 		"name": "CRAFT_SICKLE",
 		"category": "tools",
@@ -113,6 +119,12 @@ const RECIPES := {
 		"name": "CRAFT_PEN",
 		"category": "buildings",
 		"ingredients": {"item_wood": 12, "item_stone": 2},
+		"level": 4,
+	},
+	"building_furnace": {
+		"name": "CRAFT_FURNACE",
+		"category": "buildings",
+		"ingredients": {"item_stone": 14, "item_wood": 4},
 		"level": 4,
 	},
 	"building_campfire": {

@@ -465,7 +465,7 @@ func _draw_resources(to_map: Transform2D, rect: Rect2) -> void:
 	var tree := get_tree()
 	if tree == null:
 		return
-	for group in ["breakable", "wood", "stone", "animals", "campfire", "structures", "choppable", "berries", "domestic", "fishing"]:
+	for group in ["breakable", "wood", "stone", "animals", "campfire", "structures", "choppable", "berries", "domestic", "iron_veins", "fishing"]:
 		for node in tree.get_nodes_in_group(group):
 			if not (node is Node3D) or not is_instance_valid(node):
 				continue
@@ -552,6 +552,12 @@ func _draw_marker(kind: String, pos: Vector2) -> void:
 			var inner := PackedVector2Array([pos + Vector2(0, -5), pos + Vector2(5, 0), pos + Vector2(0, 5), pos + Vector2(-5, 0)])
 			draw_colored_polygon(outer, outline)
 			draw_colored_polygon(inner, COLORS["rock"].lightened(0.25))
+		"iron_veins":
+			# Losange rouille : filon de fer.
+			var outer_i := PackedVector2Array([pos + Vector2(0, -8), pos + Vector2(8, 0), pos + Vector2(0, 8), pos + Vector2(-8, 0)])
+			var inner_i := PackedVector2Array([pos + Vector2(0, -5.5), pos + Vector2(5.5, 0), pos + Vector2(0, 5.5), pos + Vector2(-5.5, 0)])
+			draw_colored_polygon(outer_i, outline)
+			draw_colored_polygon(inner_i, Color(0.78, 0.42, 0.24))
 		"animals":
 			draw_circle(pos, 4.5, outline)
 			draw_circle(pos, 3.0, COLORS["animal"])
@@ -604,7 +610,7 @@ func _draw_player(to_map: Transform2D, rect: Rect2) -> void:
 func _draw_legend(rect: Rect2, font: Font) -> void:
 	var entries := [
 		["player", "MAP_LEGEND_YOU"], ["stone", "MAP_LEGEND_STONE"], ["wood", "MAP_LEGEND_WOOD"],
-		["breakable", "MAP_LEGEND_ROCK"], ["animals", "MAP_LEGEND_ANIMAL"],
+		["breakable", "MAP_LEGEND_ROCK"], ["iron_veins", "MAP_LEGEND_IRON"], ["animals", "MAP_LEGEND_ANIMAL"],
 		["campfire", "MAP_LEGEND_FIRE"], ["structures", "MAP_LEGEND_CAMP"],
 		["site", "MAP_LEGEND_SITE"], ["fishing", "MAP_LEGEND_POND"], ["choppable", "MAP_LEGEND_TREE"], ["berries", "MAP_LEGEND_BERRY"], ["domestic", "MAP_LEGEND_DOMESTIC"],
 	]

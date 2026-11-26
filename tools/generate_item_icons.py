@@ -204,6 +204,11 @@ def _tool_axe(d, u, fill, _):
     d.polygon(head, fill=fill)
 
 
+def _tool_pickaxe(d, u, fill, _):
+    d.line([(70 * u, 214 * u), (150 * u, 70 * u)], fill=fill, width=int(20 * u))
+    _arc(d, 150 * u, 104 * u, 70 * u, 200, 340, 22 * u, fill)
+
+
 def _tool_sickle(d, u, fill, _):
     _line(d, [(84 * u, 200 * u), (140 * u, 96 * u)], 12 * u, fill)
     _arc(d, 168 * u, 84 * u, 44 * u, 100, 320, 12 * u, fill)
@@ -283,6 +288,25 @@ def _gloves(d, u, fill, _):
         d.rounded_rectangle([min(tx, tx + 22 * flip) * u, 110 * u, max(tx, tx + 22 * flip) * u, 140 * u], radius=8 * u, fill=fill)
 
 
+def _iron_ore(d, u, fill, _):
+    d.polygon([(54 * u, 170 * u), (82 * u, 86 * u), (150 * u, 62 * u), (204 * u, 112 * u), (190 * u, 188 * u), (110 * u, 204 * u)], fill=fill)
+    spot = OUTLINE if fill == WHITE else fill
+    for x, y, r in ((110, 120, 14), (150, 150, 11), (90, 165, 9), (160, 105, 8)):
+        _ellipse(d, x * u, y * u, r * u, r * u, spot)
+
+
+def _iron_ingot(d, u, fill, _):
+    d.polygon([(40 * u, 176 * u), (78 * u, 104 * u), (208 * u, 104 * u), (226 * u, 176 * u)], fill=fill)
+    d.polygon([(78 * u, 104 * u), (100 * u, 78 * u), (196 * u, 78 * u), (208 * u, 104 * u)], fill=fill)
+
+
+def _furnace(d, u, fill, _):
+    d.pieslice([56 * u, 50 * u, 200 * u, 220 * u], 180, 360, fill=fill)
+    d.rectangle([56 * u, 134 * u, 200 * u, 206 * u], fill=fill)
+    d.rectangle([150 * u, 30 * u, 176 * u, 90 * u], fill=fill)
+    d.rounded_rectangle([100 * u, 140 * u, 156 * u, 196 * u], radius=16 * u, fill=OUTLINE if fill == WHITE else fill)
+
+
 ICONS = {
     "item_berries": _berry,
     "item_stone": _stone,
@@ -308,10 +332,14 @@ ICONS = {
     "item_wool": _wool,
     "tool_stone_axe": _tool_axe,
     "tool_sickle": _tool_sickle,
+    "tool_pickaxe": _tool_pickaxe,
     "tool_hoe": _tool_hoe,
     "tool_watering_can": _tool_watering_can,
     "tool_hunting_bow": _tool_bow,
     "tool_fishing_rod": _tool_fishing_rod,
+    "item_iron_ore": _iron_ore,
+    "item_iron_ingot": _iron_ingot,
+    "building_furnace": _furnace,
     "gear_straw_hat": _straw_hat,
     "armor_fur_cloak": _fur_cloak,
     "gear_hide_boots": _boots,

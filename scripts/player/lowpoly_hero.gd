@@ -395,6 +395,10 @@ func _build_held() -> void:
 		"tool_stone_axe":
 			_part(_held, _prism(6, 0.02, 0.02, 0.6), wood, Vector3(0, 0.12, 0))
 			_part(_held, _box(Vector3(0.05, 0.14, 0.17)), stone, Vector3(0, 0.36, 0.05))
+		"tool_pickaxe":
+			_part(_held, _prism(6, 0.02, 0.02, 0.62), wood, Vector3(0, 0.13, 0))
+			_part(_held, _box(Vector3(0.04, 0.05, 0.36)), stone, Vector3(0, 0.42, 0.02))
+			_part(_held, _box(Vector3(0.035, 0.04, 0.08)), stone.darkened(0.15), Vector3(0, 0.4, 0.22), Vector3(0.4, 0, 0))
 		"tool_knife":
 			_part(_held, _prism(6, 0.02, 0.02, 0.11), wood, Vector3(0, 0.0, 0))
 			_part(_held, _box(Vector3(0.012, 0.2, 0.04)), metal, Vector3(0, 0.15, 0))

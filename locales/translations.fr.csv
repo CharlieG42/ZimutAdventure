@@ -740,3 +740,21 @@ MENU_VERSION,Version %s
 TOAST_WHISTLE_BUSY,"Votre cheval est en enclos ou votre chien monte la garde : libérez-les d'abord (fenêtre Ranch)."
 RANCH_FILTER_FREE,Seulement les animaux hors enclos
 RANCH_FILTER_NONE,Aucun animal hors enclos.
+ACTION_MINE_IRON,Extraire le fer
+ACTION_MINE_IRON_NEED_PICKAXE,Filon de fer (pioche requise)
+TOAST_NEED_PICKAXE,Il faut une pioche en main pour extraire le fer.
+ACTION_SMELT,Fondre le minerai (%d lingot(s))
+ACTION_SMELT_EMPTY,Four (2 minerais de fer + 1 bois = 1 lingot)
+TOAST_SMELTED,%d lingot(s) de fer.
+TOAST_SMELT_NEED,Il faut %d minerais de fer et %d bois par lingot.
+CRAFT_PICKAXE,Pioche
+ITEM_TOOL_PICKAXE,pioche
+CRAFT_FURNACE,Four
+ITEM_BUILDING_FURNACE,four
+ITEM_ITEM_IRON_ORE,minerai de fer
+ITEM_ITEM_IRON_INGOT,lingot de fer
+MAP_LEGEND_IRON,Filon de fer
+QUEST_IRON_ORE_TITLE,Le filon
+QUEST_IRON_ORE_DESC,"Fabriquez une pioche, puis extrayez 6 minerais de fer (filons rouillés, au pied des mesas)."
+QUEST_IRON_INGOT_TITLE,Le feu de la forge
+QUEST_IRON_INGOT_DESC,Construisez un four et fondez 3 lingots de fer.

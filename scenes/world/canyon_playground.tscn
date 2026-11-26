@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3 uid="uid://zimutcanyonplay"]
+[gd_scene load_steps=30 format=3 uid="uid://zimutcanyonplay"]
 
 [ext_resource type="Script" path="res://scripts/world/distance_culler.gd" id="96_culler"]
 [ext_resource type="Script" path="res://scripts/world/zone_announcer.gd" id="95_zones"]
@@ -28,6 +28,7 @@
 [ext_resource type="Shader" path="res://assets/vfx/sky/sky.gdshader" id="22_sky"]
 [ext_resource type="Script" path="res://scripts/vfx/sun_flare.gd" id="20_flare"]
 [ext_resource type="Script" path="res://scripts/vfx/footprints.gd" id="21_footprints"]
+[ext_resource type="PackedScene" path="res://scenes/interaction/iron_vein.tscn" id="40_ironvein"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("22_sky")
@@ -121,6 +122,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 12, -30)
 script = ExtResource("10_rockspawn")
 rock_scene = ExtResource("11_rock")
 count = 25
+
+[node name="IronVeins" type="Node3D" parent="."]
+script = ExtResource("10_rockspawn")
+rock_scene = ExtResource("40_ironvein")
+count = 22
+spawn_radius = 175.0
+seed_offset = 5151
+min_distance_to_player = 25.0
+zone_affinity = Array[float]([0.12, 0.08, 1.0, 0.05])
 
 [node name="WaterSource" parent="." instance=ExtResource("14_water")]
 
