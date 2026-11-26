@@ -736,3 +736,4 @@ GEAR_UPGRADE_INFO,"Level %d: %s — %s · [color=%s]level %d[/color]"
 ACTION_UPGRADE_SHORT,Upgrade
 TOAST_CANNOT_UPGRADE,This item cannot be upgraded.
 GEAR_EFFECT_LINE,"• %s (lvl %d): %s"
+MENU_VERSION,Version %s

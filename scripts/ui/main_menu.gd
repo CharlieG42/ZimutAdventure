@@ -26,6 +26,9 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_fit)
 	_fit()
 
+static func game_version() -> String:
+	return String(ProjectSettings.get_setting("application/config/version", "?"))
+
 func _build() -> void:
 	for child in get_children():
 		child.queue_free()
@@ -48,6 +51,19 @@ func _build() -> void:
 	_margin = MarginContainer.new()
 	_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_margin)
+	# Version du jeu (même numéro que l'APK, renseigné par la CI) en bas à droite.
+	var version := Label.new()
+	version.name = "VersionLabel"
+	version.text = tr("MENU_VERSION") % game_version()
+	version.add_theme_font_size_override("font_size", 16)
+	version.add_theme_color_override("font_color", DIM)
+	version.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	version.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	version.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	version.offset_right = -16
+	version.offset_bottom = -10
+	add_child(version)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_margin.add_child(scroll)
