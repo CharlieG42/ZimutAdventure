@@ -22,6 +22,17 @@ func _init() -> void:
 	inventory.call("clear_for_test")
 	inventory.set("_autosave", true)
 
+	# Version du jeu affichée sur le menu de démarrage.
+	var menu := (load("res://scenes/main_menu.tscn") as PackedScene).instantiate()
+	root.add_child(menu)
+	await _frames(2)
+	var version_label := menu.find_child("VersionLabel", true, false) as Label
+	var version := String(ProjectSettings.get_setting("application/config/version"))
+	if version_label == null or not version_label.text.contains(version) or not version.begins_with("v0."):
+		errors.append("menu : version du jeu absente (%s)" % (version_label.text if version_label else "aucun label"))
+	root.remove_child(menu)
+	menu.queue_free()
+
 	SaveSlots.activate(1, self)
 	change_scene_to_file(MainMenu.GAME_SCENE)
 	await _frames(20)

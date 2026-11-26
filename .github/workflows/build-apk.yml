@@ -217,6 +217,16 @@ jobs:
           sed -i 's|^keystore/release=.*|keystore/release=""|; s|^keystore/release_user=.*|keystore/release_user=""|; s|^keystore/release_password=.*|keystore/release_password=""|' export_presets.cfg
           grep '^keystore/release' export_presets.cfg || true
 
+      - name: Version affichée dans le jeu (menu de démarrage)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -eu
+          PR=$(sh tools/ci/apk_name.sh | sed -n 's/^pr=//p')
+          sed -i "s|^config/version=.*|config/version=\"${APK_VERSION}-${PR}\"|" project.godot
+          grep '^config/version' project.godot
+
       - name: Import project
         run: godot --headless --path . --import
 

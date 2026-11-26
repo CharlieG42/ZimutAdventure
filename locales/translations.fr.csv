@@ -736,3 +736,4 @@ GEAR_UPGRADE_INFO,"Niveau %d : %s — %s · [color=%s]niveau %d[/color]"
 ACTION_UPGRADE_SHORT,Améliorer
 TOAST_CANNOT_UPGRADE,Impossible d'améliorer cet objet.
 GEAR_EFFECT_LINE,"• %s (niv. %d) : %s"
+MENU_VERSION,Version %s
