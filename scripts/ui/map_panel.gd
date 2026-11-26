@@ -240,6 +240,8 @@ func _select_site(site_id: String) -> void:
 		var exploration := InteractionManager.get_exploration()
 		var site: Dictionary = exploration.call("get_site", site_id) if exploration != null else {}
 		_travel_button.text = tr("MAP_TRAVEL_TO") % tr(String(site.get("name", "")))
+		if exploration != null and bool(exploration.call("is_refuge", site_id)):
+			_travel_button.text = tr("MAP_TRAVEL_REFUGE") % tr(String(site.get("name", "")))
 		_travel_button.position = Vector2((size.x - _travel_button.custom_minimum_size.x) * 0.5, size.y - 86.0 - _travel_button.custom_minimum_size.y)
 	queue_redraw()
 

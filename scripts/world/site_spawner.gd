@@ -130,6 +130,53 @@ func _build_site(site_id: String, kind: String, pos: Vector3, index: int) -> voi
 		# Hors de l'empreinte de la ruine GLB (~13 m de large), atteignable à pied.
 		chest.position = Vector3(7.0, 0.0, 7.0)
 	root.add_child(chest)
+	if kind == "ruin":
+		# Aile à restaurer (contenu de haut niveau), à l'écart de la ruine et du coffre.
+		var restoration := RuinRestoration.create(site_id)
+		root.add_child(restoration)
+		var candidates: Array = []
+		var ring := 13.0 if used_glb_ruin else 9.0
+		for i in 8:
+			var angle := float(i) / 8.0 * TAU + 0.4
+			var spot := Vector3(cos(angle) * ring, 0.0, sin(angle) * ring)
+			# Jamais sur le coffre du site.
+			if spot.distance_to(chest.position) > 6.0:
+				candidates.append(spot)
+		_settle_on_ground(restoration, candidates)
+
+## Emprise du chantier (repère local) : coins, entrée et panneau.
+const RESTORATION_FOOTPRINT := [Vector3(0, 0, 0.6), Vector3(-2.8, 0, 0.6), Vector3(2.8, 0, 0.6), Vector3(-2.8, 0, -5.0), Vector3(2.8, 0, -5.0), Vector3(3.6, 0, 1.2), Vector3(0, 0, 1.6)]
+
+## Choisit, autour de la ruine, l'emplacement le plus plat (hors de l'eau) et y pose le
+## chantier au point le plus haut de son emprise : rien n'est enterré, et le soubassement
+## de pierre (qui descend sous le sol) comble le reste de la pente.
+func _settle_on_ground(node: Node3D, candidates: Array) -> void:
+	var best_spread := INF
+	var best_pos := node.position
+	var best_top := node.global_position.y
+	var best_yaw := node.rotation.y
+	for local in candidates:
+		node.position = local
+		# L'entrée (+Z) regarde la ruine.
+		node.rotation.y = atan2(-local.x, -local.z)
+		var low := INF
+		var high := -INF
+		var wet := false
+		for offset in RESTORATION_FOOTPRINT:
+			var at := node.to_global(offset)
+			var h := _ground_height(at.x, at.z)
+			low = minf(low, h)
+			high = maxf(high, h)
+			wet = wet or _in_water(at.x, at.z, 1.0)
+		var spread := high - low + (100.0 if wet else 0.0)
+		if spread < best_spread:
+			best_spread = spread
+			best_pos = local
+			best_yaw = node.rotation.y
+			best_top = high
+	node.position = best_pos
+	node.rotation.y = best_yaw
+	node.global_position.y = best_top
 
 ## Collision d'une scène GLB : une boîte englobante par MeshInstance3D, en espace
 ## local du nœud (elle hérite ainsi de sa transformée).

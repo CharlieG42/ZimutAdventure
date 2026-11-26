@@ -306,6 +306,14 @@ const QUESTS := {
 		"requires": "quest_iron_ingot",
 		"reward": {"item_cartridge": 12},
 	},
+	"quest_refuge": {
+		"title": "QUEST_REFUGE_TITLE",
+		"description": "QUEST_REFUGE_DESC",
+		"goal_item": "stat_refuges",
+		"goal_count": 1,
+		"requires": "quest_iron_ingot",
+		"reward": {"item_iron_ingot": 4, "item_pelt": 2},
+	},
 	"quest_tamer_3": {
 		"title": "QUEST_TAMER_3_TITLE",
 		"description": "QUEST_TAMER_3_DESC",

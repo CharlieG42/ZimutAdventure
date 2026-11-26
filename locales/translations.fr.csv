@@ -776,3 +776,18 @@ TOOL_IRON_EFFECT_TOOL_SICKLE,une laine de plus à la tonte
 TOOL_IRON_EFFECT_TOOL_HOE,une récolte de plus au potager
 QUEST_RIFLE_TITLE,La carabine
 QUEST_RIFLE_DESC,"Au niveau 10, forgez une carabine à levier (5 lingots de fer, 3 bois, 1 peau)."
+ACTION_RUIN_RESTORE,Restaurer la ruine : %s (%d/%d)
+ACTION_RUIN_REFUGE,Refuge restauré
+RUIN_STAGE_WALLS,relever les murs
+RUIN_STAGE_FRAME,poser la charpente
+RUIN_STAGE_ROOF,toit et ferrures
+TOAST_RUIN_LEVEL,Chantier de haut niveau : niveau %d requis
+TOAST_RUIN_NEED,Il manque des matériaux : %s
+TOAST_RUIN_DONE,Cette ruine est déjà restaurée
+TOAST_RUIN_STAGE_DONE,Chantier avancé : %s
+TOAST_RUIN_REFUGE_DONE,"Refuge restauré ! Lit, coffre, âtre — et voyage rapide gratuit jusqu'ici"
+TOAST_RUIN_REFUGE_INFO,"Votre refuge : lit, coffre et âtre. Voyage rapide gratuit depuis la carte"
+MAP_TRAVEL_REFUGE,"Voyager : %s (refuge, gratuit)"
+QUEST_REFUGE_TITLE,Un toit dans l'Ouest
+QUEST_REFUGE_DESC,"Restaurez entièrement une ruine (murs, charpente, toit ferré) pour en faire un refuge. Niveau 8 à 10."
+STAT_REFUGES,Refuges restaurés

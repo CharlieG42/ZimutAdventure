@@ -776,3 +776,18 @@ TOOL_IRON_EFFECT_TOOL_SICKLE,one more wool when shearing
 TOOL_IRON_EFFECT_TOOL_HOE,one more crop from the farm plot
 QUEST_RIFLE_TITLE,The rifle
 QUEST_RIFLE_DESC,"At level 10, forge a lever-action rifle (5 iron ingots, 3 wood, 1 pelt)."
+ACTION_RUIN_RESTORE,Restore the ruin: %s (%d/%d)
+ACTION_RUIN_REFUGE,Restored refuge
+RUIN_STAGE_WALLS,raise the walls
+RUIN_STAGE_FRAME,set the timber frame
+RUIN_STAGE_ROOF,roof and ironwork
+TOAST_RUIN_LEVEL,High-level work: level %d required
+TOAST_RUIN_NEED,Missing materials: %s
+TOAST_RUIN_DONE,This ruin is already restored
+TOAST_RUIN_STAGE_DONE,Work done: %s
+TOAST_RUIN_REFUGE_DONE,"Refuge restored! Bed, chest, hearth — and free fast travel here"
+TOAST_RUIN_REFUGE_INFO,"Your refuge: bed, chest and hearth. Free fast travel from the map"
+MAP_TRAVEL_REFUGE,"Travel: %s (refuge, free)"
+QUEST_REFUGE_TITLE,A roof in the West
+QUEST_REFUGE_DESC,"Fully restore a ruin (walls, frame, iron-bound roof) to make it a refuge. Levels 8 to 10."
+STAT_REFUGES,Refuges restored
