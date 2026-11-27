@@ -49,6 +49,10 @@ var blessings: int = 0
 var _markers: Array[Vector2] = []
 var _tracked: int = -1
 var _reached: Array = []
+## Ruines restaurées : site -> étape atteinte (3 = refuge) ; contenu du coffre de chaque refuge.
+var _ruin_stages: Dictionary = {}
+var _refuge_stocks: Dictionary = {}
+const REFUGE_STAGE := 3
 
 func _ready() -> void:
 	_cells.resize(GRID * GRID)
@@ -64,6 +68,8 @@ func reload_from_disk() -> void:
 	_markers.clear()
 	_tracked = -1
 	_reached = []
+	_ruin_stages = {}
+	_refuge_stocks = {}
 	_load()
 
 # --- Brouillard ----------------------------------------------------------------------------
@@ -294,9 +300,41 @@ func drain_factor() -> float:
 func travel_is_free() -> bool:
 	return blessings >= 2
 
+## Voyage gratuit vers ce site : bénédiction des chemins anciens, ou refuge restauré.
+func travel_is_free_to(site_id: String) -> bool:
+	return travel_is_free() or is_refuge(site_id)
+
 ## Fortune : chance de butin en plus.
 func loot_bonus() -> float:
 	return FORTUNE_BONUS if blessings >= 3 else 0.0
+
+# --- Ruines restaurées ----------------------------------------------------------------------
+
+func ruin_stage(site_id: String) -> int:
+	return int(_ruin_stages.get(site_id, 0))
+
+func set_ruin_stage(site_id: String, stage: int) -> void:
+	_ruin_stages[site_id] = stage
+	_dirty = true
+	_save()
+
+func is_refuge(site_id: String) -> bool:
+	return ruin_stage(site_id) >= REFUGE_STAGE
+
+func refuge_count() -> int:
+	var total := 0
+	for site_id in _ruin_stages:
+		if is_refuge(String(site_id)):
+			total += 1
+	return total
+
+func refuge_stock(site_id: String) -> Dictionary:
+	return _refuge_stocks.get(site_id, {})
+
+func set_refuge_stock(site_id: String, stock: Dictionary) -> void:
+	_refuge_stocks[site_id] = stock
+	_dirty = true
+	_save()
 
 # --- Voyage rapide ---------------------------------------------------------------------------------------
 
@@ -308,7 +346,7 @@ func can_travel(site_id: String) -> String:
 	if progression != null and not bool(progression.call("meets_level", TRAVEL_LEVEL)):
 		return "TOAST_TRAVEL_LEVEL"
 	var survival := InteractionManager.get_survival()
-	if survival != null and not travel_is_free() and (float(survival.call("get_hunger")) < TRAVEL_HUNGER or float(survival.call("get_thirst")) < TRAVEL_THIRST):
+	if survival != null and not travel_is_free_to(site_id) and (float(survival.call("get_hunger")) < TRAVEL_HUNGER or float(survival.call("get_thirst")) < TRAVEL_THIRST):
 		return "TOAST_TRAVEL_TIRED"
 	return ""
 
@@ -326,7 +364,7 @@ func fast_travel(site_id: String, player: Node3D) -> String:
 	if player is CharacterBody3D:
 		(player as CharacterBody3D).velocity = Vector3.ZERO
 	var survival := InteractionManager.get_survival()
-	if survival != null and not travel_is_free():
+	if survival != null and not travel_is_free_to(site_id):
 		survival.call("consume", TRAVEL_HUNGER, TRAVEL_THIRST)
 	var progression := InteractionManager.get_progression()
 	if progression != null:
@@ -386,6 +424,8 @@ func _load() -> void:
 	if _tracked >= _markers.size():
 		_tracked = -1
 	_reached = config.get_value("landmarks", "reached", [])
+	_ruin_stages = config.get_value("ruins", "stages", {})
+	_refuge_stocks = config.get_value("ruins", "stocks", {})
 	for site_id in _pending_found:
 		if _sites.has(site_id):
 			_sites[site_id]["found"] = true
@@ -419,6 +459,8 @@ func _save() -> void:
 	config.set_value("markers", "list", _markers)
 	config.set_value("markers", "tracked", _tracked)
 	config.set_value("landmarks", "reached", _reached)
+	config.set_value("ruins", "stages", _ruin_stages)
+	config.set_value("ruins", "stocks", _refuge_stocks)
 	config.save(SaveSlots.file(SAVE_NAME))
 	_dirty = false
 
@@ -434,3 +476,5 @@ func clear_for_test() -> void:
 	_markers.clear()
 	_tracked = -1
 	_reached = []
+	_ruin_stages = {}
+	_refuge_stocks = {}
